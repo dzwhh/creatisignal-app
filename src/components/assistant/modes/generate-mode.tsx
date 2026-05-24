@@ -124,7 +124,10 @@ function VideoSettingsPopup({ resolution, setResolution, ratio, setRatio, durati
         <SectionLabel>时长</SectionLabel>
         <div className="flex items-center gap-3">
           <input type="range" min={5} max={60} value={duration} onChange={(e) => setDuration(Number(e.target.value))}
-            className="flex-1 h-1.5 appearance-none rounded-full cursor-pointer accent-[#18181b]" />
+            className="dh-range flex-1 h-1.5 appearance-none rounded-full cursor-pointer"
+            style={{
+              background: `linear-gradient(to right, #18181b 0%, #18181b ${((duration - 5) / 55) * 100}%, var(--line) ${((duration - 5) / 55) * 100}%, var(--line) 100%)`,
+            }} />
           <div className="flex items-center gap-1.5 shrink-0">
             <div className="w-9 h-7 border border-[var(--line)] rounded-lg text-[13px] font-semibold text-[var(--text)] flex items-center justify-center">{duration}</div>
             <span className="text-[12px] text-[var(--muted)]">s</span>
