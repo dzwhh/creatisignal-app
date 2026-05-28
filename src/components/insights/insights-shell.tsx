@@ -48,7 +48,7 @@ export function InsightsShell() {
               素材增长诊断
             </h1>
             <p className="text-[12.5px] text-[var(--muted)] mt-1">
-              从广告表现、商品卖点和素材标签中找到 CPO 高的原因，并生成下一轮可投放素材 Brief
+              诊断高 CPO 原因，生成下一轮素材 Brief
             </p>
           </div>
           <div className="flex items-center gap-2">
