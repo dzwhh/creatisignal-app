@@ -232,16 +232,42 @@ function UploadSlot({ label, icon: Icon, onClick }: { label: string; icon: React
 
 // ─── Main Component ──────────────────────────────────────────────────────────
 
-export function GenerateMode() {
+interface GenerateModeProps {
+  initialPrompt?: string
+  onSubmit?: () => void
+  submitting?: boolean
+}
+
+export function GenerateMode({ initialPrompt, onSubmit, submitting }: GenerateModeProps = {}) {
   const [genType, setGenType] = useState<GenType>("video")
   const [videoMode, setVideoMode] = useState<VideoMode>("reference")
   const [text, setText] = useState("")
   const [activePopup, setActivePopup] = useState<ActivePopup>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
 
-  // Video/remix settings
-  const [videoResolution, setVideoResolution] = useState("480P")
+  // Pre-fill from props (e.g. OnboardingHero path B click)
+  useEffect(() => {
+    if (!initialPrompt) return
+    setGenType("video")
+    setText(initialPrompt)
+    // Focus + move cursor to end on next tick
+    window.setTimeout(() => {
+      const el = textareaRef.current
+      if (!el) return
+      el.focus()
+      el.selectionStart = el.selectionEnd = el.value.length
+    }, 0)
+  }, [initialPrompt])
+
+  function handleSend() {
+    if (!text.trim()) return
+    onSubmit?.()
+  }
+
+  // Video/remix settings — 默认拉满到新出的「720P · 9:16 · 30s」高质量组合
+  const [videoResolution, setVideoResolution] = useState("720P")
   const [videoRatio, setVideoRatio] = useState("9:16")
-  const [videoDuration, setVideoDuration] = useState(15)
+  const [videoDuration, setVideoDuration] = useState(30)
 
   // Image settings
   const [imageResolution, setImageResolution] = useState("1K")
@@ -361,6 +387,7 @@ export function GenerateMode() {
             </div>
           )}
           <textarea
+            ref={textareaRef}
             className="w-full min-h-[52px] border-0 outline-none resize-none text-[#24272f] text-[15px] leading-[1.5] bg-transparent placeholder:text-[var(--muted-2)]"
             placeholder={placeholders[genType]}
             value={text}
@@ -402,6 +429,14 @@ export function GenerateMode() {
               <button type="button" onClick={() => toggle("settings")} className={pickerBtn}>
                 <SlidersHorizontal size={15} strokeWidth={2} />
                 <span>{settingsLabel}</span>
+                {genType !== "image" && videoResolution === "720P" && videoRatio === "9:16" && videoDuration === 30 && (
+                  <span
+                    className="ml-1 inline-flex items-center h-[18px] px-1.5 rounded-md bg-[var(--lime)] text-[#1a2010] text-[9.5px] font-extrabold tracking-wide leading-none"
+                    title="新推出的高质量默认配置"
+                  >
+                    NEW
+                  </span>
+                )}
                 <ChevronDown size={12} className={cn("text-[var(--muted)] -ml-0.5 transition-transform", activePopup === "settings" && "rotate-180")} />
               </button>
               {activePopup === "settings" && (
@@ -432,7 +467,7 @@ export function GenerateMode() {
 
         <div className="flex items-center gap-2">
           <span className="text-[13px] text-[#8a8d94] whitespace-nowrap">{text.length}/{maxLen}</span>
-          <SendButton disabled={!text.trim()} />
+          <SendButton disabled={!text.trim()} loading={submitting} onClick={handleSend} />
         </div>
       </div>
 

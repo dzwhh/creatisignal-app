@@ -1,8 +1,9 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import Image from "next/image"
-import { Search, ChevronDown } from "lucide-react"
+import { Search, ChevronDown, Wand2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { MultimodalSearch } from "./multimodal-search"
 
@@ -153,34 +154,51 @@ export function MaterialsContent() {
 
       {/* Grid */}
       <div className="grid grid-cols-5 gap-[18px]">
-        {materials.map((m) => (
-          <article
-            key={m.id}
-            className="border border-[var(--line)] rounded-xl bg-white overflow-hidden shadow-[0_1px_2px_rgba(9,9,11,0.03)] cursor-pointer hover:shadow-[0_4px_16px_rgba(9,9,11,0.08)] transition-shadow"
-          >
-            <div
-              className="relative overflow-hidden"
-              style={{ aspectRatio: "9/14", background: m.bg }}
+        {materials.map((m) => {
+          // 把 mock id "1"-"10" 映射到 MATERIALS 里真实 fingerprint，进入复刻工作台
+          const fp = `fp_${m.id.padStart(3, "0")}`
+          const replicateHref = `/replicate/${fp}?source=discover`
+          return (
+            <article
+              key={m.id}
+              className="group relative border border-[var(--line)] rounded-xl bg-white overflow-hidden shadow-[0_1px_2px_rgba(9,9,11,0.03)] cursor-pointer hover:shadow-[0_4px_16px_rgba(9,9,11,0.08)] transition-shadow"
             >
-              {/* Highlight overlay */}
-              <div className="absolute inset-[12%] inset-b-[22%] rounded-t-[999px] rounded-b-[18px] bg-white/40" />
-              <span className="absolute top-[9px] right-[9px] text-[15px]">🔥🔥</span>
-              <div className="absolute left-[10px] right-[10px] bottom-[10px] flex justify-between items-end gap-1">
-                <span className="h-[22px] rounded-full bg-[rgba(28,30,36,0.72)] text-white px-2.5 text-[11px] font-extrabold flex items-center">
-                  {m.tag}
-                </span>
-                <span className="h-[22px] rounded-full bg-[var(--lime)] text-[#1a2010] px-2.5 text-[11px] font-extrabold flex items-center">
-                  {m.tactic}
-                </span>
+              <div
+                className="relative overflow-hidden"
+                style={{ aspectRatio: "9/14", background: m.bg }}
+              >
+                {/* Highlight overlay */}
+                <div className="absolute inset-[12%] inset-b-[22%] rounded-t-[999px] rounded-b-[18px] bg-white/40" />
+                <span className="absolute top-[9px] right-[9px] text-[15px]">🔥🔥</span>
+                <div className="absolute left-[10px] right-[10px] bottom-[10px] flex justify-between items-end gap-1">
+                  <span className="h-[22px] rounded-full bg-[rgba(28,30,36,0.72)] text-white px-2.5 text-[11px] font-extrabold flex items-center">
+                    {m.tag}
+                  </span>
+                  <span className="h-[22px] rounded-full bg-[var(--lime)] text-[#1a2010] px-2.5 text-[11px] font-extrabold flex items-center">
+                    {m.tactic}
+                  </span>
+                </div>
+
+                {/* Replica CTA — hover 显示 */}
+                <Link
+                  href={replicateHref}
+                  className="absolute inset-0 flex items-center justify-center bg-black/45 opacity-0 group-hover:opacity-100 transition-opacity"
+                  aria-label="复刻这条市场爆款"
+                >
+                  <span className="h-9 px-4 rounded-full bg-white text-[#18181b] text-[12.5px] font-extrabold flex items-center gap-1.5 shadow-lg">
+                    <Wand2 size={13} strokeWidth={2.4} />
+                    复刻这条
+                  </span>
+                </Link>
               </div>
-            </div>
-            <div className="px-3 py-2.5 flex items-center justify-between text-[12px] text-[#8b8f98]">
-              <span>♡ {m.likes}</span>
-              <span>□ {m.comments}</span>
-              <span>⇧ {m.shares}</span>
-            </div>
-          </article>
-        ))}
+              <div className="px-3 py-2.5 flex items-center justify-between text-[12px] text-[#8b8f98]">
+                <span>♡ {m.likes}</span>
+                <span>□ {m.comments}</span>
+                <span>⇧ {m.shares}</span>
+              </div>
+            </article>
+          )
+        })}
       </div>
     </>
   )

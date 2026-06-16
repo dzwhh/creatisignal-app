@@ -15,10 +15,34 @@ const modes = [
   { id: "generate", label: "创意生成", icon: Sparkles },
 ] as const
 
-type ModeId = (typeof modes)[number]["id"]
+export type ModeId = (typeof modes)[number]["id"]
 
-export function AssistantChat() {
-  const [mode, setMode] = useState<ModeId>("report")
+export interface ChatPrefill {
+  report?: string
+  analysis?: string
+  brief?: string
+  generate?: string
+}
+
+interface Props {
+  /** Controlled mode (if omitted, falls back to internal state) */
+  mode?: ModeId
+  onModeChange?: (m: ModeId) => void
+  /** Pre-fill input for each mode */
+  prefill?: ChatPrefill
+  /** Called when a mode reaches a "first generate" action — used to fire First-Win */
+  onFirstWin?: (kind: "report" | "video" | "brief" | "analysis") => void
+  /** Show send-button spinner during simulated generation */
+  submitting?: boolean
+}
+
+export function AssistantChat({ mode: controlledMode, onModeChange, prefill, onFirstWin, submitting }: Props = {}) {
+  const [internalMode, setInternalMode] = useState<ModeId>("report")
+  const mode = controlledMode ?? internalMode
+  const setMode = (m: ModeId) => {
+    if (controlledMode === undefined) setInternalMode(m)
+    onModeChange?.(m)
+  }
 
   return (
     <div className="flex flex-col items-center gap-[14px] w-full max-w-[760px] mx-auto">
@@ -45,11 +69,35 @@ export function AssistantChat() {
       </div>
 
       {/* Chat box */}
-      <div className="relative w-full min-h-[134px] border border-[var(--line)] rounded-[20px] bg-white shadow-[0_1px_2px_rgba(9,9,11,0.04),0_12px_28px_rgba(9,9,11,0.06)] p-[18px] flex flex-col gap-7">
-        {mode === "report" && <ReportMode />}
-        {mode === "analysis" && <AnalysisMode />}
-        {mode === "brief" && <BriefMode />}
-        {mode === "generate" && <GenerateMode />}
+      <div className="relative w-full min-h-[134px] border border-[var(--line)] rounded-[20px] bg-white p-[18px] flex flex-col gap-7 shadow-[0_1px_2px_rgba(9,9,11,0.04),0_12px_28px_rgba(9,9,11,0.06)]">
+        {mode === "report" && (
+          <ReportMode
+            initialUrl={prefill?.report}
+            onSubmit={() => onFirstWin?.("report")}
+            submitting={submitting}
+          />
+        )}
+        {mode === "analysis" && (
+          <AnalysisMode
+            initialPrompt={prefill?.analysis}
+            onSubmit={() => onFirstWin?.("analysis")}
+            submitting={submitting}
+          />
+        )}
+        {mode === "brief" && (
+          <BriefMode
+            initialPrompt={prefill?.brief}
+            onSubmit={() => onFirstWin?.("brief")}
+            submitting={submitting}
+          />
+        )}
+        {mode === "generate" && (
+          <GenerateMode
+            initialPrompt={prefill?.generate}
+            onSubmit={() => onFirstWin?.("video")}
+            submitting={submitting}
+          />
+        )}
       </div>
     </div>
   )

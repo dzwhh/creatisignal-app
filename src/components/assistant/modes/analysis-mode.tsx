@@ -1,17 +1,41 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Plus, Image } from "lucide-react"
 import { SendButton } from "../send-button"
 import { ImageSelectModal } from "@/components/modals/image-select-modal"
 
-export function AnalysisMode() {
+interface AnalysisModeProps {
+  initialPrompt?: string
+  onSubmit?: () => void
+  submitting?: boolean
+}
+
+export function AnalysisMode({ initialPrompt, onSubmit, submitting }: AnalysisModeProps = {}) {
   const [text, setText] = useState("")
   const [imageModalOpen, setImageModalOpen] = useState(false)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+  useEffect(() => {
+    if (!initialPrompt) return
+    setText(initialPrompt)
+    window.setTimeout(() => {
+      const el = textareaRef.current
+      if (!el) return
+      el.focus()
+      el.selectionStart = el.selectionEnd = el.value.length
+    }, 0)
+  }, [initialPrompt])
+
+  function handleSend() {
+    if (!text.trim()) return
+    onSubmit?.()
+  }
 
   return (
     <>
       <textarea
+        ref={textareaRef}
         className="w-full min-h-[44px] border-0 outline-none resize-none text-[#24272f] text-[15px] leading-[1.5] bg-transparent placeholder:text-[var(--muted-2)]"
         placeholder="描述要分析的素材、投放目标或问题"
         value={text}
@@ -38,7 +62,7 @@ export function AnalysisMode() {
             <span>选择素材</span>
           </button>
         </div>
-        <SendButton disabled={!text.trim()} />
+        <SendButton disabled={!text.trim()} loading={submitting} onClick={handleSend} />
       </div>
       <ImageSelectModal
         open={imageModalOpen}

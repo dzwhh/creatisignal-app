@@ -238,7 +238,13 @@ function KindPicker({
 }
 
 // ── ReportMode (main) ──────────────────────────────────────────────────
-export function ReportMode() {
+interface ReportModeProps {
+  initialUrl?: string
+  onSubmit?: () => void
+  submitting?: boolean
+}
+
+export function ReportMode({ initialUrl, onSubmit, submitting }: ReportModeProps = {}) {
   const [kind, setKind] = useState<ReportKind>("link")
   const [url, setUrl] = useState("")
   const [parsed, setParsed] = useState(false)
@@ -251,6 +257,21 @@ export function ReportMode() {
 
   // single open popover key
   const [openPopover, setOpenPopover] = useState<string | null>(null)
+
+  // Pre-fill from props (e.g. OnboardingHero path A click). Re-runs on each new value
+  // so example chip can re-trigger after manual edits.
+  useEffect(() => {
+    if (!initialUrl) return
+    setKind("link")
+    setUrl(initialUrl)
+    setParsed(false)
+    setParsing(true)
+    const t = window.setTimeout(() => {
+      setParsing(false)
+      setParsed(true)
+    }, 800)
+    return () => window.clearTimeout(t)
+  }, [initialUrl])
 
   const hasUrl = url.trim().length > 0
   const showConfig = parsed || kind === "hot"
@@ -276,6 +297,11 @@ export function ReportMode() {
     setPlatforms([])
     setCountries([])
     setOpenPopover(null)
+  }
+
+  function handleSubmit() {
+    if (!canSubmit) return
+    onSubmit?.()
   }
 
   return (
@@ -367,7 +393,7 @@ export function ReportMode() {
               <span>{parsing ? "解析中..." : "解析链接"}</span>
             </button>
           )}
-          <SendButton disabled={!canSubmit} />
+          <SendButton disabled={!canSubmit} loading={submitting} onClick={handleSubmit} />
         </div>
       </div>
     </>

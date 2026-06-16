@@ -11,12 +11,21 @@ import type {
   CpoReasonKey,
   DiagnosticIssue,
   ExperimentBatch,
+  LifecyclePhase,
+  MatchResult,
+  MatchSignal,
   Material,
   MaterialAccountRow,
   MaterialAction,
   MaterialBucket,
   Region,
+  ReplicaAxis,
+  ReplicaCategory,
+  ReplicaDirection,
+  ReplicaProject,
+  ReplicaProjectStatus,
   ScenePointCell,
+  SelfProduct,
 } from "./types"
 
 // ─── Seeded PRNG ─────────────────────────────────────────────────────────────
@@ -274,12 +283,31 @@ function buildMaterial(seq: number): Material {
   }
   if (variance >= 1.5) cpoReason = "target_too_tight"
 
+  // ─ Lifecycle phase 推导（基于 bucket + ageDays + 数据走势）─
+  const ageDays = ri(1, 30)
+  const firstSeenAt = new Date(2026, 4, Math.max(1, 28 - ageDays)).toISOString()
+  let lifecyclePhase: LifecyclePhase
+  if (bucket === "archived") {
+    lifecyclePhase = "retired"
+  } else if (bucket === "iterate") {
+    lifecyclePhase = ageDays > 14 ? "declining" : "potential"
+  } else if (bucket === "potential") {
+    lifecyclePhase = ageDays <= 3 ? "cold_start" : "potential"
+  } else {
+    // core
+    if (ageDays <= 2) lifecyclePhase = "cold_start"
+    else if (ageDays <= 5 && aggRoi > 2.2) lifecyclePhase = "peak"     // 出现拐点
+    else if (ageDays <= 14) lifecyclePhase = "scaling"
+    else if (aggRoi < 1.6) lifecyclePhase = "declining"
+    else lifecyclePhase = "scaling"
+  }
+
   return {
     fingerprint,
     thumb: `https://picsum.photos/seed/${fingerprint}/240/240`,
     sku,
     name: id,
-    firstSeenAt: new Date(2026, 4, ri(1, 27)).toISOString(),
+    firstSeenAt,
     format: "video",
     industryTag,
     videoStyleTag,
@@ -305,6 +333,8 @@ function buildMaterial(seq: number): Material {
     recommendation: rec,
     variance,
     cpoReason,
+    lifecyclePhase,
+    ageDays,
   }
 }
 
@@ -599,6 +629,212 @@ export const EXPERIMENTS: ExperimentBatch[] = (() => {
       daysRunning: ri(1, 3),
       totalDays: 3,
       items,
+    })
+  }
+  return out
+})()
+
+// ─── 自有产品库 SELF_PRODUCTS ─────────────────────────────────────────────────
+// 用于复刻匹配的右侧"自己"。第一版 mock；后续接商品中心。
+
+export const SELF_PRODUCTS: SelfProduct[] = [
+  {
+    sku: "ZF7899",
+    name: "Hotligh 1200LM Magnetic Work Light",
+    image: "https://picsum.photos/seed/sku_zf7899/240/240",
+    category: "工具户外 / 维修照明",
+    coreSellingPoints: ["磁吸固定", "1200LM 高亮", "Type-C 快充", "双手解放"],
+    brandVoice: ["Built for mechanics.", "Light where you need it.", "Hands-free in seconds."],
+    competitiveEdge: "唯一一款能磁吸到任何金属车身、还顶得住户外冲洗的工作灯",
+    inventoryStatus: "in_stock",
+    matchableSceneTags: ["修车/车库", "夜间维修", "户外野营", "停电应急"],
+  },
+  {
+    sku: "ZF8313",
+    name: "Hotligh EDC Multi-Mode Light",
+    image: "https://picsum.photos/seed/sku_zf8313/240/240",
+    category: "EDC 随身 / 多模式照明",
+    coreSellingPoints: ["2000LM 输出", "UV / RGB 多模式", "夹扣设计", "口袋便携"],
+    brandVoice: ["Stays in your pocket.", "Twelve modes, one button.", "EDC done right."],
+    competitiveEdge: "唯一同时具备 UV + RGB + 夹扣的口袋级 EDC 灯",
+    inventoryStatus: "in_stock",
+    matchableSceneTags: ["EDC 随身", "停电应急", "户外野营"],
+  },
+  {
+    sku: "ZF2002",
+    name: "Hotligh Compact Camping Lantern",
+    image: "https://picsum.photos/seed/sku_zf2002/240/240",
+    category: "户外露营 / 露营灯具",
+    coreSellingPoints: ["360° 泛光", "续航 18h", "防水 IPX5", "可挂可立"],
+    brandVoice: ["Light up your camp.", "Eighteen hours, one charge.", "Rain-ready."],
+    competitiveEdge: "续航最长 + 防水最高级 的小尺寸营地灯",
+    inventoryStatus: "low",
+    matchableSceneTags: ["露营户外", "户外野营", "停电应急"],
+  },
+  {
+    sku: "ZF5566",
+    name: "Hotligh Magnetic Bike Headlight",
+    image: "https://picsum.photos/seed/sku_zf5566/240/240",
+    category: "汽车配件 / 自行车照明",
+    coreSellingPoints: ["3 段亮度", "磁吸快拆", "USB-C 充电", "防雨"],
+    brandVoice: ["Click on, ride out.", "No tools, no straps."],
+    competitiveEdge: "5 秒磁吸快拆，比绑带式车灯快 10 倍",
+    inventoryStatus: "in_stock",
+    matchableSceneTags: ["EDC 随身", "户外野营"],
+  },
+]
+
+// ─── 复刻匹配评分 computeMatchScore（mock）────────────────────────────────────
+
+export function computeMatchScore(material: Material, product: SelfProduct): MatchResult {
+  // 1. 卖点重合度（mat.sellingPointTags ∩ product.coreSellingPoints — 模糊匹配）
+  const overlap = material.sellingPointTags.filter((t) =>
+    product.coreSellingPoints.some((p) =>
+      p.includes(t.replace(/\s.*$/, "")) || t.includes(p.split(/\s|\//)[0])
+    )
+  )
+  const sellingScore = Math.min(100, (overlap.length / Math.max(1, material.sellingPointTags.length)) * 130)
+
+  // 2. 场景兼容性
+  const sceneHit = material.sceneTags.filter((s) => product.matchableSceneTags.includes(s)).length
+  const sceneScore = sceneHit > 0 ? Math.min(100, 50 + sceneHit * 25) : 25
+
+  // 3. 行业一致性
+  const catScore = product.category.split("/")[0].trim() === material.industryTag.split("/")[0].trim() ? 100 : 60
+
+  // 4. 品牌话术兼容（与 hook 风格的兼容，mock：按 videoStyleTag 启发式）
+  const voiceFriendly = ["产品演示", "使用前后对比", "试用展示", "教程/怎么做", "开箱视频"]
+  const voiceScore = voiceFriendly.includes(material.videoStyleTag) ? 85 : 65
+
+  // 5. 证据等级 — 基于 bucket + accountCount
+  const evidenceScore =
+    material.bucket === "core" ? 90 :
+    material.bucket === "potential" ? 70 :
+    material.bucket === "iterate" ? 40 : 20
+
+  const signals: MatchSignal[] = [
+    { key: "selling_point", label: "卖点重合度",   score: Math.round(sellingScore),  weight: 0.30, detail: overlap.length > 0 ? `命中 ${overlap.length} 个卖点：${overlap.join("、")}` : "卖点无明显重合，需要重写卖点表达",                                   ok: sellingScore >= 60 },
+    { key: "scene",         label: "场景兼容性",   score: Math.round(sceneScore),    weight: 0.25, detail: sceneHit > 0 ? `${sceneHit} 个场景与产品适用范围一致` : "场景不在产品适配范围，复刻后受众错位",                                            ok: sceneScore >= 60 },
+    { key: "category",      label: "行业一致性",   score: Math.round(catScore),      weight: 0.15, detail: catScore === 100 ? "行业完全一致" : "行业不同，复刻骨架仍可用但需要本土化",                                                            ok: catScore >= 60 },
+    { key: "voice",         label: "话术兼容性",   score: Math.round(voiceScore),    weight: 0.15, detail: voiceScore >= 80 ? "视频风格与品牌口吻易适配" : "视频风格偏剧情，需调整为演示+口播",                                                  ok: voiceScore >= 60 },
+    { key: "evidence",      label: "证据等级",     score: evidenceScore,             weight: 0.15, detail: material.bucket === "core" ? "已在多账户验证，证据 E3" : material.bucket === "potential" ? "证据 E2，仍在小规模验证" : "证据不足 E1，复刻风险较高", ok: evidenceScore >= 60 },
+  ]
+
+  const total = Math.round(signals.reduce((s, sig) => s + sig.score * sig.weight, 0))
+
+  // Blockers — 命中则不允许复刻
+  const blockers: string[] = []
+  if (!LIFECYCLE_REPLICA_ALLOWED.includes(material.lifecyclePhase)) {
+    blockers.push(`素材已进入"${material.lifecyclePhase === "declining" ? "衰退期" : material.lifecyclePhase === "retired" ? "退场" : "冷启动期"}"，复刻只会拉低新系列天花板`)
+  }
+  if (product.inventoryStatus === "out") {
+    blockers.push(`产品 ${product.sku} 已断货，无法支撑复刻投放`)
+  }
+
+  const level: MatchResult["level"] = total >= 75 ? "high" : total >= 55 ? "mid" : "low"
+
+  return { total, level, signals, blockers }
+}
+
+const LIFECYCLE_REPLICA_ALLOWED: LifecyclePhase[] = ["potential", "scaling", "peak"]
+
+// 默认配对：按行业一致性优先 + 卖点重合度兜底
+export function pickDefaultProduct(material: Material): SelfProduct {
+  const sameSku = SELF_PRODUCTS.find((p) => p.sku === material.sku)
+  if (sameSku) return sameSku
+  // pick by industry then by selling overlap
+  const byIndustry = SELF_PRODUCTS.find((p) => p.category.split("/")[0].trim() === material.industryTag.split("/")[0].trim())
+  if (byIndustry) return byIndustry
+  return SELF_PRODUCTS[0]
+}
+
+// ─── 复刻方向生成 getDirectionsForMaterial（mock 静态 3 个方向）──────────────
+
+export function getDirectionsForMaterial(material: Material): ReplicaDirection[] {
+  const sp1 = material.sellingPointTags[0] ?? "核心卖点"
+  const sp2 = material.sellingPointTags[1] ?? "辅助卖点"
+  const sc1 = material.sceneTags[0] ?? "通用场景"
+  const phase = material.lifecyclePhase
+
+  // 三个方向的置信度根据生命周期调整：peak/scaling 更适合 hook 变体；potential 更适合 selling
+  const hookConfidence  = phase === "peak" || phase === "scaling" ? 0.82 : 0.68
+  const sceneConfidence = 0.65
+  const sellingConfidence = phase === "potential" ? 0.78 : 0.62
+
+  return [
+    {
+      id: "A",
+      title: "强化首秒结果（开场 Hook 变体）",
+      desc: "保留骨架，只动开场 3 秒——首帧直接抛出最强结果画面",
+      axis: "hook",
+      keep: [`${sp1} 的演示完整保留`, "中段 Demo 节奏不变", "CTA 不变"],
+      change: "前 3 秒开场画面，从「问题切入」改为「结果前置」",
+      impact: "2 秒观看率 / CTR ↗",
+      confidence: hookConfidence,
+      lifecycleFit: ["peak", "scaling", "potential"],
+      brief: `Stop scrolling — see what ${sp1} actually does in 3 seconds.`,
+    },
+    {
+      id: "B",
+      title: "替换核心场景",
+      desc: "保留卖点和节奏，只改场景——切换到产品另一个高潜力使用场景",
+      axis: "scene",
+      keep: [`${sp1} / ${sp2} 卖点完整`, "结构与节奏不变", "CTA 不变"],
+      change: `场景从「${sc1}」切换到自有产品更适配的场景`,
+      impact: "受众覆盖 / CVR ↗",
+      confidence: sceneConfidence,
+      lifecycleFit: ["scaling", "potential"],
+      brief: `Same ${sp1}, new scene — proving it works anywhere.`,
+    },
+    {
+      id: "C",
+      title: "改写卖点优先级",
+      desc: "保留开场和场景，只动卖点表达——把次要卖点升级为主卖点",
+      axis: "selling",
+      keep: ["开场不变", "场景不变", "Demo 结构不变"],
+      change: `卖点优先级从「${sp1}」改写为「${sp2}」主打`,
+      impact: "ROAS / 客单价 ↗",
+      confidence: sellingConfidence,
+      lifecycleFit: ["potential", "scaling"],
+      brief: `It's not about ${sp1}. It's about ${sp2}.`,
+    },
+  ]
+}
+
+// ─── 最近复刻项目 REPLICA_PROJECTS ───────────────────────────────────────────
+// 源类型只有 market/own；部分 own 项目带 lineage（派生自上轮）
+
+export const REPLICA_PROJECTS: ReplicaProject[] = (() => {
+  const cores = MATERIALS.filter((m) => m.bucket === "core").slice(0, 6)
+  const cats: ReplicaCategory[] = ["market", "own", "own", "own", "market", "market"]
+  const statuses: ReplicaProjectStatus[] = ["completed", "in_progress", "submitted", "in_progress", "draft", "completed"]
+  // 第 3、4 个项目派生自 rep_001（"自有爆款放大"链路：先 own 出爆量，再二次派生迭代）
+  const derivations: Record<number, { fromId: string; axis: ReplicaAxis }> = {
+    2: { fromId: "rep_001", axis: "hook" },
+    3: { fromId: "rep_002", axis: "scene" },
+  }
+  const out: ReplicaProject[] = []
+  for (let i = 0; i < cores.length; i++) {
+    const m = cores[i]
+    const cat = cats[i % cats.length]
+    const titlePrefix = cat === "market" ? "市场爆款复刻" : "自有爆款放大"
+    const derived = derivations[i]
+    out.push({
+      id: `rep_${(i + 1).toString().padStart(3, "0")}`,
+      title: `${titlePrefix} · ${m.sceneTags[0] ?? "通用"}`,
+      category: cat,
+      sourceFingerprint: cat === "market" ? undefined : m.fingerprint,
+      sourceName: cat === "market" ? `TikTok 市场素材 #${i + 1}` : m.name,
+      productSku: pickDefaultProduct(m).sku,
+      matchScore: 60 + ri(0, 30),
+      variantCount: ri(2, 4),
+      status: statuses[i % statuses.length],
+      createdAt: new Date(2026, 5, 6 + i).toISOString(),
+      updatedAt: new Date(2026, 5, 11 + i).toISOString(),
+      thumb: m.thumb,
+      lifecyclePhase: m.lifecyclePhase,
+      derivedFromProjectId: derived?.fromId,
+      derivedFromAxis: derived?.axis,
     })
   }
   return out

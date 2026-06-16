@@ -1,15 +1,39 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Plus } from "lucide-react"
 import { SendButton } from "../send-button"
 
-export function BriefMode() {
+interface BriefModeProps {
+  initialPrompt?: string
+  onSubmit?: () => void
+  submitting?: boolean
+}
+
+export function BriefMode({ initialPrompt, onSubmit, submitting }: BriefModeProps = {}) {
   const [text, setText] = useState("")
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+  useEffect(() => {
+    if (!initialPrompt) return
+    setText(initialPrompt)
+    window.setTimeout(() => {
+      const el = textareaRef.current
+      if (!el) return
+      el.focus()
+      el.selectionStart = el.selectionEnd = el.value.length
+    }, 0)
+  }, [initialPrompt])
+
+  function handleSend() {
+    if (!text.trim()) return
+    onSubmit?.()
+  }
 
   return (
     <>
       <textarea
+        ref={textareaRef}
         className="w-full min-h-[44px] border-0 outline-none resize-none text-[#24272f] text-[15px] leading-[1.5] bg-transparent placeholder:text-[var(--muted-2)]"
         placeholder="填写 Brief 目标、人群、卖点、投放场景或参考方向"
         value={text}
@@ -28,7 +52,7 @@ export function BriefMode() {
             <Plus size={16} strokeWidth={2} />
           </button>
         </div>
-        <SendButton disabled={!text.trim()} />
+        <SendButton disabled={!text.trim()} loading={submitting} onClick={handleSend} />
       </div>
     </>
   )

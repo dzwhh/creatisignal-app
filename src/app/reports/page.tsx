@@ -1,12 +1,23 @@
 import { Topbar } from "@/components/layout/topbar"
-import { PlaceholderPage } from "@/components/ui/placeholder-page"
+import { ReportsContent, type ReportTab } from "@/components/reports/reports-content"
 
-export default function Page() {
+const VALID_TABS: ReportTab[] = ["report", "analysis", "brief", "generate"]
+
+// Next.js 16: searchParams is a Promise — must await
+export default async function ReportsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string; item?: string }>
+}) {
+  const { tab, item } = await searchParams
+  const initialTab: ReportTab = VALID_TABS.includes(tab as ReportTab) ? (tab as ReportTab) : "report"
+  const highlightFirst = item === "first"
+
   return (
     <>
-      <Topbar title="我的报告" />
+      <Topbar title="我的任务" />
       <main className="flex-1 overflow-y-auto">
-        <PlaceholderPage title="我的报告" desc="查看历史生成的创意 Report、分析结果和 Brief。" />
+        <ReportsContent initialTab={initialTab} highlightFirst={highlightFirst} />
       </main>
     </>
   )
