@@ -21,7 +21,7 @@ const COPY: Record<TaskKind, ToastContent> = {
   video: {
     title: "你的第一条 30s 视频已生成！",
     desc: "下一步：试试复刻这条做 3 个变体",
-    primary: { label: "进入复刻工作台", href: "/replicate" },
+    primary: { label: "进入爆款复刻", href: "/replicate" },
   },
   brief: {
     title: "Brief 已经准备好",

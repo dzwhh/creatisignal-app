@@ -9,11 +9,13 @@ import {
   FileText,
   GitBranch,
   Globe2,
+  Megaphone,
   Plus,
   Search,
   Sparkles,
   Target,
   TrendingUp,
+  Users,
   Wand2,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -68,7 +70,7 @@ export function ReplicateHub() {
         {/* Header */}
         <div className="flex items-end justify-between">
           <div>
-            <h1 className="text-[22px] font-extrabold text-[var(--text)] tracking-tight">复刻工作台</h1>
+            <h1 className="text-[22px] font-extrabold text-[var(--text)] tracking-tight">爆款复刻</h1>
             <p className="text-[12.5px] text-[var(--muted)] mt-1">从市场或自有素材开始复刻 · 系统自动判定生命周期 · 你只做决策</p>
           </div>
           <Link
@@ -80,26 +82,30 @@ export function ReplicateHub() {
           </Link>
         </div>
 
-        {/* Two source entries */}
+        {/* Two source entries: UGC / 广告 创意复刻 */}
         <section>
           <div className="grid grid-cols-2 gap-4">
-            <CategoryCard
-              category="market"
-              icon={<Globe2 size={20} />}
-              href="/discover/inspiration"
-              count={counts.market}
-              kpiLabel="复刻周期"
-              kpiValue="最快 2 天"
-              hint="从公域 TOP 素材引入，验证速度最快"
+            <PathTypeCard
+              tone="violet"
+              icon={<Users size={20} />}
+              href="/replicate/new?type=ugc"
+              tag="UGC 风格"
+              title="UGC 创意复刻"
+              desc="复刻达人 / 红人 / 真实买家秀 / 测评类 UGC 素材，跑得快、真实感强、信任建立快"
+              kpiLabel="适合场景"
+              kpiValue="新品上市 · 信任建立"
+              hint="UGC 视角第一人称口播 + 真实场景，转化路径短"
             />
-            <CategoryCard
-              category="own"
-              icon={<TrendingUp size={20} />}
-              href="/insights"
-              count={counts.own}
-              kpiLabel="ROI 命中"
-              kpiValue="3.2× 中位"
-              hint="自有素材诊断里找爆量/拐点期素材直接放大"
+            <PathTypeCard
+              tone="amber"
+              icon={<Megaphone size={20} />}
+              href="/replicate/new?type=ad"
+              tag="商业广告"
+              title="广告创意复刻"
+              desc="复刻已验证的爆款广告素材（自有 / 竞品），结构稳、卖点突出、CVR / ROAS 验证扎实"
+              kpiLabel="适合场景"
+              kpiValue="放量期 · 稳定 ROI"
+              hint="广告骨架经过付费投放验证，CVR / ROAS 有数据支撑"
               recommended
             />
           </div>
@@ -368,5 +374,80 @@ function EmptyState({ sourceFilter, stageFilter, hasQuery }: { sourceFilter: Sou
         {hasQuery ? "换个关键词或清空筛选" : "从上方两个入口任选其一开始复刻"}
       </p>
     </div>
+  )
+}
+
+// ─── PathTypeCard：UGC / 广告创意复刻 入口大卡 ─────────────────────────────
+
+function PathTypeCard({
+  tone,
+  icon,
+  href,
+  tag,
+  title,
+  desc,
+  kpiLabel,
+  kpiValue,
+  hint,
+  recommended,
+}: {
+  tone: "violet" | "amber"
+  icon: React.ReactNode
+  href: string
+  tag: string
+  title: string
+  desc: string
+  kpiLabel: string
+  kpiValue: string
+  hint: string
+  recommended?: boolean
+}) {
+  const meta = tone === "violet"
+    ? { dot: "#7c3aed", iconBg: "#f5f3ff", tagBg: "#ede9fe", tagColor: "#6d28d9" }
+    : { dot: "#d97706", iconBg: "#fffbeb", tagBg: "#fef3c7", tagColor: "#a16207" }
+
+  return (
+    <Link
+      href={href}
+      className={cn(
+        "group relative rounded-2xl bg-white border p-5 flex flex-col cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(9,9,11,0.08)]",
+        recommended ? "border-[#18181b]" : "border-[var(--line)] hover:border-[var(--line-strong)]"
+      )}
+    >
+      {recommended && (
+        <span className="absolute -top-2 left-5 inline-flex h-5 px-2 rounded-full bg-[#18181b] text-white text-[10px] font-extrabold items-center gap-1">
+          <Target size={9} strokeWidth={3} /> 推荐入口
+        </span>
+      )}
+
+      <div className="flex items-start justify-between mb-3">
+        <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: meta.iconBg, color: meta.dot }}>
+          {icon}
+        </div>
+        <span
+          className="inline-flex items-center gap-1 h-5 px-2 rounded-md text-[10.5px] font-bold"
+          style={{ backgroundColor: meta.tagBg, color: meta.tagColor }}
+        >
+          {tag}
+        </span>
+      </div>
+
+      <h3 className="text-[15px] font-extrabold text-[var(--text)]">{title}</h3>
+      <p className="text-[11.5px] text-[var(--muted)] mt-0.5 leading-relaxed flex-1">{desc}</p>
+
+      <div className="mt-3 pt-3 border-t border-dashed border-[var(--line)] flex items-center justify-between">
+        <div>
+          <p className="text-[10px] font-semibold text-[var(--muted)] uppercase tracking-wide">{kpiLabel}</p>
+          <p className="text-[12.5px] font-extrabold text-[var(--text)]">{kpiValue}</p>
+        </div>
+        <span className="inline-flex items-center gap-1 text-[12px] font-bold text-[var(--text)] group-hover:gap-2 transition-all">
+          开始复刻 <ArrowRight size={12} />
+        </span>
+      </div>
+
+      <p className="absolute bottom-[-1px] left-0 right-0 px-5 pb-2 text-[10.5px] text-[var(--muted-2)] opacity-0 group-hover:opacity-100 transition-opacity">
+        {hint}
+      </p>
+    </Link>
   )
 }

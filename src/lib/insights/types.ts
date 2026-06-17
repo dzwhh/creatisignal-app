@@ -317,3 +317,199 @@ export type BrandKpi = {
   spend: number
   conclusion: string
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// V2 复刻工作台（5 步流程：选择素材 → 爆款判定 → 元素拆解 → 生成方向 → 确认生成）
+// ═══════════════════════════════════════════════════════════════════════════
+
+// ─── Step 1 素材来源 ────────────────────────────────────────────────────────
+
+export type MaterialSource = "market_hot" | "competitor_hot" | "owned_hot" | "local_upload"
+
+export const MATERIAL_SOURCE_META: Record<MaterialSource, {
+  label: string
+  short: string
+  desc: string
+  tone: "info" | "warn" | "ok" | "muted"
+  dot: string
+}> = {
+  market_hot:     { label: "市场爆款",   short: "市场",   desc: "公域 Top 素材，看互动率与生命周期", tone: "info",  dot: "#0ea5e9" },
+  competitor_hot: { label: "竞品爆款",   short: "竞品",   desc: "竞品在跑素材，看可借鉴 + 差异化",   tone: "warn",  dot: "#f97316" },
+  owned_hot:      { label: "自有爆款",   short: "自有",   desc: "GMV Max 已验证素材，看 ROI 与稳定", tone: "ok",    dot: "#22c55e" },
+  local_upload:   { label: "本地上传",   short: "本地",   desc: "用户素材，仅做结构识别，低置信",     tone: "muted", dot: "#a1a1aa" },
+}
+
+// 卖点输入方式
+export type SellingPointInputMode = "manual" | "link_ai_analysis"
+
+// 商品信息（Step 1 右侧面板收集）
+export type ProductBrief = {
+  image?: string
+  url?: string
+  name: string
+  category: string
+  sellingPoints: string[]         // 3-5 条
+  sellingPointMode: SellingPointInputMode
+  audience: string                 // 目标人群
+  scenes: string[]                 // 使用场景
+  price?: string                   // 价格/优惠
+  forbidden: string[]              // 禁忌表达
+}
+
+// ─── Step 2 爆款判定 ────────────────────────────────────────────────────────
+
+export type HotItemVerdictKind = "recommended" | "cautious" | "not_recommended" | "not_enough_data"
+
+export const HOT_VERDICT_META: Record<HotItemVerdictKind, {
+  label: string
+  short: string
+  tone: "ok" | "warn" | "bad" | "muted"
+  dot: string
+  bg: string
+  border: string
+  desc: string
+}> = {
+  recommended:     { label: "推荐复刻",  short: "推荐", tone: "ok",    dot: "#16a34a", bg: "#f0fdf4", border: "#bbf7d0", desc: "数据扎实且匹配，建议直接进入元素拆解" },
+  cautious:        { label: "谨慎复刻",  short: "谨慎", tone: "warn",  dot: "#a16207", bg: "#fffbeb", border: "#fde68a", desc: "有可借鉴价值但需要修改要点；继续但标记低置信" },
+  not_recommended: { label: "不推荐",    short: "拒",   tone: "bad",   dot: "#dc2626", bg: "#fef2f2", border: "#fecaca", desc: "复刻收益低或风险大，建议返回重选素材" },
+  not_enough_data: { label: "数据不足",  short: "?",    tone: "muted", dot: "#71717a", bg: "#f4f4f5", border: "#e4e4e7", desc: "样本不足或仅结构识别，结论低置信" },
+}
+
+// 4 来源的"数据支撑"字段（4 种结构互斥）
+export type HotVerdictDataSupport =
+  | { source: "market_hot";     popularityScore: number; engagementRate: number; lifecycleDays: number; categoryMatch: number; reusability: number }
+  | { source: "competitor_hot"; competitorCategory: string; similarSkus: number; runDays: number; structurePattern: string; differentiationRisk: "low" | "mid" | "high" }
+  | { source: "owned_hot";      dailyOrders: number; roi: number; spend: number; stableDays: number; declineRate: number }
+  | { source: "local_upload";   structureIdentified: string[]; confidence: "low" }
+
+export type HotItemVerdict = {
+  verdict: HotItemVerdictKind
+  source: MaterialSource
+  category: string                  // 爆款类型文案（"市场候选 / 竞品可借鉴 / 自有可复刻 / 数据不足"）
+  reasons: string[]                 // 最多 3 条
+  dataSupport: HotVerdictDataSupport
+  lifecyclePhase: LifecyclePhase
+  lowConfidence?: boolean           // 进入后续步骤是否标记低置信
+}
+
+// ─── Step 3 8 元素拆解（电商内容元素，非技术字段） ─────────────────────────
+
+export type ElementKey =
+  | "audience_scene"  // 人群与场景
+  | "hook"            // Hook
+  | "value"           // 商品价值
+  | "proof"           // Proof
+  | "structure"       // 内容结构
+  | "cta"             // CTA
+  | "emotion"         // 情绪杠杆
+  | "platform_fit"    // 平台适配
+
+export const ELEMENT_META: Record<ElementKey, {
+  label: string
+  icon: string                 // emoji 兜底
+  question: string             // 拆解关键问题
+}> = {
+  audience_scene: { label: "人群与场景", icon: "👥", question: "谁在什么场景下被打中" },
+  hook:           { label: "Hook",       icon: "⚡", question: "前 1-3 秒如何停留" },
+  value:          { label: "商品价值",   icon: "💎", question: "产品解决什么问题" },
+  proof:          { label: "Proof",      icon: "✅", question: "如何证明有效" },
+  structure:      { label: "内容结构",   icon: "📐", question: "信息推进顺序" },
+  cta:            { label: "CTA",        icon: "🎯", question: "如何引导点击/下单" },
+  emotion:        { label: "情绪杠杆",   icon: "❤️", question: "爽感 / 焦虑 / 省钱 / 信任" },
+  platform_fit:   { label: "平台适配",   icon: "📱", question: "节奏 / 字幕 / 安全区 / 红线" },
+}
+
+export type ElementBreakdown = {
+  key: ElementKey
+  conclusion: string                // 拆解结论
+  dataSupport: string               // 数据支撑（短）
+  lifecyclePhase: LifecyclePhase    // 当前生命周期
+  mustKeep: string[]                // 必须保留
+  canVary: string[]                 // 可以变化
+  forbidden: string[]               // 禁止复制
+}
+
+// ─── Step 4 内容脚本 + 分镜脚本 ─────────────────────────────────────────────
+
+export type ScriptTimeRange = "0-3s" | "3-8s" | "8-13s" | "13-15s"
+
+export type ScriptStep = {
+  timeRange: ScriptTimeRange
+  voiceover: string                 // 口播
+  subtitle: string                  // 字幕
+  action: string                    // 动作 / 行为
+}
+
+export type StoryboardShot = {
+  timeRange: ScriptTimeRange
+  shot: string                      // 镜头描述
+  framing: string                   // 景别
+  materials: string[]               // 所需素材
+  notes?: string                    // 拍摄备注
+}
+
+// ─── Step 4 方向（在 V1 基础上扩展） ──────────────────────────────────────
+
+// 注：原 ReplicaDirection（types.ts 上方）的字段保留并向下兼容；
+// V2 扩展字段可通过 ReplicaDirectionV2 引用
+export type ReplicaDirectionV2 = ReplicaDirection & {
+  script: ScriptStep[]              // 内容脚本（按时间轴）
+  storyboard: StoryboardShot[]      // 分镜脚本（按镜头）
+  expectedDelta: string             // 预期提升指标文案（短）
+  risks: string[]                   // 风险提示
+}
+
+// ─── Step 5 生成结果 ────────────────────────────────────────────────────────
+
+export type OutcomeStatus = "pending" | "generating" | "done" | "adopted" | "rejected" | "edited"
+
+export type GenerationOutcome = {
+  id: string
+  directionId: ReplicaDirection["id"]
+  status: OutcomeStatus
+  progress: number                  // 0-100，生成进度
+  thumb: string                     // 占位缩略图
+  durationSec: number               // 视频时长
+  scriptOverride?: ScriptStep[]     // 编辑覆盖
+  storyboardOverride?: StoryboardShot[]
+  rejectionReason?: RejectionReason
+}
+
+// 一次生成 = 一个任务，包含 3 个 outcome（对应 A/B/C 三方向）
+export type GenerationTask = {
+  id: string
+  index: number                     // 1, 2, 3...
+  createdAt: string
+  outcomes: GenerationOutcome[]
+}
+
+// 不采纳原因 6 选
+export type RejectionReason =
+  | "hook_weak"
+  | "proof_untrust"
+  | "cta_hard"
+  | "storyboard_unfilmable"
+  | "off_value"
+  | "platform_risk"
+
+export const REJECTION_REASON_META: Record<RejectionReason, {
+  label: string
+  desc: string
+}> = {
+  hook_weak:             { label: "Hook 不够强",      desc: "前 3 秒没抓住注意力" },
+  proof_untrust:         { label: "Proof 不可信",     desc: "证据弱、容易被质疑" },
+  cta_hard:              { label: "CTA 太硬",         desc: "硬推销，转化反向" },
+  storyboard_unfilmable: { label: "分镜不可拍",       desc: "实际拍摄成本高/做不出" },
+  off_value:             { label: "不符合商品卖点",   desc: "脚本和产品价值脱节" },
+  platform_risk:         { label: "平台风险",         desc: "可能触发红线 / 不通过审核" },
+}
+
+// 4 步生成阶段（Step 5 顶部 progress）
+export type GenerationStage = "script_lock" | "shot_gen" | "subtitle" | "safety_check"
+
+export const GENERATION_STAGE_META: Record<GenerationStage, { label: string }> = {
+  script_lock:  { label: "脚本锁定" },
+  shot_gen:     { label: "镜头生成" },
+  subtitle:     { label: "字幕合成" },
+  safety_check: { label: "安全检查" },
+}

@@ -839,3 +839,316 @@ export const REPLICA_PROJECTS: ReplicaProject[] = (() => {
   }
   return out
 })()
+
+// ═══════════════════════════════════════════════════════════════════════════
+// V2 复刻工作台 mock 函数
+// ═══════════════════════════════════════════════════════════════════════════
+
+import type {
+  ElementBreakdown,
+  ElementKey,
+  GenerationOutcome,
+  HotItemVerdict,
+  HotItemVerdictKind,
+  HotVerdictDataSupport,
+  MaterialSource,
+  ProductBrief,
+  ReplicaDirectionV2,
+  ScriptStep,
+  StoryboardShot,
+} from "./types"
+
+// ─── Step 2: computeHotVerdict ──────────────────────────────────────────────
+
+export function computeHotVerdict(
+  source: MaterialSource,
+  material?: Material,
+  productBrief?: ProductBrief
+): HotItemVerdict {
+  // 按 source 派生不同的数据支撑 + 结论
+  const phase = material?.lifecyclePhase ?? "potential"
+
+  if (source === "market_hot") {
+    const ds: HotVerdictDataSupport = {
+      source: "market_hot",
+      popularityScore: 78 + ri(0, 18),
+      engagementRate: rf(3.2, 6.4),
+      lifecycleDays: ri(3, 12),
+      categoryMatch: ri(70, 95),
+      reusability: ri(72, 90),
+    }
+    const verdict: HotItemVerdictKind = ds.popularityScore >= 80 ? "recommended" : "cautious"
+    return {
+      verdict,
+      source,
+      category: verdict === "recommended" ? "市场候选" : "市场可借鉴",
+      reasons: [
+        `公域互动率 ${ds.engagementRate.toFixed(1)}%，高于同类中位 +22%`,
+        `素材跑了 ${ds.lifecycleDays} 天仍在放量，生命周期未到拐点`,
+        `品类匹配度 ${ds.categoryMatch}，与你的产品契合度高`,
+      ].slice(0, 3),
+      dataSupport: ds,
+      lifecyclePhase: phase,
+    }
+  }
+
+  if (source === "competitor_hot") {
+    const runDays = ri(5, 21)
+    const ds: HotVerdictDataSupport = {
+      source: "competitor_hot",
+      competitorCategory: productBrief?.category ?? "工具户外",
+      similarSkus: ri(3, 12),
+      runDays,
+      structurePattern: "Hook → Demo → CTA",
+      differentiationRisk: runDays > 14 ? "high" : runDays > 7 ? "mid" : "low",
+    }
+    const verdict: HotItemVerdictKind = ds.differentiationRisk === "high" ? "cautious" : "recommended"
+    return {
+      verdict,
+      source,
+      category: "竞品可借鉴",
+      reasons: [
+        `竞品已持续投放 ${ds.runDays} 天，说明这套结构跑得通`,
+        `相似 SKU 已有 ${ds.similarSkus} 个，差异化空间 ${ds.differentiationRisk === "high" ? "较小，需重点改写" : "充足"}`,
+        `结构模式：${ds.structurePattern}，可借鉴但需要规避相似度`,
+      ],
+      dataSupport: ds,
+      lifecyclePhase: phase,
+      lowConfidence: ds.differentiationRisk === "high",
+    }
+  }
+
+  if (source === "owned_hot") {
+    const dailyOrders = ri(18, 65)
+    const roi = rf(1.8, 3.4)
+    const ds: HotVerdictDataSupport = {
+      source: "owned_hot",
+      dailyOrders,
+      roi,
+      spend: ri(2500, 8800),
+      stableDays: ri(3, 14),
+      declineRate: rf(0.02, 0.12),
+    }
+    const verdict: HotItemVerdictKind = ds.roi >= 2.4 ? "recommended" : "cautious"
+    return {
+      verdict,
+      source,
+      category: "自有可复刻",
+      reasons: [
+        `GMV Max 日均出单 ${ds.dailyOrders} 单，ROI ${ds.roi.toFixed(2)}`,
+        `已稳定跑量 ${ds.stableDays} 天，处于${phase === "peak" ? "爆量拐点" : phase === "scaling" ? "放量期" : "潜力期"}`,
+        ds.declineRate > 0.08 ? "近期衰退迹象，建议尽快复刻延续" : "数据稳定，是延续生命周期的合理窗口",
+      ],
+      dataSupport: ds,
+      lifecyclePhase: phase,
+    }
+  }
+
+  // local_upload
+  const ds: HotVerdictDataSupport = {
+    source: "local_upload",
+    structureIdentified: ["开场展示", "中段口播", "结尾 CTA"],
+    confidence: "low",
+  }
+  return {
+    verdict: "not_enough_data",
+    source,
+    category: "数据不足",
+    reasons: [
+      "本地素材无投放数据，无法判断商业爆款属性",
+      "仅识别出基础结构：开场 + 口播 + CTA",
+      "可继续走结构化复刻，但置信度低，建议小预算先测",
+    ],
+    dataSupport: ds,
+    lifecyclePhase: phase,
+    lowConfidence: true,
+  }
+}
+
+// ─── Step 3: get8ElementBreakdown ───────────────────────────────────────────
+
+export function get8ElementBreakdown(
+  material: Material,
+  productBrief?: ProductBrief
+): ElementBreakdown[] {
+  const sp1 = material.sellingPointTags[0] ?? "核心卖点"
+  const sp2 = material.sellingPointTags[1] ?? "辅助卖点"
+  const sc1 = material.sceneTags[0] ?? "通用场景"
+  const phase = material.lifecyclePhase
+  const audience = productBrief?.audience ?? "户外通勤 / EDC 用户"
+
+  const items: ElementBreakdown[] = [
+    {
+      key: "audience_scene",
+      conclusion: `${audience} 在「${sc1}」场景被痛点打中`,
+      dataSupport: `场景命中率 ${ri(68, 89)}%，受众覆盖 ${ri(120, 480)}k`,
+      lifecyclePhase: phase,
+      mustKeep: [`${sc1} 场景骨架`, "受众情绪进入点"],
+      canVary: ["具体角色与服化", "场景细节装饰"],
+      forbidden: ["脱离产品适用范围的场景"],
+    },
+    {
+      key: "hook",
+      conclusion: "首秒结果前置 + 反差画面（手机灯 vs 工作灯）",
+      dataSupport: `2 秒观看率 ${rf(34, 62, 1)}%（同类 +${ri(15, 28)}%）`,
+      lifecyclePhase: phase,
+      mustKeep: ["前 1 秒结果画面", "反差冲击力"],
+      canVary: ["开头一句话", "对比方式"],
+      forbidden: ["纯文字开场", "缓慢镜头淡入"],
+    },
+    {
+      key: "value",
+      conclusion: `${sp1} + ${sp2} 解决"双手解放 + 持久照明"组合痛点`,
+      dataSupport: `产品价值点击率 ${rf(4.2, 8.8)}%`,
+      lifecyclePhase: phase,
+      mustKeep: ["产品核心价值不变", "痛点-解决路径"],
+      canVary: ["卖点排列顺序", "表达句式"],
+      forbidden: ["弱化主胜因", "替换为次要功能"],
+    },
+    {
+      key: "proof",
+      conclusion: "多场景实拍 Demo + 极端冲水测试，建立 IPX5 信任",
+      dataSupport: "完播率 38%，停留中位 8.2s",
+      lifecyclePhase: phase,
+      mustKeep: ["至少 2 个真实场景 Demo", "结果可见的验证镜头"],
+      canVary: ["验证场景的选择", "数字/证书展示方式"],
+      forbidden: ["未经验证的承诺", "夸大数据"],
+    },
+    {
+      key: "structure",
+      conclusion: "Hook → 痛点 → 产品 → Demo → 卖点 → CTA（15 秒紧凑）",
+      dataSupport: "结构完成率 76%，未跳出节奏",
+      lifecyclePhase: phase,
+      mustKeep: ["6 段时间分布", "每段 2-3 秒推进"],
+      canVary: ["段内具体内容", "字幕样式"],
+      forbidden: ["长段独白", "打乱推进顺序"],
+    },
+    {
+      key: "cta",
+      conclusion: `结尾 "Keep one in your car" 软推 + 商品卡引导`,
+      dataSupport: `CTA 点击率 ${rf(3.4, 6.2)}%`,
+      lifecyclePhase: phase,
+      mustKeep: ["明确动作引导", "商品卡可见"],
+      canVary: ["CTA 文案", "情绪触发点"],
+      forbidden: ["硬广推销话术", "限时焦虑滥用"],
+    },
+    {
+      key: "emotion",
+      conclusion: "省力 + 信任为主，少量惊喜（首秒反差）",
+      dataSupport: "评论正向情绪占比 72%",
+      lifecyclePhase: phase,
+      mustKeep: ["省力 + 信任的主基调"],
+      canVary: ["惊喜程度", "焦虑使用"],
+      forbidden: ["焦虑过度", "煽动负面情绪"],
+    },
+    {
+      key: "platform_fit",
+      conclusion: "TikTok 9:16 · 字幕安全区 · 商品卡不遮挡核心镜头",
+      dataSupport: "平台合规率 100%",
+      lifecyclePhase: phase,
+      mustKeep: ["9:16 比例", "字幕在安全区", "商品卡位置规范"],
+      canVary: ["字幕字号", "色彩搭配"],
+      forbidden: ["医疗承诺", "竞品对比性内容", "假折扣表达"],
+    },
+  ]
+  return items
+}
+
+// ─── Step 4: getDirectionsV2（含 script + storyboard） ──────────────────────
+
+export function getDirectionsV2(
+  material: Material,
+  productBrief?: ProductBrief
+): ReplicaDirectionV2[] {
+  const sp1 = material.sellingPointTags[0] ?? "核心卖点"
+  const sp2 = material.sellingPointTags[1] ?? "辅助卖点"
+  const sc1 = material.sceneTags[0] ?? "通用场景"
+  const product = productBrief?.name ?? "Hotligh 1200LM Magnetic Work Light"
+  const phase = material.lifecyclePhase
+
+  const baseScript = (variantTitle: string, hookLine: string, ctaLine: string): ScriptStep[] => [
+    { timeRange: "0-3s",   voiceover: hookLine,                                              subtitle: `${hookLine}`,                       action: "首秒结果画面 + 反差对比" },
+    { timeRange: "3-8s",   voiceover: `这是 ${product}，专为${sc1}设计`,                       subtitle: `${product} for ${sc1}`,             action: `产品出现 + ${sp1} 演示` },
+    { timeRange: "8-13s",  voiceover: `${sp1} + ${sp2}，双手解放还能扛冲洗`,                   subtitle: `${sp1} & ${sp2}`,                    action: "多场景 Demo + 极端测试" },
+    { timeRange: "13-15s", voiceover: ctaLine,                                                subtitle: ctaLine,                              action: "商品卡 + CTA 引导" },
+  ]
+
+  const baseStoryboard = (extraNotes?: string): StoryboardShot[] => [
+    { timeRange: "0-3s",   shot: "特写：手机灯 vs 工作灯对比",     framing: "特写",     materials: ["手机", "工作灯", "暗光车库"],         notes: extraNotes },
+    { timeRange: "3-8s",   shot: "中景：产品全貌 + 磁吸吸附",       framing: "中景",     materials: ["产品", "车身", "工作台"] },
+    { timeRange: "8-13s",  shot: "多镜头快切：Demo + 冲水测试",     framing: "近景/特写", materials: ["产品", "水管", "户外", "车库"] },
+    { timeRange: "13-15s", shot: "全景：使用结果 + 商品卡",         framing: "全景",     materials: ["产品", "商品卡 overlay"] },
+  ]
+
+  return [
+    {
+      id: "A",
+      title: "强化 Hook · 提升 2 秒观看率",
+      desc: "保留卖点和节奏，只改前 3 秒：用最反差的画面 + 一句话痛点抓住注意力",
+      axis: "hook",
+      keep: ["产品价值", "Demo 结构", "15 秒节奏"],
+      change: `前 3 秒：从"问题切入"改为"极端反差结果前置"`,
+      impact: "2 秒观看率 / CTR ↗",
+      confidence: 0.82,
+      lifecycleFit: ["peak", "scaling", "potential"],
+      brief: `Stop using your phone light under the hood.`,
+      script: baseScript("强化 Hook", "Stop using your phone light. Use this.", "Keep one in your car."),
+      storyboard: baseStoryboard("第 1 个镜头需要鲜明色差"),
+      expectedDelta: "预计 2 秒观看率 +15~25%，CTR +8~12%",
+      risks: ["首秒反差不够会反向降低完播率"],
+    },
+    {
+      id: "B",
+      title: "强化 Proof · 提升 CVR / ROI",
+      desc: "保留 Hook，加大中段验证密度：冲水 + 多场景 + 真实评价闪现",
+      axis: "scene",
+      keep: ["Hook 风格", "产品价值表达", "CTA"],
+      change: "中段 5-13 秒：加入极端冲洗、连续场景切换、用户评价闪现",
+      impact: "CVR / ROAS ↗",
+      confidence: 0.74,
+      lifecycleFit: ["scaling", "peak"],
+      brief: `Watch what real mechanics actually use.`,
+      script: baseScript(
+        "强化 Proof",
+        "Real mechanics aren't using their phones anymore.",
+        "Get yours before next service."
+      ),
+      storyboard: baseStoryboard("中段需要 4-5 个快切镜头"),
+      expectedDelta: "预计 CVR +10~18%，ROAS +12~20%",
+      risks: ["镜头过密可能打断节奏，需控制每段 1.5-2s"],
+    },
+    {
+      id: "C",
+      title: "强化 CTA · 提升商品点击 / 下单",
+      desc: "保留 Hook 和 Proof，只动结尾 3 秒：把 CTA 从软推变成场景化下单引导",
+      axis: "selling",
+      keep: ["Hook", "Demo 节奏", "卖点优先级"],
+      change: `结尾 13-15s：从 "Keep one in your car" 改为 "Tap to keep yours ready" + 商品卡放大`,
+      impact: "商品点击 / 下单转化 ↗",
+      confidence: 0.68,
+      lifecycleFit: ["scaling", "potential"],
+      brief: `Tap below to grab yours before your next breakdown.`,
+      script: baseScript(
+        "强化 CTA",
+        "Don't wait for a breakdown to wish you had this.",
+        "Tap to keep yours ready."
+      ),
+      storyboard: baseStoryboard("结尾镜头需要 CTA 字幕动态放大"),
+      expectedDelta: "预计商品点击率 +12~18%",
+      risks: ["CTA 过硬可能反向影响信任感"],
+    },
+  ]
+}
+
+// ─── Step 5: mockGenerationOutcomes ─────────────────────────────────────────
+
+export function mockGenerationOutcomes(directions: ReplicaDirectionV2[]): GenerationOutcome[] {
+  return directions.map((d, i) => ({
+    id: `out_${d.id}`,
+    directionId: d.id,
+    status: "pending",
+    progress: 0,
+    thumb: `https://picsum.photos/seed/outcome_${d.id}/480/854`,
+    durationSec: 15,
+  }))
+}

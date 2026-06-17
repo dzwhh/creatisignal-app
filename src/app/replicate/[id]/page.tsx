@@ -2,27 +2,31 @@ import { Topbar } from "@/components/layout/topbar"
 import { ReplicateWorkspace } from "@/components/replicate/replicate-workspace"
 import { MATERIALS } from "@/lib/insights/mock"
 
-// Next.js 16: params is a Promise — must await
+// Next.js 16: params + searchParams are Promises — must await
 export default async function ReplicatePage({
   params,
   searchParams,
 }: {
   params: Promise<{ id: string }>
-  searchParams: Promise<{ product?: string; source?: string }>
+  searchParams: Promise<{ product?: string; source?: string; step?: string }>
 }) {
   const { id } = await params
-  const { product, source } = await searchParams
+  const { product, source, step: stepRaw } = await searchParams
 
   const material = MATERIALS.find((m) => m.fingerprint === id) ?? null
+  // step 显式优先；否则交给 workspace 按 source 推断
+  const stepNum = stepRaw ? Number(stepRaw) : NaN
+  const initialStep = (stepNum >= 1 && stepNum <= 5 ? stepNum : undefined) as 1 | 2 | 3 | 4 | 5 | undefined
 
   return (
     <>
-      <Topbar title="复刻工作台" />
+      <Topbar title="爆款复刻" />
       <ReplicateWorkspace
         material={material}
         materialId={id}
         productSkuFromQuery={product}
         sourceFromQuery={source}
+        initialStep={initialStep}
       />
     </>
   )

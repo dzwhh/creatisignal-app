@@ -199,7 +199,7 @@ function ReplicaFooter({
             )}
           >
             {material.lifecyclePhase === "peak" ? <Zap size={14} strokeWidth={2.4} /> : <Wand2 size={14} strokeWidth={2.2} />}
-            进入复刻工作台
+            进入爆款复刻
             <ArrowRight size={13} strokeWidth={2.4} className="opacity-80" />
           </Link>
         )}
@@ -523,7 +523,7 @@ function MatchTab({
 
       <div className="rounded-xl border border-dashed border-[var(--line)] bg-[var(--soft-2)] p-3 text-[11.5px] text-[var(--muted)] leading-relaxed flex items-start gap-1.5">
         <ShieldCheck size={12} className="mt-0.5 shrink-0" />
-        <span>下一步可进入<span className="font-bold text-[var(--text)]">复刻工作台</span>，选择只动一个变量轴生成 2–3 个变体；卖点点击可直接跳到 Brief。</span>
+        <span>下一步可进入<span className="font-bold text-[var(--text)]">爆款复刻</span>，选择只动一个变量轴生成 2–3 个变体；卖点点击可直接跳到 Brief。</span>
       </div>
     </div>
   )

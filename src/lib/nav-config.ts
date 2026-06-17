@@ -30,7 +30,7 @@ export const navSections: NavSection[] = [
     subMenu: [
       { label: "创意助手", href: "/assistant" },
       { label: "素材洞察", href: "/insights" },
-      { label: "复刻工作台", href: "/replicate" },
+      { label: "爆款复刻", href: "/replicate" },
       { label: "我的任务", href: "/reports" },
     ],
   },
