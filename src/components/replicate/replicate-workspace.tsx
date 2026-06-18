@@ -370,19 +370,17 @@ function Stepper({ step, setStep }: { step: StepId; setStep: (s: StepId) => void
       {STEPS.map((s, i) => {
         const done = step > s.id
         const current = step === s.id
-        const clickable = done || current
         const Icon = s.icon
         return (
           <div key={s.id} className="flex items-center">
             <button
               type="button"
-              disabled={!clickable}
-              onClick={() => clickable && setStep(s.id)}
+              onClick={() => setStep(s.id)}
               className={cn(
-                "h-8 px-3 rounded-full text-[12px] font-extrabold flex items-center gap-1.5 transition-colors",
+                "h-8 px-3 rounded-full text-[12px] font-extrabold flex items-center gap-1.5 cursor-pointer transition-colors",
                 current ? "bg-[var(--near-black)] text-white"
-                  : done ? "bg-[#dcfce7] text-[#15803d] cursor-pointer hover:bg-[#bbf7d0]"
-                  : "bg-[var(--soft)] text-[var(--muted)] cursor-not-allowed"
+                  : done ? "bg-[#dcfce7] text-[#15803d] hover:bg-[#bbf7d0]"
+                  : "bg-[var(--soft)] text-[var(--muted)] hover:bg-[var(--soft-2)] hover:text-[var(--text)]"
               )}
             >
               <span className="w-4 h-4 rounded-full flex items-center justify-center text-[10px]" style={{

@@ -115,7 +115,12 @@ export function ProductBriefPanel({ brief, onChange }: Props) {
             <Link2 size={11} className="text-[var(--muted)]" />
             商品链接
           </p>
-          <button type="button" className="text-[11px] font-bold text-[var(--muted)] hover:text-[var(--text)] cursor-pointer">
+          <button
+            type="button"
+            onClick={() => setLinkUrl("https://shop.tiktok.com/@homedeco/product/funny-bathroom-wall-decor-metal-sign-vintage-1734567890123")}
+            title="点击试用示例链接（再点「识别」自动填入下方所有信息）"
+            className="text-[11px] font-bold text-[var(--muted)] hover:text-[var(--text)] cursor-pointer underline decoration-dotted underline-offset-2"
+          >
             示例
           </button>
         </div>
@@ -123,7 +128,7 @@ export function ProductBriefPanel({ brief, onChange }: Props) {
           <input
             value={linkUrl}
             onChange={(e) => setLinkUrl(e.target.value)}
-            placeholder="粘贴 TikTok Shop 商品链接"
+            placeholder="粘贴商品链接"
             className="flex-1 h-9 px-2.5 rounded-lg border border-[var(--line)] bg-white text-[12.5px] outline-none focus:border-[var(--line-strong)]"
           />
           <button
