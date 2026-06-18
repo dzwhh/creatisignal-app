@@ -1,18 +1,44 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { Camera, ChevronDown, Layers, Mic, Play, User } from "lucide-react"
+import {
+  Camera,
+  ChevronDown,
+  Hash,
+  LayoutDashboard,
+  Layers,
+  MessageSquare,
+  Mic,
+  PenLine,
+  Play,
+  Shapes,
+  Sparkles,
+  Type,
+  User,
+  type LucideIcon,
+} from "lucide-react"
 import { cn } from "@/lib/utils"
 import {
   DYNAMIC_CATEGORY_META,
   NARRATIVE_ROLE_META,
   type BoundaryKind,
   type DynamicCategory,
+  type DynamicCategoryIconName,
   type DynamicElement,
   type Scene,
 } from "@/lib/replicate/breakdown-types"
 import { getElementKey, resolveBoundary } from "@/lib/replicate/breakdown-utils"
 import { BoundaryChip } from "./boundary-chip"
+
+const ICON_MAP: Record<DynamicCategoryIconName, LucideIcon> = {
+  MessageSquare,
+  Shapes,
+  LayoutDashboard,
+  Type,
+  Sparkles,
+  PenLine,
+  Hash,
+}
 
 interface Props {
   scene: Scene
@@ -37,9 +63,6 @@ export function SceneCard({ scene, isActive, defaultExpanded, overrides, onSetBo
     return Array.from(map.entries())
   }, [scene.dynamic_elements])
 
-  const primaryRole = scene.narrative_role[0]
-  const roleMeta = NARRATIVE_ROLE_META[primaryRole]
-
   function handleHeaderClick() {
     setExpanded((v) => !v)
     onHeaderClick(scene)
@@ -58,10 +81,7 @@ export function SceneCard({ scene, isActive, defaultExpanded, overrides, onSetBo
         onClick={handleHeaderClick}
         className="w-full text-left p-3.5 flex items-center gap-3 cursor-pointer hover:bg-[var(--soft-2)]"
       >
-        <span
-          className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[12px] font-extrabold shrink-0"
-          style={{ backgroundColor: roleMeta.color }}
-        >
+        <span className="w-7 h-7 rounded-full flex items-center justify-center bg-[var(--near-black)] text-white text-[12px] font-extrabold shrink-0">
           {scene.scene_id}
         </span>
         <div className="flex-1 min-w-0">
@@ -157,10 +177,16 @@ export function SceneCard({ scene, isActive, defaultExpanded, overrides, onSetBo
             <div className="space-y-2">
               {groupedElements.map(([cat, elems]) => {
                 const cMeta = DYNAMIC_CATEGORY_META[cat]
+                const CatIcon = ICON_MAP[cMeta.iconName]
                 return (
                   <div key={cat} className="rounded-lg border border-[var(--line)] overflow-hidden">
                     <div className="px-2.5 py-1.5 bg-[var(--soft-2)] flex items-center gap-1.5">
-                      <span className="text-[12px]">{cMeta.emoji}</span>
+                      <span
+                        className="w-4 h-4 rounded flex items-center justify-center shrink-0"
+                        style={{ backgroundColor: cMeta.dot + "20", color: cMeta.dot }}
+                      >
+                        <CatIcon size={10} strokeWidth={2.4} />
+                      </span>
                       <span className="text-[10.5px] font-extrabold text-[var(--text)]">{cMeta.label}</span>
                       <span className="text-[10px] text-[var(--muted-2)]">×{elems.length}</span>
                     </div>

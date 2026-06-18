@@ -140,19 +140,29 @@ export const NARRATIVE_ROLE_META: Record<NarrativeRole, {
 }
 
 // ─── Meta：dynamic category 标签 + 图标 ────────────────────────────────────
+// 用 lucide icon name 字符串，渲染端 import 后查表（避免在 types 里依赖 lucide）
+
+export type DynamicCategoryIconName =
+  | "MessageSquare"
+  | "Shapes"
+  | "LayoutDashboard"
+  | "Type"
+  | "Sparkles"
+  | "PenLine"
+  | "Hash"
 
 export const DYNAMIC_CATEGORY_META: Record<DynamicCategory, {
   label: string
-  emoji: string
+  iconName: DynamicCategoryIconName
   dot: string
 }> = {
-  caption:    { label: "字幕",      emoji: "💬", dot: "#0ea5e9" },
-  shape:      { label: "图形",      emoji: "🔷", dot: "#7c3aed" },
-  ui_panel:   { label: "UI 面板",   emoji: "📱", dot: "#0d9488" },
-  title:      { label: "标题",      emoji: "🏷️", dot: "#d97706" },
-  effect:     { label: "特效",      emoji: "✨", dot: "#a855f7" },
-  annotation: { label: "标注",      emoji: "✏️", dot: "#ef4444" },
-  counter:    { label: "计数器",    emoji: "🔢", dot: "#16a34a" },
+  caption:    { label: "字幕",      iconName: "MessageSquare",    dot: "#0ea5e9" },
+  shape:      { label: "图形",      iconName: "Shapes",           dot: "#7c3aed" },
+  ui_panel:   { label: "UI 面板",   iconName: "LayoutDashboard",  dot: "#0d9488" },
+  title:      { label: "标题",      iconName: "Type",             dot: "#d97706" },
+  effect:     { label: "特效",      iconName: "Sparkles",         dot: "#a855f7" },
+  annotation: { label: "标注",      iconName: "PenLine",          dot: "#ef4444" },
+  counter:    { label: "计数器",    iconName: "Hash",             dot: "#16a34a" },
 }
 
 // ─── Meta：边界三色 ────────────────────────────────────────────────────────

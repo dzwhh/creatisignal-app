@@ -473,7 +473,20 @@ export type GenerationOutcome = {
   scriptOverride?: ScriptStep[]     // 编辑覆盖
   storyboardOverride?: StoryboardShot[]
   rejectionReason?: RejectionReason
+  versions?: OutcomeVersion[]       // 历史版本，最多 5 个，新版本在前
+  currentVersionId?: string         // 当前展示版本（默认最新）
 }
+
+// 单条 outcome 的历史版本（在 OutcomeDetailDrawer 中"再次生成"产生）
+export type OutcomeVersion = {
+  id: string
+  index: number                     // V1, V2, V3...
+  createdAt: string
+  storyboardEdits: Record<string, string>   // timeRange → 编辑后的 shot 描述
+  thumb: string                     // 该版本的缩略图（mock 占位）
+}
+
+export const MAX_VERSIONS_PER_OUTCOME = 5
 
 // 一次生成 = 一个任务，包含 3 个 outcome（对应 A/B/C 三方向）
 export type GenerationTask = {

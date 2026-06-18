@@ -49,8 +49,8 @@ export const VideoBreakdownPlayer = forwardRef<VideoBreakdownPlayerHandle, Props
 
     return (
       <div className="rounded-2xl border border-[var(--line)] bg-white overflow-hidden flex flex-col">
-        {/* Video */}
-        <div className="aspect-video bg-black relative">
+        {/* Video — 9:16 竖屏（TikTok 平台尺寸） */}
+        <div className="relative bg-black aspect-[9/16] max-h-[560px] mx-auto w-full flex items-center justify-center">
           <video
             ref={videoRef}
             src={data.source_video_url}
@@ -58,20 +58,19 @@ export const VideoBreakdownPlayer = forwardRef<VideoBreakdownPlayerHandle, Props
             playsInline
             preload="metadata"
             onTimeUpdate={handleTimeUpdate}
-            className="w-full h-full"
+            className="w-full h-full object-contain"
           />
         </div>
 
-        {/* 时间轴：5 段彩色，按时长比例 */}
-        <div className="p-3 space-y-2">
+        {/* 时间轴：5 段，统一灰底 + 当前 active 段 lime 高亮 */}
+        <div className="p-3 space-y-2 border-t border-[var(--line)]">
           <div className="flex items-center justify-between text-[10.5px] font-bold text-[var(--muted-2)]">
-            <span>0:00</span>
             <span>{formatTime(currentTime)} / {formatTime(totalDuration)}</span>
-            <span>{formatTime(totalDuration)}</span>
+            <span>5 个场景 · 22s</span>
           </div>
 
-          {/* 主时间轴 */}
-          <div className="relative h-7 rounded-md overflow-hidden bg-[var(--soft)] flex">
+          {/* 主时间轴：低饱和 + 主题色强调 active */}
+          <div className="relative h-9 rounded-lg overflow-hidden bg-[var(--soft)] flex shadow-[inset_0_0_0_1px_var(--line)]">
             {data.scenes.map((scene) => {
               const widthPct = (scene.duration / totalDuration) * 100
               const role = scene.narrative_role[0]
@@ -84,57 +83,34 @@ export const VideoBreakdownPlayer = forwardRef<VideoBreakdownPlayerHandle, Props
                   onClick={() => handleSeekClick(scene)}
                   title={`Scene ${scene.scene_id} · ${meta.label} · ${formatTime(scene.start_time)}–${formatTime(scene.end_time)}`}
                   className={cn(
-                    "h-full flex items-center justify-center text-[9px] font-extrabold transition-all cursor-pointer overflow-hidden border-r border-white/30 last:border-r-0",
-                    isActive ? "ring-2 ring-inset ring-white" : ""
+                    "relative h-full flex items-center justify-center text-[10px] font-extrabold transition-all cursor-pointer overflow-hidden border-r border-white last:border-r-0 group",
+                    isActive
+                      ? "bg-[var(--lime)] text-[#1a2010]"
+                      : "bg-[var(--soft-2)] text-[var(--muted)] hover:bg-[var(--soft)] hover:text-[var(--text)]"
                   )}
-                  style={{
-                    width: `${widthPct}%`,
-                    backgroundColor: meta.color,
-                    color: "white",
-                    opacity: isActive ? 1 : 0.85,
-                  }}
+                  style={{ width: `${widthPct}%` }}
                 >
-                  <span className="truncate px-1">{meta.short}</span>
+                  <span className="truncate px-1.5">{meta.short}</span>
+                  {/* 底部细条 — 与 lime 主题协调：默认中性灰，active 段变 lime 深绿 */}
+                  <span
+                    className="absolute left-0 right-0 bottom-0 h-[2.5px] transition-colors"
+                    style={{ backgroundColor: isActive ? "#1a2010" : "var(--muted-2)" }}
+                  />
                 </button>
               )
             })}
 
             {/* 当前时间游标 */}
             <div
-              className="absolute top-0 bottom-0 w-[2px] bg-white pointer-events-none shadow-[0_0_0_1px_rgba(0,0,0,0.5)]"
+              className="absolute top-0 bottom-0 w-[2px] bg-[var(--near-black)] pointer-events-none"
               style={{ left: `${(currentTime / totalDuration) * 100}%` }}
             />
           </div>
 
-          {/* 5 段图例 */}
-          <div className="flex items-center gap-2 flex-wrap text-[10.5px]">
-            {data.scenes.map((s) => {
-              const role = s.narrative_role[0]
-              const meta = NARRATIVE_ROLE_META[role]
-              return (
-                <span key={s.scene_id} className="inline-flex items-center gap-1 text-[var(--muted)]">
-                  <span className="w-2 h-2 rounded-sm" style={{ backgroundColor: meta.color }} />
-                  <span className="font-bold">{meta.short}</span>
-                  <span className="text-[var(--muted-2)] text-[9.5px]">{s.duration.toFixed(1)}s</span>
-                </span>
-              )
-            })}
-          </div>
-        </div>
-
-        {/* 整体策略 + 情绪曲线（视频下方） */}
-        <div className="px-3 pb-3 pt-1 border-t border-[var(--line)]">
-          <p className="text-[10.5px] font-extrabold text-[var(--muted-2)] uppercase tracking-wide mb-1">整体策略</p>
-          <p className="text-[11.5px] text-[var(--text)] leading-relaxed mb-2">{data.narrative_overview.overall_strategy}</p>
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-[10px] font-bold text-[var(--muted-2)]">情绪曲线：</span>
-            {data.narrative_overview.viral_analysis.emotion_curve.map((e, i, arr) => (
-              <span key={i} className="inline-flex items-center gap-1">
-                <span className="h-5 px-1.5 rounded-md bg-[var(--soft)] text-[10px] font-bold text-[var(--text)]">{e}</span>
-                {i < arr.length - 1 && <span className="text-[var(--muted-2)] text-[10px]">→</span>}
-              </span>
-            ))}
-          </div>
+          {/* 提示 */}
+          <p className="text-[10.5px] text-[var(--muted-2)] text-center">
+            点击任一段跳转到对应场景
+          </p>
         </div>
       </div>
     )

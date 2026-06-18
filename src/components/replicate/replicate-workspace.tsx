@@ -258,7 +258,39 @@ function Inner({ material, productSkuFromQuery, sourceFromQuery, initialStep }: 
   }
   function handleAdopt(outcomeId: string)   { patchOutcome(outcomeId, { status: "adopted", rejectionReason: undefined }) }
   function handleReject(outcomeId: string, reason: RejectionReason) { patchOutcome(outcomeId, { status: "rejected", rejectionReason: reason }) }
-  function handleEdit(outcomeId: string)    { patchOutcome(outcomeId, { status: "edited" }) }
+
+  // 详情抽屉「再次生成」→ 给当前 outcome 追加一个新版本（FIFO 限制 5）
+  function handleAddOutcomeVersion(outcomeId: string, storyboardEdits: Record<string, string>) {
+    setTasks((prev) => prev.map((t) => ({
+      ...t,
+      outcomes: t.outcomes.map((o) => {
+        if (o.id !== outcomeId) return o
+        const existing = o.versions ?? [{
+          id: `${o.id}_v1`,
+          index: 1,
+          createdAt: new Date().toISOString(),
+          storyboardEdits: {},
+          thumb: o.thumb,
+        }]
+        const nextIndex = (existing[0]?.index ?? 0) + 1
+        const newVersion = {
+          id: `${o.id}_v${nextIndex}`,
+          index: nextIndex,
+          createdAt: new Date().toISOString(),
+          storyboardEdits,
+          thumb: `https://picsum.photos/seed/${o.id}_v${nextIndex}/480/854`,
+        }
+        // FIFO：新版在前，超 5 去掉最后一个
+        const trimmed = [newVersion, ...existing].slice(0, 5)
+        return { ...o, versions: trimmed, currentVersionId: newVersion.id, status: "edited" as const }
+      }),
+    })))
+  }
+
+  // 切换历史版本
+  function handleSwitchOutcomeVersion(outcomeId: string, versionId: string) {
+    patchOutcome(outcomeId, { currentVersionId: versionId })
+  }
 
   // ─── Step 校验：可否进入下一步 ───────────────────────────────────────────
   const canNext: { ok: boolean; ctaLabel: string } = useMemo(() => {
@@ -338,9 +370,10 @@ function Inner({ material, productSkuFromQuery, sourceFromQuery, initialStep }: 
               directions={directions}
               stageProgress={stageProgress}
               hasRunningTask={Boolean(runningTaskId)}
+              onAddVersion={handleAddOutcomeVersion}
+              onSwitchVersion={handleSwitchOutcomeVersion}
               onAdopt={handleAdopt}
               onReject={handleReject}
-              onEdit={handleEdit}
               onRegenerate={handleRegenerate}
             />
           )}

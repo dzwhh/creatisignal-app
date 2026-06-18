@@ -20,7 +20,8 @@ interface Props {
   hasRunningTask: boolean                                 // 是否还有任务在跑
   onAdopt: (outcomeId: string) => void
   onReject: (outcomeId: string, reason: RejectionReason) => void
-  onEdit: (outcomeId: string) => void
+  onAddVersion: (outcomeId: string, storyboardEdits: Record<string, string>) => void
+  onSwitchVersion: (outcomeId: string, versionId: string) => void
   onRegenerate: () => void
 }
 
@@ -33,7 +34,8 @@ export function ConfirmStep({
   hasRunningTask,
   onAdopt,
   onReject,
-  onEdit,
+  onAddVersion,
+  onSwitchVersion,
   onRegenerate,
 }: Props) {
   // 派生
@@ -74,7 +76,8 @@ export function ConfirmStep({
               defaultExpanded={task.index === tasks.length}  // 最新（task.index 最大）默认展开
               onAdopt={onAdopt}
               onReject={onReject}
-              onEdit={onEdit}
+              onAddVersion={onAddVersion}
+              onSwitchVersion={onSwitchVersion}
               dirById={dirById}
             />
           ))}
@@ -153,7 +156,8 @@ function TaskGroup({
   defaultExpanded,
   onAdopt,
   onReject,
-  onEdit,
+  onAddVersion,
+  onSwitchVersion,
   dirById,
 }: {
   task: GenerationTask
@@ -161,7 +165,8 @@ function TaskGroup({
   defaultExpanded: boolean
   onAdopt: (id: string) => void
   onReject: (id: string, r: RejectionReason) => void
-  onEdit: (id: string) => void
+  onAddVersion: (id: string, edits: Record<string, string>) => void
+  onSwitchVersion: (id: string, versionId: string) => void
   dirById: (id: string) => ReplicaDirectionV2
 }) {
   const [expanded, setExpanded] = useState(defaultExpanded)
@@ -217,7 +222,8 @@ function TaskGroup({
                 direction={dirById(o.directionId)}
                 onAdopt={() => onAdopt(o.id)}
                 onReject={(r) => onReject(o.id, r)}
-                onEdit={() => onEdit(o.id)}
+                onAddVersion={(edits) => onAddVersion(o.id, edits)}
+                onSwitchVersion={(vid) => onSwitchVersion(o.id, vid)}
               />
             ))}
           </div>
