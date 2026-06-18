@@ -41,6 +41,7 @@ import { ContextBar } from "./context-bar"
 import { SourceStep } from "./steps/source-step"
 import { VerdictStep } from "./steps/verdict-step"
 import { BreakdownStep } from "./steps/breakdown-step"
+import { loadSampleBreakdown } from "@/lib/replicate/breakdown-utils"
 import { DirectionStep } from "./steps/direction-step"
 import { ConfirmStep } from "./steps/confirm-step"
 
@@ -110,7 +111,10 @@ function Inner({ material, productSkuFromQuery, sourceFromQuery, initialStep }: 
     return computeHotVerdict(source, selectedMaterial ?? undefined, productBrief as ProductBrief)
   }, [source, selectedMaterial, productBrief])
 
-  // Step 3 breakdown
+  // Step 3 真实视频 breakdown（V2：接 sample-breakdown.json）
+  const videoBreakdown = useMemo(() => loadSampleBreakdown(), [])
+
+  // Step 3（旧）抽象元素拆解 — 保留兜底但 V2 不再使用
   const breakdown: ElementBreakdown[] = useMemo(() => {
     if (!selectedMaterial) return []
     return get8ElementBreakdown(selectedMaterial, productBrief as ProductBrief)
@@ -320,7 +324,7 @@ function Inner({ material, productSkuFromQuery, sourceFromQuery, initialStep }: 
             />
           )}
           {step === 2 && verdict && <VerdictStep verdict={verdict} />}
-          {step === 3 && <BreakdownStep items={breakdown} />}
+          {step === 3 && <BreakdownStep data={videoBreakdown} />}
           {step === 4 && (
             <DirectionStep
               directions={directions}

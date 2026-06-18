@@ -1,0 +1,726 @@
+{
+    "source_video_url": "https://mpp-cn-shanghai-pre.oss-cn-shanghai.aliyuncs.com/VisionAlg/wanjingyike/marketingvideosolutiontest/test_a1/15edf19cb700477489cb71fd8020f141/source.mp4?OSSAccessKeyId=LTAI5tDsLKb9iQoh1zB4rS22&Expires=1790324529&Signature=NkhybkZjKJd1A%2F%2FwF%2BvegyTutIM%3D",
+    "narrative_overview": {
+        "overall_strategy": "采用“痛点焦虑 - 方案数据 - 流程简化 - 收益可视化 - 权威背书”的线性转化路径，针对菲律宾普惠金融用户设计。",
+        "target_audience": "有短期资金需求、关注还款压力及平台合规性的菲律宾成年用户。",
+        "emotional_journey": "焦虑 → 安心 → 轻松 → 兴奋 → 信任",
+        "viral_analysis": {
+            "hook_trigger_mechanism": "loss_aversion",
+            "hook_sentence_pattern": "反问句 + 痛点",
+            "persuasion_type": "process_demo",
+            "conversion_trigger": "immediate_benefit",
+            "emotion_curve": [
+                "anxiety",
+                "relief",
+                "confidence",
+                "joy",
+                "trust"
+            ],
+            "rhythm_profile": {
+                "hook_pace": "fast_dense",
+                "body_pace": "moderate_escalating",
+                "cta_pace": "urgent_push"
+            }
+        }
+    },
+    "scenes": [
+        {
+            "scene_id": 0,
+            "start_time": 0.0,
+            "end_time": 2.9,
+            "duration": 2.9,
+            "narrative_role": [
+                "hook",
+                "problem_setup"
+            ],
+            "narrative_context": "完整覆盖 sect_0 (hook, 0.0-2.9)",
+            "transcript": [
+                {
+                    "time": "00:00.00 - 00:02.90",
+                    "speaker": "女主持人 / 旁白",
+                    "state": "关切、提问语气；音高略上扬，表情配合焦虑主题。",
+                    "content": "Kinakabahan sa laki ng monthly na babayaran?",
+                    "content_chinese": "担心每月还款额太高吗？"
+                }
+            ],
+            "local_path": "scenes/0_0.00-2.90s.mp4",
+            "video_url": null,
+            "profile": {
+                "shot": {
+                    "shot_size": "中近景",
+                    "camera_movement": "静止",
+                    "camera_angle": "平视"
+                },
+                "host": {
+                    "present": true,
+                    "pip_mode": false
+                },
+                "scene_type": "hybrid",
+                "visual_description": {
+                    "hyperframes_layer": "画面顶部中央悬浮一个卡通乌云下雨特效，左上角紫色 Cashify Logo，画面中部白色粗体字幕 'Kinakabahan sa laki ng monthly na babayaran?'，底部黑色半透明条内含多行白色小字法律声明。",
+                    "video_layer": "红发女性身穿白色镂空针织开衫内搭黑色上衣，怀抱白色枕头坐在沙发上，面对镜头讲述并伴有手势动作，背景为室内家居环境，画面四周带有放射状动态模糊特效。"
+                }
+            },
+            "dynamic_elements": [
+                {
+                    "id": 0,
+                    "category": "caption",
+                    "content": "Kinakabahan sa laki ng monthly na babayaran?",
+                    "visual_description": "白色粗体无衬线字体，带黑色描边和投影，位于画面中下部水平居中",
+                    "animation": "fade-in",
+                    "start": 0.0,
+                    "end": 2.9
+                },
+                {
+                    "id": 1,
+                    "category": "shape",
+                    "content": "卡通乌云贴纸",
+                    "visual_description": "蓝灰色填充、黑色粗轮廓的卡通乌云，带有雨滴和闪电符号，位于人物头顶上方",
+                    "animation": "loop",
+                    "start": 0.0,
+                    "end": 2.9
+                },
+                {
+                    "id": 2,
+                    "category": "effect",
+                    "content": "灰白色放射状集中线",
+                    "visual_description": "从画面中心向四周发散的灰白色集中线，覆盖整个画面边缘，营造紧张氛围",
+                    "animation": "loop",
+                    "start": 0.0,
+                    "end": 2.9
+                },
+                {
+                    "id": 3,
+                    "category": "shape",
+                    "content": "Cashify 品牌 Logo",
+                    "visual_description": "紫色六边形图标加紫色 Cashify 文字，位于屏幕左上角",
+                    "animation": "none",
+                    "start": 0.0,
+                    "end": 2.9
+                },
+                {
+                    "id": 4,
+                    "category": "title",
+                    "content": "Please read the terms & conditions before proceeding with the loan. SEC Registration No. CS201900565, Certificate of Authority No. 2872 CASHIFY SUNLOAN LENDING INVESTORS CORPORATION Contact us: cs@cashifyapp.ph Regulated by SEC (https://message.sec.gov.ph/)",
+                    "visual_description": "屏幕底部多行极小白色法律免责声明文字",
+                    "animation": "none",
+                    "start": 0.0,
+                    "end": 2.9,
+                    "narration_relation": "independent"
+                }
+            ]
+        },
+        {
+            "scene_id": 1,
+            "start_time": 2.9,
+            "end_time": 13.4,
+            "duration": 10.5,
+            "narrative_role": [
+                "solution_intro",
+                "benefit_highlight"
+            ],
+            "narrative_context": "完整覆盖 sect_1 (solution_intro, 2.9-13.4)",
+            "transcript": [
+                {
+                    "time": "00:03.50 - 00:07.80",
+                    "speaker": "女主持人 / 旁白",
+                    "state": "安抚、自信；语气转为轻松积极，强调解决方案。",
+                    "content": "Sa Cashify, hindi mo kailangang ma-stress dahil sa gaan ng aming flexible payments.",
+                    "content_chinese": "在Cashify，你无需因我们灵活的付款方式而感到压力。"
+                },
+                {
+                    "time": "00:08.10 - 00:13.10",
+                    "speaker": "女主持人 / 旁白",
+                    "state": "热情推荐；语速稍快，重音落在数字上以突出优惠。",
+                    "content": "Humiram hanggang 50,000 pesos sa 0.2% interest at 12-month installment.",
+                    "content_chinese": "借款高达5万比索，利率仅0.2%，分12期偿还。"
+                }
+            ],
+            "local_path": "scenes/1_2.90-13.40s.mp4",
+            "video_url": null,
+            "profile": {
+                "shot": {
+                    "shot_size": "近景",
+                    "camera_movement": "静止",
+                    "camera_angle": "平视"
+                },
+                "host": {
+                    "present": true,
+                    "pip_mode": true
+                },
+                "scene_type": "hybrid",
+                "visual_description": {
+                    "hyperframes_layer": "全屏紫色品牌 UI 界面：顶部显示贷款金额'₱50,000'、利率'0.2%'及期限'12'，中部为白色'Apply Now'按钮，下方有注册流程图标（Register/Get credit/Fast Arrival）及底部监管 Logo；画面中央叠加动态高亮文字与红色圈注动画。",
+                    "video_layer": "右下角矩形画中画区域内，一位红发女性身穿白色针织开衫搭配黑色内搭，面对镜头进行讲解并配合手势动作。"
+                }
+            },
+            "dynamic_elements": [
+                {
+                    "id": 0,
+                    "category": "shape",
+                    "content": "Cashify 品牌 Logo",
+                    "visual_description": "紫色六边形图标加紫色 Cashify 文字，位于屏幕左上角",
+                    "animation": "none",
+                    "start": 2.9,
+                    "end": 13.4
+                },
+                {
+                    "id": 1,
+                    "category": "ui_panel",
+                    "content": "贷款金额信息卡",
+                    "visual_description": "占据画面上半部分的紫色圆角矩形卡片。顶部标题 'Loan Amount'；中部大号白色数字 '₱ 50,000'；下方三个字段：左列 'Interest Rate 0.2%'，右列 'Terms 12'；底部横跨整宽的白色圆角按钮，内含紫色 'Apply Now' 文字。",
+                    "animation": "none",
+                    "start": 2.9,
+                    "end": 13.4
+                },
+                {
+                    "id": 2,
+                    "category": "ui_panel",
+                    "content": "贷款流程步骤面板",
+                    "visual_description": "位于画面中部的白色圆角卡片，标题 'How to get the loan'。包含三个水平排列的步骤：左侧 'Register'（用户加号图标），中间 'Get credit'（文件对勾图标），右侧 'Fast Arrival'（钱包图标）。图标与箭头为紫色。",
+                    "animation": "none",
+                    "start": 2.9,
+                    "end": 13.4
+                },
+                {
+                    "id": 3,
+                    "category": "ui_panel",
+                    "content": "用户评价卡片",
+                    "visual_description": "位于画面下方的白色圆角卡片。左侧圆形头像（男性），右侧姓名 'David L.' 和五颗黄色星星。下方灰色小字评论文本 'No other fees except interest...'。底部有三个紫色分页圆点。",
+                    "animation": "none",
+                    "start": 2.9,
+                    "end": 13.4
+                },
+                {
+                    "id": 4,
+                    "category": "shape",
+                    "content": "SEC/AMLC 合规 Logo 组",
+                    "visual_description": "位于屏幕最底部的三个并排 Logo：绿色 SEC 盾牌、蓝色 Credit Info 圆圈、彩色 AMLC 标志。",
+                    "animation": "none",
+                    "start": 2.9,
+                    "end": 13.4
+                },
+                {
+                    "id": 5,
+                    "category": "title",
+                    "content": "Please read the terms & conditions before proceeding...",
+                    "visual_description": "屏幕最底部多行极小灰色法律免责声明文字，包含 SEC Registration No. 等信息",
+                    "animation": "none",
+                    "start": 2.9,
+                    "end": 13.4,
+                    "narration_relation": "independent"
+                },
+                {
+                    "id": 6,
+                    "category": "caption",
+                    "content": "Sa Cashify, hindi mo kailangang ma-stress dahil sa gaan ng aming flexible payments.",
+                    "visual_description": "白色粗体无衬线字体，带黑色描边和投影，位于画面中下部水平居中，覆盖在评价卡片上方",
+                    "animation": "fade-in",
+                    "start": 2.9,
+                    "end": 7.7
+                },
+                {
+                    "id": 7,
+                    "category": "caption",
+                    "content": "Humiram hanggang ₱50,000 sa 0.2% interest at 12-month installment.",
+                    "visual_description": "白色粗体无衬线字体，带黑色描边和投影，位于画面中下部水平居中，替换前一条字幕",
+                    "animation": "fade-in",
+                    "start": 7.8,
+                    "end": 12.7
+                },
+                {
+                    "id": 8,
+                    "category": "annotation",
+                    "content": "红色手绘圈选 ₱50,000",
+                    "visual_description": "红色手绘风格的圆圈动画，圈住紫色卡片中的 '₱ 50,000' 数字",
+                    "animation": "draw",
+                    "start": 8.7,
+                    "end": 9.7
+                },
+                {
+                    "id": 9,
+                    "category": "annotation",
+                    "content": "红色手绘圈选 0.2%",
+                    "visual_description": "红色手绘风格的圆圈动画，圈住紫色卡片中的 '0.2%' 利率数字",
+                    "animation": "draw",
+                    "start": 9.9,
+                    "end": 10.9
+                },
+                {
+                    "id": 10,
+                    "category": "annotation",
+                    "content": "红色手绘圈选 Terms 12",
+                    "visual_description": "红色手绘风格的圆圈动画，圈住紫色卡片中的 'Terms 12' 期数",
+                    "animation": "draw",
+                    "start": 11.1,
+                    "end": 12.1
+                },
+                {
+                    "id": 11,
+                    "category": "effect",
+                    "content": "金色硬币粒子飘落",
+                    "visual_description": "多个金色圆形硬币从画面顶部飘落至底部，带有闪烁光效，覆盖整个画面",
+                    "animation": "loop",
+                    "start": 8.7,
+                    "end": 13.4
+                },
+                {
+                    "id": 12,
+                    "category": "title",
+                    "content": "PHP 50,000 (from 强调特效)",
+                    "visual_description": "超大号紫色渐变立体字 'PHP 50,000'，带白色外发光，从画面底部弹出放大后消失",
+                    "animation": "scale-pop",
+                    "start": 8.8,
+                    "end": 9.9,
+                    "narration_relation": "keyword_emphasis"
+                },
+                {
+                    "id": 13,
+                    "category": "title",
+                    "content": "0.2% (from 强调特效)",
+                    "visual_description": "超大号紫色渐变立体字 '0.2%'，带白色外发光，从画面底部弹出放大后消失",
+                    "animation": "scale-pop",
+                    "start": 10.0,
+                    "end": 11.1,
+                    "narration_relation": "keyword_emphasis"
+                },
+                {
+                    "id": 14,
+                    "category": "title",
+                    "content": "12 months (from 强调特效)",
+                    "visual_description": "超大号紫色渐变立体字 '12 months'，带白色外发光，从画面底部弹出放大后消失",
+                    "animation": "scale-pop",
+                    "start": 11.2,
+                    "end": 12.3,
+                    "narration_relation": "keyword_emphasis"
+                }
+            ]
+        },
+        {
+            "scene_id": 2,
+            "start_time": 13.4,
+            "end_time": 17.8,
+            "duration": 4.4,
+            "narrative_role": [
+                "product_demo",
+                "objection_handling"
+            ],
+            "narrative_context": "完整覆盖 sect_2 (product_demo, 13.4-17.8)",
+            "transcript": [
+                {
+                    "time": "00:13.60 - 00:16.80",
+                    "speaker": "女主持人 / 旁白",
+                    "state": "轻松、鼓励；语气柔和，强调简便性。",
+                    "content": "Phone at ID lang ang kailangan para relax ka lang sa bawat bayaran.",
+                    "content_chinese": "只需手机和身份证，每次还款都让你安心无忧。"
+                },
+                {
+                    "time": "00:17.30 - 00:18.60",
+                    "speaker": "女主持人 / 旁白",
+                    "state": "号召行动；语气坚定有力，结尾上扬。",
+                    "content": "Mag-apply na sa Cashify!",
+                    "content_chinese": "立即在Cashify申请吧！"
+                }
+            ],
+            "local_path": "scenes/2_13.40-17.80s.mp4",
+            "video_url": null,
+            "profile": {
+                "shot": {
+                    "shot_size": "特写",
+                    "camera_movement": "静止",
+                    "camera_angle": "平视"
+                },
+                "host": {
+                    "present": false,
+                    "pip_mode": false
+                },
+                "scene_type": "hyperframes",
+                "visual_description": {
+                    "hyperframes_layer": "紫色背景全屏UI界面：中央白色圆角卡片包含贷款金额滑块（从0滑动至50,000 PHP）、期限选择按钮（3/9/12个月）及底部橙色'Apply'大按钮；顶部有品牌Logo与标语，中间叠加动态文字提示，底部为法律声明小字。",
+                    "video_layer": null
+                }
+            },
+            "dynamic_elements": [
+                {
+                    "id": 0,
+                    "category": "shape",
+                    "content": "Cashify 品牌 Logo",
+                    "visual_description": "屏幕左上角，紫色六边形图标加白色 Cashify 文字",
+                    "animation": "none",
+                    "start": 13.4,
+                    "end": 17.8
+                },
+                {
+                    "id": 1,
+                    "category": "title",
+                    "content": "Madaling proseso, mababang interes!",
+                    "visual_description": "屏幕顶部居中，白色粗体无衬线字体标题",
+                    "animation": "none",
+                    "start": 13.4,
+                    "end": 17.8,
+                    "narration_relation": "independent"
+                },
+                {
+                    "id": 2,
+                    "category": "ui_panel",
+                    "content": "贷款申请交互面板",
+                    "visual_description": "占据画面主体的白色圆角矩形卡片。包含：'Inutang na Halaga' 标签、动态金额数字（PHP 50,000）、绿色滑块条、卡通手型图标拖动滑块；'Tagal ng loan' 标签及三个期限选项按钮（3/9/12 month）；底部橙色圆角按钮 'Mag-apply para sa pautang'。",
+                    "animation": "fade-in",
+                    "start": 13.4,
+                    "end": 17.8
+                },
+                {
+                    "id": 3,
+                    "category": "counter",
+                    "content": "PHP 0 → PHP 50,000 (from 贷款申请交互面板)",
+                    "visual_description": "金额数字随滑块拖动从 0 快速跳动增加到 50,000，橙色粗体大字",
+                    "animation": "loop",
+                    "start": 13.4,
+                    "end": 15.4
+                },
+                {
+                    "id": 4,
+                    "category": "shape",
+                    "content": "卡通手型拖动滑块 (from 贷款申请交互面板)",
+                    "visual_description": "粉色卡通手型图标在绿色滑块条上从左向右滑动，填充条随之延长",
+                    "animation": "slide-left",
+                    "start": 13.4,
+                    "end": 15.4
+                },
+                {
+                    "id": 5,
+                    "category": "caption",
+                    "content": "Phone at ID lang ang kailangan",
+                    "visual_description": "白色粗体无衬线字体，带黑色描边和投影，位于面板中部偏下位置",
+                    "animation": "fade-in",
+                    "start": 13.4,
+                    "end": 15.2
+                },
+                {
+                    "id": 6,
+                    "category": "caption",
+                    "content": "para relax ka lang sa bawat bayaran.",
+                    "visual_description": "白色粗体无衬线字体，带黑色描边和投影，位于面板中部偏下位置，替换上一行字幕",
+                    "animation": "fade-in",
+                    "start": 15.2,
+                    "end": 16.4
+                },
+                {
+                    "id": 7,
+                    "category": "shape",
+                    "content": "真实手指点击期限按钮 (from 贷款申请交互面板)",
+                    "visual_description": "一只真实的人类食指从画面右下角伸入，点击 '12 month' 按钮",
+                    "animation": "none",
+                    "start": 15.9,
+                    "end": 16.9
+                },
+                {
+                    "id": 8,
+                    "category": "title",
+                    "content": "12 month 高亮选中 (from 贷款申请交互面板)",
+                    "visual_description": "三个期限按钮中 12 month 被点亮，背景变为橙色，其他两个保持灰色",
+                    "animation": "scale-pop",
+                    "start": 16.0,
+                    "end": 17.8,
+                    "narration_relation": "keyword_emphasis"
+                },
+                {
+                    "id": 9,
+                    "category": "caption",
+                    "content": "Mag-apply na sa Cashify",
+                    "visual_description": "白色粗体无衬线字体，带黑色描边和投影，位于面板底部按钮上方",
+                    "animation": "fade-in",
+                    "start": 16.4,
+                    "end": 17.8
+                },
+                {
+                    "id": 10,
+                    "category": "title",
+                    "content": "Please read the terms & conditions before proceeding with the loan. SEC Registration No. CS201900565...",
+                    "visual_description": "屏幕底部多行极小白色法律免责声明文字",
+                    "animation": "none",
+                    "start": 13.4,
+                    "end": 17.8,
+                    "narration_relation": "independent"
+                }
+            ]
+        },
+        {
+            "scene_id": 3,
+            "start_time": 17.8,
+            "end_time": 19.2,
+            "duration": 1.4,
+            "narrative_role": [
+                "social_proof"
+            ],
+            "narrative_context": "完整覆盖 sect_3 (benefit_highlight, 17.8-19.2)",
+            "transcript": [
+                {
+                    "time": "00:17.30 - 00:18.60",
+                    "speaker": "女主持人 / 旁白",
+                    "state": "号召行动；语气坚定有力，结尾上扬。",
+                    "content": "Mag-apply na sa Cashify!",
+                    "content_chinese": "立即在Cashify申请吧！"
+                }
+            ],
+            "local_path": "scenes/3_17.80-19.20s.mp4",
+            "video_url": null,
+            "profile": {
+                "shot": {
+                    "shot_size": "全景",
+                    "camera_movement": "静止",
+                    "camera_angle": "平视"
+                },
+                "host": {
+                    "present": false,
+                    "pip_mode": false
+                },
+                "scene_type": "hyperframes",
+                "visual_description": {
+                    "hyperframes_layer": "浅米色背景，中央堆叠绿色钞票与金色硬币，上方飘落彩色纸屑；画面中央显示橙色大号金额'₱50,000'，右上角有紫色品牌Logo及红色向下箭头图标，底部为灰色小字法律声明。",
+                    "video_layer": null
+                }
+            },
+            "dynamic_elements": [
+                {
+                    "id": 0,
+                    "category": "shape",
+                    "content": "Cashify 品牌 Logo",
+                    "visual_description": "紫色六边形图标加紫色 Cashify 文字，位于屏幕左上角",
+                    "animation": "none",
+                    "start": 17.8,
+                    "end": 19.2
+                },
+                {
+                    "id": 1,
+                    "category": "effect",
+                    "content": "彩色纸屑粒子雨",
+                    "visual_description": "从画面顶部持续飘落的橙色、黄色、红色矩形纸屑粒子，覆盖整个画面上半部分",
+                    "animation": "loop",
+                    "start": 17.8,
+                    "end": 19.2
+                },
+                {
+                    "id": 2,
+                    "category": "shape",
+                    "content": "红色向下箭头",
+                    "visual_description": "粗线条红色描边、白色填充的卡通风格向下箭头，位于画面右上角",
+                    "animation": "bounce",
+                    "start": 17.8,
+                    "end": 19.2
+                },
+                {
+                    "id": 3,
+                    "category": "shape",
+                    "content": "Cashify App 图标",
+                    "visual_description": "紫色圆角正方形背景，中央有白色抽象 S 形 Logo，位于画面右侧中部",
+                    "animation": "none",
+                    "start": 17.8,
+                    "end": 19.2
+                },
+                {
+                    "id": 4,
+                    "category": "shape",
+                    "content": "现金堆叠插画",
+                    "visual_description": "三叠绿色钞票（用白色纸带捆扎）和两摞金色硬币，位于画面中下部居中位置",
+                    "animation": "none",
+                    "start": 17.8,
+                    "end": 19.2
+                },
+                {
+                    "id": 5,
+                    "category": "counter",
+                    "content": "₱50,000",
+                    "visual_description": "巨大的橙色粗体数字，带有比索符号，位于画面底部中央",
+                    "animation": "none",
+                    "start": 17.8,
+                    "end": 19.2
+                },
+                {
+                    "id": 6,
+                    "category": "title",
+                    "content": "Please read the terms & conditions before proceeding with the loan SEC Registration No. CS201590565, Certificate of Authority No. 2573 CASHIFY SUNLAIN LENDING INVESTORS CORPORATION Contact us: cs@cashifyapp.ph Regulated by SEC (https://investors.sec.gov.ph/)",
+                    "visual_description": "屏幕最底部多行极小浅灰色法律免责声明文字",
+                    "animation": "none",
+                    "start": 17.8,
+                    "end": 19.2,
+                    "narration_relation": "independent"
+                }
+            ]
+        },
+        {
+            "scene_id": 4,
+            "start_time": 19.2,
+            "end_time": 22.0,
+            "duration": 2.8,
+            "narrative_role": [
+                "cta"
+            ],
+            "narrative_context": "完整覆盖 sect_4 (cta, 19.2-22.0)",
+            "transcript": [],
+            "local_path": "scenes/4_19.20-22.00s.mp4",
+            "video_url": null,
+            "profile": {
+                "shot": {
+                    "shot_size": "全景",
+                    "camera_movement": "静止",
+                    "camera_angle": "平视"
+                },
+                "host": {
+                    "present": false,
+                    "pip_mode": false
+                },
+                "scene_type": "hyperframes",
+                "visual_description": {
+                    "hyperframes_layer": "紫色渐变背景，中央白色立体 Cashify Logo 与品牌名，下方标语 'Bagong pangalan. Bagong simula.'，底部并排 Google Play 和 App Store 下载按钮及 SEC 监管法律小字。",
+                    "video_layer": null
+                }
+            },
+            "dynamic_elements": [
+                {
+                    "id": 0,
+                    "category": "shape",
+                    "content": "Cashify 品牌 Logo",
+                    "visual_description": "画面中央的六边形抽象图标，呈现玻璃质感或白色填充，带有光泽扫过效果",
+                    "animation": "fade-in",
+                    "start": 19.2,
+                    "end": 22.0
+                },
+                {
+                    "id": 1,
+                    "category": "title",
+                    "content": "Cashify",
+                    "visual_description": "位于 Logo 下方的白色粗体品牌名称文字",
+                    "animation": "fade-in",
+                    "start": 19.6,
+                    "end": 22.0,
+                    "narration_relation": "independent"
+                },
+                {
+                    "id": 2,
+                    "category": "title",
+                    "content": "Bagong pangalan. Bagong simula.",
+                    "visual_description": "位于品牌名下方的白色标语文字",
+                    "animation": "typewriter",
+                    "start": 19.8,
+                    "end": 22.0,
+                    "narration_relation": "independent"
+                },
+                {
+                    "id": 3,
+                    "category": "shape",
+                    "content": "Get it on Google Play 按钮",
+                    "visual_description": "位于画面左下方的黑色圆角矩形按钮，包含 Google Play 彩色三角图标及文字",
+                    "animation": "scale-pop",
+                    "start": 20.7,
+                    "end": 22.0
+                },
+                {
+                    "id": 4,
+                    "category": "shape",
+                    "content": "Download on the App Store 按钮",
+                    "visual_description": "位于画面右下方的黑色圆角矩形按钮，包含 Apple 图标及文字",
+                    "animation": "scale-pop",
+                    "start": 20.7,
+                    "end": 22.0
+                },
+                {
+                    "id": 5,
+                    "category": "title",
+                    "content": "Please read the terms & conditions before proceeding with the loan. SEC Registration No. CS201900565...",
+                    "visual_description": "屏幕最底部的多行微小白色法律免责声明及监管信息文本块",
+                    "animation": "none",
+                    "start": 19.2,
+                    "end": 22.0,
+                    "narration_relation": "independent"
+                }
+            ]
+        }
+    ],
+    "narrative_sections": [
+        {
+            "sect_id": 0,
+            "role": "hook",
+            "time": "00:00.000 - 00:02.900",
+            "scene_context": "scene_0 (0.0-2.9, 完整)",
+            "description": "女性坐在沙发上，头顶焦虑乌云动画，屏幕文字提问“担心每月还款额太高吗？”，直接切入用户痛点。",
+            "strategy": "利用视觉焦虑符号和反问句制造损失厌恶，瞬间抓住有债务压力的目标用户注意力。",
+            "transcript": [
+                {
+                    "time": "00:00.00 - 00:02.90",
+                    "speaker": "女主持人 / 旁白",
+                    "state": "关切、提问语气；音高略上扬，表情配合焦虑主题。",
+                    "content": "Kinakabahan sa laki ng monthly na babayaran?",
+                    "content_chinese": "担心每月还款额太高吗？"
+                }
+            ]
+        },
+        {
+            "sect_id": 1,
+            "role": "solution_intro",
+            "time": "00:02.900 - 00:13.400",
+            "scene_context": "scene_1 (2.9-13.4, 完整)",
+            "description": "切换至 Cashify 应用界面，主持人画中画讲解，展示 5 万比索额度、0.2% 利率及 12 期分期等核心优惠数据。",
+            "strategy": "立即给出解决方案并用具体数字（低利率、高额度）建立初步信任，缓解开场制造的焦虑。",
+            "transcript": [
+                {
+                    "time": "00:03.50 - 00:07.80",
+                    "speaker": "女主持人 / 旁白",
+                    "state": "安抚、自信；语气转为轻松积极，强调解决方案。",
+                    "content": "Sa Cashify, hindi mo kailangang ma-stress dahil sa gaan ng aming flexible payments.",
+                    "content_chinese": "在Cashify，你无需因我们灵活的付款方式而感到压力。"
+                },
+                {
+                    "time": "00:08.10 - 00:13.10",
+                    "speaker": "女主持人 / 旁白",
+                    "state": "热情推荐；语速稍快，重音落在数字上以突出优惠。",
+                    "content": "Humiram hanggang 50,000 pesos sa 0.2% interest at 12-month installment.",
+                    "content_chinese": "借款高达5万比索，利率仅0.2%，分12期偿还。"
+                }
+            ]
+        },
+        {
+            "sect_id": 2,
+            "role": "product_demo",
+            "time": "00:13.400 - 00:17.800",
+            "scene_context": "scene_2 (13.4-17.8, 完整)",
+            "description": "全屏动画演示申请流程，卡通手拖动滑块选择金额，点击按钮，旁白强调仅需手机和身份证。",
+            "strategy": "通过可视化的简单操作流程演示，降低用户对申请难度的心理门槛，消除顾虑。",
+            "transcript": [
+                {
+                    "time": "00:13.60 - 00:16.80",
+                    "speaker": "女主持人 / 旁白",
+                    "state": "轻松、鼓励；语气柔和，强调简便性。",
+                    "content": "Phone at ID lang ang kailangan para relax ka lang sa bawat bayaran.",
+                    "content_chinese": "只需手机和身份证，每次还款都让你安心无忧。"
+                }
+            ]
+        },
+        {
+            "sect_id": 3,
+            "role": "benefit_highlight",
+            "time": "00:17.800 - 00:19.200",
+            "scene_context": "scene_3 (17.8-19.2, 完整)",
+            "description": "庆祝动画展示堆积的钞票和金币，屏幕中央巨大数字",
+            "strategy": null,
+            "transcript": [
+                {
+                    "time": "00:17.30 - 00:18.60",
+                    "speaker": "女主持人 / 旁白",
+                    "state": "号召行动；语气坚定有力，结尾上扬。",
+                    "content": "Mag-apply na sa Cashify!",
+                    "content_chinese": "立即在Cashify申请吧！"
+                }
+            ]
+        },
+        {
+            "sect_id": 4,
+            "role": "cta",
+            "time": "00:19.200 - 00:22.000",
+            "scene_context": "scene_4 (19.2-22.0, 完整)",
+            "description": "品牌 Logo 定版，下方显示 Google Play 和 App Store 下载徽章及 SEC 监管合规文字。",
+            "strategy": "提供明确的下载入口和合规背书，利用权威信任感推动用户完成最终转化行动。",
+            "transcript": []
+        }
+    ]
+}
