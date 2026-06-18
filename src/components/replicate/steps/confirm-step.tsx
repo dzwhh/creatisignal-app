@@ -19,7 +19,7 @@ interface Props {
   stageProgress: Record<GenerationStage, number>
   hasRunningTask: boolean                                 // 是否还有任务在跑
   onAdopt: (outcomeId: string) => void
-  onReject: (outcomeId: string, reason: RejectionReason) => void
+  onReject: (outcomeId: string, reason: RejectionReason, customText?: string) => void
   onAddVersion: (outcomeId: string, storyboardEdits: Record<string, string>) => void
   onSwitchVersion: (outcomeId: string, versionId: string) => void
   onRegenerate: () => void
@@ -164,7 +164,7 @@ function TaskGroup({
   directions: ReplicaDirectionV2[]
   defaultExpanded: boolean
   onAdopt: (id: string) => void
-  onReject: (id: string, r: RejectionReason) => void
+  onReject: (id: string, r: RejectionReason, customText?: string) => void
   onAddVersion: (id: string, edits: Record<string, string>) => void
   onSwitchVersion: (id: string, versionId: string) => void
   dirById: (id: string) => ReplicaDirectionV2
@@ -221,7 +221,7 @@ function TaskGroup({
                 outcome={o}
                 direction={dirById(o.directionId)}
                 onAdopt={() => onAdopt(o.id)}
-                onReject={(r) => onReject(o.id, r)}
+                onReject={(r, t) => onReject(o.id, r, t)}
                 onAddVersion={(edits) => onAddVersion(o.id, edits)}
                 onSwitchVersion={(vid) => onSwitchVersion(o.id, vid)}
               />

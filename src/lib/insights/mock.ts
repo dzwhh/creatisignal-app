@@ -805,32 +805,44 @@ export function getDirectionsForMaterial(material: Material): ReplicaDirection[]
 // 源类型只有 market/own；部分 own 项目带 lineage（派生自上轮）
 
 export const REPLICA_PROJECTS: ReplicaProject[] = (() => {
-  const cores = MATERIALS.filter((m) => m.bucket === "core").slice(0, 6)
-  const cats: ReplicaCategory[] = ["market", "own", "own", "own", "market", "market"]
-  const statuses: ReplicaProjectStatus[] = ["completed", "in_progress", "submitted", "in_progress", "draft", "completed"]
-  // 第 3、4 个项目派生自 rep_001（"自有爆款放大"链路：先 own 出爆量，再二次派生迭代）
+  const cores = MATERIALS.filter((m) => m.bucket === "core").slice(0, 8)
+  const cats: ReplicaCategory[] = ["market", "competitor", "own", "own", "upload", "market", "competitor", "own"]
+  const stages: import("./types").ReplicaStage[] = ["confirm", "direction", "breakdown", "direction", "source", "confirm", "breakdown", "direction"]
+  const statuses: ReplicaProjectStatus[] = ["completed", "in_progress", "submitted", "in_progress", "draft", "completed", "in_progress", "in_progress"]
   const derivations: Record<number, { fromId: string; axis: ReplicaAxis }> = {
-    2: { fromId: "rep_001", axis: "hook" },
-    3: { fromId: "rep_002", axis: "scene" },
+    3: { fromId: "rep_002", axis: "hook" },
+    7: { fromId: "rep_003", axis: "scene" },
+  }
+  const titleByCat: Record<ReplicaCategory, string> = {
+    market: "市场爆款推荐",
+    competitor: "竞对爆款拆解",
+    own: "自有爆款放大",
+    upload: "自主上传迭代",
+  }
+  const sourceNameByCat: Record<ReplicaCategory, (i: number, mName: string) => string> = {
+    market: (i) => `TikTok 市场素材 #${i + 1}`,
+    competitor: (i) => `竞品账户 @rival_${i + 1}`,
+    own: (_i, mName) => mName,
+    upload: (i) => `本地上传 · upload_${(i + 1).toString().padStart(2, "0")}.mp4`,
   }
   const out: ReplicaProject[] = []
   for (let i = 0; i < cores.length; i++) {
     const m = cores[i]
     const cat = cats[i % cats.length]
-    const titlePrefix = cat === "market" ? "市场爆款复刻" : "自有爆款放大"
     const derived = derivations[i]
     out.push({
       id: `rep_${(i + 1).toString().padStart(3, "0")}`,
-      title: `${titlePrefix} · ${m.sceneTags[0] ?? "通用"}`,
+      title: `${titleByCat[cat]} · ${m.sceneTags[0] ?? "通用"}`,
       category: cat,
-      sourceFingerprint: cat === "market" ? undefined : m.fingerprint,
-      sourceName: cat === "market" ? `TikTok 市场素材 #${i + 1}` : m.name,
+      stage: stages[i % stages.length],
+      sourceFingerprint: cat === "own" ? m.fingerprint : undefined,
+      sourceName: sourceNameByCat[cat](i, m.name),
       productSku: pickDefaultProduct(m).sku,
       matchScore: 60 + ri(0, 30),
       variantCount: ri(2, 4),
       status: statuses[i % statuses.length],
-      createdAt: new Date(2026, 5, 6 + i).toISOString(),
-      updatedAt: new Date(2026, 5, 11 + i).toISOString(),
+      createdAt: new Date(2026, 5, 4 + i).toISOString(),
+      updatedAt: new Date(2026, 5, 10 + i).toISOString(),
       thumb: m.thumb,
       lifecyclePhase: m.lifecyclePhase,
       derivedFromProjectId: derived?.fromId,

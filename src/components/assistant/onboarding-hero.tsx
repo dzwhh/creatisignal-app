@@ -2,6 +2,7 @@
 
 import { ArrowRight, BarChart2, BookOpen, FileText, Sparkles, X, Zap } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { RainbowButton } from "@/components/ui/rainbow-button"
 
 export type PathMode = "report" | "analysis" | "brief" | "generate"
 export type PathPick = { mode: PathMode; value: string }
@@ -204,20 +205,24 @@ function PathCard({
       </div>
 
       {/* CTA */}
-      <button
-        type="button"
-        onClick={onClick}
-        disabled={disabled}
-        className={cn(
-          "h-10 rounded-xl text-[12.5px] font-extrabold flex items-center justify-center gap-1.5 transition-opacity mt-auto",
+      {disabled ? (
+        <button
+          type="button"
           disabled
-            ? "bg-[var(--soft)] text-[var(--muted-2)] cursor-not-allowed"
-            : "bg-[var(--near-black)] text-white cursor-pointer hover:opacity-90"
-        )}
-      >
-        {ctaLabel}
-        {!disabled && <ArrowRight size={13} strokeWidth={2.4} className="opacity-90" />}
-      </button>
+          className="h-10 rounded-xl text-[12.5px] font-extrabold flex items-center justify-center gap-1.5 bg-[var(--soft)] text-[var(--muted-2)] cursor-not-allowed mt-auto"
+        >
+          {ctaLabel}
+        </button>
+      ) : (
+        <RainbowButton
+          type="button"
+          onClick={onClick}
+          className="h-10 w-full rounded-xl text-[12.5px] mt-auto"
+        >
+          {ctaLabel}
+          <ArrowRight size={13} strokeWidth={2.4} className="opacity-90 ml-1.5" />
+        </RainbowButton>
+      )}
       <p className="text-center text-[10px] text-[var(--muted-2)] font-semibold -mt-1">{ctaSub}</p>
     </article>
   )

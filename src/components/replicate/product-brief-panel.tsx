@@ -98,7 +98,7 @@ export function ProductBriefPanel({ brief, onChange }: Props) {
   }
 
   return (
-    <aside className="rounded-2xl border border-[var(--line)] bg-white p-4 space-y-3 sticky top-3 self-start max-h-[calc(100vh-180px)] overflow-y-auto">
+    <aside className="rounded-2xl border border-[var(--line)] bg-white p-4 space-y-3 max-h-[calc(100vh-240px)] overflow-y-auto">
       {/* Header */}
       <div>
         <div className="flex items-center gap-2 mb-1">
@@ -199,6 +199,14 @@ export function ProductBriefPanel({ brief, onChange }: Props) {
               />
             </div>
           </div>
+
+          {/* 竞对品牌（可选） */}
+          <Field
+            label="竞对品牌（可选）"
+            value={brief.competitorBrand ?? ""}
+            onChange={(v) => onChange({ ...brief, competitorBrand: v })}
+            placeholder="例：Anker、Vansky、Bose..."
+          />
 
           {/* 主卖点（1 个） */}
           <MainSellingPointPicker

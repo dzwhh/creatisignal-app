@@ -5,6 +5,7 @@ import Link from "next/link"
 import { ArrowRight, CheckCircle2, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useOnboardingState, type TaskKind } from "@/lib/onboarding/state"
+import { rainbowButtonClassName } from "@/components/ui/rainbow-button"
 
 type ToastContent = {
   title: string
@@ -21,7 +22,7 @@ const COPY: Record<TaskKind, ToastContent> = {
   video: {
     title: "你的第一条 30s 视频已生成！",
     desc: "下一步：试试复刻这条做 3 个变体",
-    primary: { label: "进入爆款复刻", href: "/replicate" },
+    primary: { label: "进入爆款推荐", href: "/replicate" },
   },
   brief: {
     title: "Brief 已经准备好",
@@ -112,10 +113,10 @@ export function FirstWinToast() {
         <Link
           href={copy.primary.href}
           onClick={() => markFirstWinSeen()}
-          className="h-8 px-3 rounded-full bg-[var(--near-black)] text-white text-[12px] font-bold flex items-center gap-1 hover:opacity-90"
+          className={cn(rainbowButtonClassName, "h-8 px-3 text-[12px]")}
         >
           {copy.primary.label}
-          <ArrowRight size={12} strokeWidth={2.4} />
+          <ArrowRight size={12} strokeWidth={2.4} className="ml-1" />
         </Link>
       </div>
 

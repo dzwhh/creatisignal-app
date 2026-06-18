@@ -12,7 +12,7 @@ interface Props {
   outcome: GenerationOutcome
   direction: ReplicaDirectionV2
   onAdopt: () => void
-  onReject: (reason: RejectionReason) => void
+  onReject: (reason: RejectionReason, customText?: string) => void
   onAddVersion: (storyboardEdits: Record<string, string>) => void
   onSwitchVersion: (versionId: string) => void
 }
@@ -95,8 +95,10 @@ export function OutcomeCard({ outcome, direction, onAdopt, onReject, onAddVersio
           </div>
           <p className="text-[10.5px] text-[var(--muted)] leading-relaxed line-clamp-2">{direction.expectedDelta}</p>
           {outcome.rejectionReason && (
-            <p className="text-[10.5px] text-[#dc2626] font-bold mt-1.5">
-              原因：{REJECTION_REASON_META[outcome.rejectionReason].label}
+            <p className="text-[10.5px] text-[#dc2626] font-bold mt-1.5 line-clamp-2">
+              原因：{outcome.rejectionReason === "custom" && outcome.rejectionReasonText
+                ? outcome.rejectionReasonText
+                : REJECTION_REASON_META[outcome.rejectionReason].label}
             </p>
           )}
         </div>

@@ -16,11 +16,11 @@ export default async function ReplicatePage({
   const material = MATERIALS.find((m) => m.fingerprint === id) ?? null
   // step 显式优先；否则交给 workspace 按 source 推断
   const stepNum = stepRaw ? Number(stepRaw) : NaN
-  const initialStep = (stepNum >= 1 && stepNum <= 5 ? stepNum : undefined) as 1 | 2 | 3 | 4 | 5 | undefined
+  const initialStep = (stepNum >= 1 && stepNum <= 4 ? stepNum : undefined) as 1 | 2 | 3 | 4 | undefined
 
   return (
     <>
-      <Topbar title="爆款复刻" />
+      <Topbar title="爆款推荐" />
       <ReplicateWorkspace
         material={material}
         materialId={id}

@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-import { ArrowRight, Check, Edit3, FileText, Film, Lock, Unlock, X } from "lucide-react"
+import { ArrowRight, Check, Edit3, FileText, Film, Lock, Sparkles, Unlock, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { ScriptStep, ScriptTimeRange, StoryboardShot } from "@/lib/insights/types"
 
@@ -59,17 +59,28 @@ export function ScriptStoryboardPair({ script, storyboard }: Props) {
     setEditingScript(false)
   }
 
-  // ─── 分镜：本地副本 + 锁定 + 单块编辑 ──────────────────────────────────
-  const [shots, setShots] = useState<StoryboardShot[]>(() => storyboard)
+  // ─── 分镜：默认空（仅时间槽位），同步按钮 AI 生成 ──────────────────────
+  const emptyShots = useMemo<StoryboardShot[]>(() => {
+    return TIME_RANGES.map((tr) => ({
+      timeRange: tr,
+      framing: "—",
+      shot: "",
+      materials: [],
+    }))
+  }, [])
+  const [shots, setShots] = useState<StoryboardShot[]>(() => emptyShots)
+  const [generated, setGenerated] = useState(false)
   const [locked, setLocked] = useState<Set<ScriptTimeRange>>(new Set())
   const [editingShotKey, setEditingShotKey] = useState<ScriptTimeRange | null>(null)
   const [shotDraft, setShotDraft] = useState("")
 
+  // 父级方向切换时，分镜重新归零
   useEffect(() => {
-    setShots(storyboard)
+    setShots(emptyShots)
+    setGenerated(false)
     setLocked(new Set())
     setEditingShotKey(null)
-  }, [storyboard])
+  }, [storyboard, emptyShots])
 
   function toggleLock(tr: ScriptTimeRange) {
     setLocked((prev) => {
@@ -91,20 +102,41 @@ export function ScriptStoryboardPair({ script, storyboard }: Props) {
     setEditingShotKey(null)
   }
 
-  // ─── 同步：把内容脚本对应段落同步到未锁定的分镜 ────────────────────────
+  // ─── 同步 = AI 根据内容脚本生成分镜 ─────────────────────────────────────
   const [syncing, setSyncing] = useState(false)
+  // 把内容脚本的旁白 + 时间槽 → 一段分镜描述（mock AI）
+  function synthesizeShot(tr: ScriptTimeRange, voiceover: string, fallback: StoryboardShot): { framing: string; shot: string; materials: string[] } {
+    if (!voiceover.trim()) return { framing: fallback.framing || "—", shot: fallback.shot, materials: fallback.materials }
+    const fallbackByTr: Record<ScriptTimeRange, { framing: string; materials: string[] }> = {
+      "0-3s":   { framing: "近景",   materials: ["主角面部特写", "动效气泡"] },
+      "3-8s":   { framing: "中景",   materials: ["产品手持", "使用场景"] },
+      "8-13s":  { framing: "中近景", materials: ["产品细节", "对比演示"] },
+      "13-15s": { framing: "全景",   materials: ["品牌 Logo", "CTA 字幕"] },
+    }
+    const cfg = fallbackByTr[tr]
+    const headline = voiceover.length > 38 ? voiceover.slice(0, 38) + "…" : voiceover
+    return {
+      framing: cfg.framing,
+      shot: `${cfg.framing}：${headline}`,
+      materials: cfg.materials,
+    }
+  }
   function handleSync() {
     if (syncing) return
     setSyncing(true)
     const parsed = parseScriptText(scriptText)
-    setShots((prev) => prev.map((s) => {
-      if (locked.has(s.timeRange)) return s
-      const newVoiceover = parsed[s.timeRange]
-      if (!newVoiceover) return s
-      // mock 同步逻辑：把分镜 shot 描述改成"基于：xxx"
-      return { ...s, shot: `（同步自内容脚本）${newVoiceover.slice(0, 40)}${newVoiceover.length > 40 ? "…" : ""}` }
-    }))
-    window.setTimeout(() => setSyncing(false), 800)
+    // 模拟 AI 生成延时（更长一点显示「生成中」状态）
+    window.setTimeout(() => {
+      setShots((prev) => prev.map((s) => {
+        if (locked.has(s.timeRange)) return s
+        const voiceover = parsed[s.timeRange] ?? ""
+        const fallback = storyboard.find((x) => x.timeRange === s.timeRange) ?? s
+        const synth = synthesizeShot(s.timeRange, voiceover, fallback)
+        return { ...s, ...synth }
+      }))
+      setGenerated(true)
+      setSyncing(false)
+    }, 1100)
   }
 
   const unlockedCount = TIME_RANGES.length - locked.size
@@ -206,25 +238,25 @@ export function ScriptStoryboardPair({ script, storyboard }: Props) {
               : "bg-white border-[var(--line)] hover:bg-[var(--lime)] hover:border-[#cdf066] cursor-pointer hover:shadow-[0_4px_14px_rgba(201,255,41,0.4)]"
           )}
         >
-          <ArrowRight
-            size={18}
-            strokeWidth={2.6}
-            className={cn(
-              "transition-colors",
-              syncing ? "text-[#1a2010]" : "text-[var(--muted)] group-hover:text-[#1a2010]"
-            )}
-          />
-          {/* hover 显示"同步"主题色文字（小气泡） */}
+          {syncing ? (
+            <Sparkles size={18} strokeWidth={2.6} className="text-[#1a2010] animate-pulse" />
+          ) : (
+            <ArrowRight
+              size={18}
+              strokeWidth={2.6}
+              className="text-[var(--muted)] group-hover:text-[#1a2010] transition-colors"
+            />
+          )}
+          {/* hover/同步状态 文字气泡 */}
           <span
             className={cn(
-              "absolute -bottom-7 left-1/2 -translate-x-1/2 px-1.5 h-5 rounded-md text-[10px] font-extrabold whitespace-nowrap pointer-events-none",
-              "transition-opacity",
+              "absolute -bottom-7 left-1/2 -translate-x-1/2 px-1.5 h-5 rounded-md text-[10px] font-extrabold whitespace-nowrap pointer-events-none transition-opacity flex items-center gap-1",
               syncing
                 ? "opacity-100 bg-[#1a2010] text-[var(--lime)]"
                 : "opacity-0 group-hover:opacity-100 bg-[#1a2010] text-[var(--lime)]"
             )}
           >
-            {syncing ? "同步中…" : "同步"}
+            {syncing ? "AI 生成中…" : generated ? "重新生成分镜" : "AI 生成分镜"}
           </span>
         </button>
         {/* 锁定数提示 */}
@@ -242,11 +274,26 @@ export function ScriptStoryboardPair({ script, storyboard }: Props) {
           <div className="flex items-center gap-1.5 text-[11px] font-extrabold text-[var(--muted-2)] uppercase tracking-wide">
             <Film size={11} />
             分镜脚本
+            {!generated && (
+              <span className="ml-1 inline-flex items-center gap-1 h-[18px] px-1.5 rounded-md bg-[var(--soft)] text-[var(--muted)] text-[9.5px] font-extrabold tracking-wide">
+                未生成
+              </span>
+            )}
           </div>
           <span className="text-[10px] font-bold text-[var(--muted-2)]">
-            {unlockedCount} 可同步 · {locked.size} 已锁定
+            {generated ? `${unlockedCount} 可同步 · ${locked.size} 已锁定` : `点击中间 → AI 生成`}
           </span>
         </div>
+        {!generated && (
+          <div className="flex-1 rounded-lg border border-dashed border-[var(--line-strong)] bg-[var(--soft-2)] flex flex-col items-center justify-center text-center p-6">
+            <Sparkles size={24} className="text-[var(--muted-2)] mb-2" />
+            <p className="text-[12.5px] font-extrabold text-[var(--text)]">分镜脚本尚未生成</p>
+            <p className="text-[11px] text-[var(--muted)] mt-1 leading-relaxed max-w-[260px]">
+              确认好左侧内容脚本后，点击中间的 → 按钮，AI 会根据脚本自动生成分镜。
+            </p>
+          </div>
+        )}
+        {generated && (
         <div className="space-y-2 flex-1 overflow-y-auto pr-0.5">
           {shots.map((s) => {
             const isLocked = locked.has(s.timeRange)
@@ -332,6 +379,7 @@ export function ScriptStoryboardPair({ script, storyboard }: Props) {
             )
           })}
         </div>
+        )}
       </section>
     </div>
   )

@@ -5,7 +5,6 @@ import Link from "next/link"
 import {
   ArrowLeft,
   ArrowRight,
-  Ban,
   Check,
   FileText,
   FlaskConical,
@@ -13,33 +12,26 @@ import {
   Layers,
   ShieldCheck,
   Sparkles,
-  Stethoscope,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import {
   type GenerationOutcome,
   type GenerationStage,
   type GenerationTask,
-  type HotItemVerdict,
   type MaterialSource,
   type ProductBrief,
   type RejectionReason,
   type ReplicaDirectionV2,
-  type ElementBreakdown,
   type Material,
-  GENERATION_STAGE_META,
 } from "@/lib/insights/types"
 import {
   MATERIALS,
-  computeHotVerdict,
-  get8ElementBreakdown,
   getDirectionsV2,
   mockGenerationOutcomes,
   pickDefaultProduct,
 } from "@/lib/insights/mock"
 import { ContextBar } from "./context-bar"
 import { SourceStep } from "./steps/source-step"
-import { VerdictStep } from "./steps/verdict-step"
 import { BreakdownStep } from "./steps/breakdown-step"
 import { loadSampleBreakdown } from "@/lib/replicate/breakdown-utils"
 import { DirectionStep } from "./steps/direction-step"
@@ -47,7 +39,7 @@ import { ConfirmStep } from "./steps/confirm-step"
 
 // ─── Public Props ────────────────────────────────────────────────────────────
 
-type StepId = 1 | 2 | 3 | 4 | 5
+type StepId = 1 | 2 | 3 | 4
 
 interface Props {
   material: Material | null            // 入参素材（drawer 跳入时已选）
@@ -64,13 +56,13 @@ export function ReplicateWorkspace({ material, materialId, productSkuFromQuery, 
 // ─── Inner workspace with full state machine ─────────────────────────────────
 
 function Inner({ material, productSkuFromQuery, sourceFromQuery, initialStep }: Props) {
-  // 推断初始 source：discover→market_hot；insights→owned_hot；variant→owned_hot；否则按 material 决定
+  // 推断初始 source：discover→market_hot；insights→owned_hot；否则按 material 决定
   const initialSource: MaterialSource | null =
     sourceFromQuery === "discover" ? "market_hot" :
     sourceFromQuery === "insights" ? "owned_hot" :
     material ? "owned_hot" : null
 
-  // 初始 step 推断
+  // 初始 step 推断（4 步制，无爆款判定）
   const computedInitialStep: StepId =
     initialStep ??
     (sourceFromQuery === "discover" ? 1 : material ? 2 : 1)
@@ -105,22 +97,10 @@ function Inner({ material, productSkuFromQuery, sourceFromQuery, initialStep }: 
     return MATERIALS.find((m) => m.fingerprint === selectedMaterialId) ?? null
   }, [selectedMaterialId])
 
-  // Step 2 verdict（进入 Step 2 时计算）
-  const verdict: HotItemVerdict | null = useMemo(() => {
-    if (!source || (!selectedMaterial && source !== "local_upload")) return null
-    return computeHotVerdict(source, selectedMaterial ?? undefined, productBrief as ProductBrief)
-  }, [source, selectedMaterial, productBrief])
-
-  // Step 3 真实视频 breakdown（V2：接 sample-breakdown.json）
+  // Step 2 真实视频 breakdown
   const videoBreakdown = useMemo(() => loadSampleBreakdown(), [])
 
-  // Step 3（旧）抽象元素拆解 — 保留兜底但 V2 不再使用
-  const breakdown: ElementBreakdown[] = useMemo(() => {
-    if (!selectedMaterial) return []
-    return get8ElementBreakdown(selectedMaterial, productBrief as ProductBrief)
-  }, [selectedMaterial, productBrief])
-
-  // Step 4 directions
+  // Step 3 directions
   const directions: ReplicaDirectionV2[] = useMemo(() => {
     if (!selectedMaterial) return []
     return getDirectionsV2(selectedMaterial, productBrief as ProductBrief)
@@ -128,7 +108,7 @@ function Inner({ material, productSkuFromQuery, sourceFromQuery, initialStep }: 
 
   const [selectedDirectionId, setSelectedDirectionId] = useState<ReplicaDirectionV2["id"]>("A")
 
-  // Step 5：任务批次（每次"再生成一次"产生一个新 task，3 outcome / task；新任务排前）
+  // Step 4：任务批次
   const [tasks, setTasks] = useState<GenerationTask[]>([])
   const [stageProgress, setStageProgress] = useState<Record<GenerationStage, number>>({
     script_lock: 0,
@@ -137,19 +117,17 @@ function Inner({ material, productSkuFromQuery, sourceFromQuery, initialStep }: 
     safety_check: 0,
   })
 
-  // 派生：扁平的 outcomes 列表（供 canNext 用）
   const allOutcomes = useMemo(() => tasks.flatMap((t) => t.outcomes), [tasks])
 
-  // 当前正在生成的任务（一次只跑一个）
   const runningTaskId = useMemo(() => {
     const t = tasks.find((t) => t.outcomes.some((o) => o.status === "generating"))
     return t?.id
   }, [tasks])
 
-  // 进入 Step 5 时创建首个任务 —— 仅启动一次（ref 守门）
+  // 进入 Step 4 时创建首个任务
   const initStartedRef = useRef(false)
   useEffect(() => {
-    if (step !== 5) {
+    if (step !== 4) {
       initStartedRef.current = false
       return
     }
@@ -160,7 +138,7 @@ function Inner({ material, productSkuFromQuery, sourceFromQuery, initialStep }: 
       id: `task_1`,
       index: 1,
       createdAt: new Date().toISOString(),
-      outcomes: mockGenerationOutcomes(directions).map((o, i) => ({
+      outcomes: mockGenerationOutcomes(directions).map((o) => ({
         ...o,
         id: `task_1_${o.directionId}`,
         status: "generating" as const,
@@ -171,7 +149,6 @@ function Inner({ material, productSkuFromQuery, sourceFromQuery, initialStep }: 
     setStageProgress({ script_lock: 0, shot_gen: 0, subtitle: 0, safety_check: 0 })
   }, [step, directions])
 
-  // 当 runningTaskId 变化（或新任务被加入）→ 跑 8s mock progress
   const lastRunRef = useRef<string | null>(null)
   useEffect(() => {
     if (!runningTaskId || lastRunRef.current === runningTaskId) return
@@ -186,7 +163,6 @@ function Inner({ material, productSkuFromQuery, sourceFromQuery, initialStep }: 
 
     const timer = window.setInterval(() => {
       tick++
-      // 4 阶段平均分配 tick
       const stageDuration = totalTicks / stages.length
       setStageProgress(() => {
         const next: Record<GenerationStage, number> = {
@@ -199,7 +175,6 @@ function Inner({ material, productSkuFromQuery, sourceFromQuery, initialStep }: 
         }
         return next
       })
-      // 推进 running task 的 outcomes
       setTasks((prev) => prev.map((t) => {
         if (t.id !== runningTaskId) return t
         return {
@@ -231,9 +206,8 @@ function Inner({ material, productSkuFromQuery, sourceFromQuery, initialStep }: 
     return () => { window.clearInterval(timer) }
   }, [runningTaskId])
 
-  // 再生成一次：新建 task 推到前面
   function handleRegenerate() {
-    if (runningTaskId) return  // 上一个还没跑完，禁止
+    if (runningTaskId) return
     const nextIndex = tasks.length + 1
     const newTask: GenerationTask = {
       id: `task_${nextIndex}`,
@@ -246,10 +220,9 @@ function Inner({ material, productSkuFromQuery, sourceFromQuery, initialStep }: 
         progress: 0,
       })),
     }
-    setTasks((prev) => [newTask, ...prev])  // 新任务排前
+    setTasks((prev) => [newTask, ...prev])
   }
 
-  // 改 outcome 状态（按 outcomeId 在所有 task 里查找）
   function patchOutcome(outcomeId: string, patch: Partial<GenerationOutcome>) {
     setTasks((prev) => prev.map((t) => ({
       ...t,
@@ -257,9 +230,10 @@ function Inner({ material, productSkuFromQuery, sourceFromQuery, initialStep }: 
     })))
   }
   function handleAdopt(outcomeId: string)   { patchOutcome(outcomeId, { status: "adopted", rejectionReason: undefined }) }
-  function handleReject(outcomeId: string, reason: RejectionReason) { patchOutcome(outcomeId, { status: "rejected", rejectionReason: reason }) }
+  function handleReject(outcomeId: string, reason: RejectionReason, customText?: string) {
+    patchOutcome(outcomeId, { status: "rejected", rejectionReason: reason, rejectionReasonText: customText })
+  }
 
-  // 详情抽屉「再次生成」→ 给当前 outcome 追加一个新版本（FIFO 限制 5）
   function handleAddOutcomeVersion(outcomeId: string, storyboardEdits: Record<string, string>) {
     setTasks((prev) => prev.map((t) => ({
       ...t,
@@ -280,14 +254,12 @@ function Inner({ material, productSkuFromQuery, sourceFromQuery, initialStep }: 
           storyboardEdits,
           thumb: `https://picsum.photos/seed/${o.id}_v${nextIndex}/480/854`,
         }
-        // FIFO：新版在前，超 5 去掉最后一个
         const trimmed = [newVersion, ...existing].slice(0, 5)
         return { ...o, versions: trimmed, currentVersionId: newVersion.id, status: "edited" as const }
       }),
     })))
   }
 
-  // 切换历史版本
   function handleSwitchOutcomeVersion(outcomeId: string, versionId: string) {
     patchOutcome(outcomeId, { currentVersionId: versionId })
   }
@@ -301,31 +273,25 @@ function Inner({ material, productSkuFromQuery, sourceFromQuery, initialStep }: 
       if (!productBrief.image || !productBrief.name || !productBrief.sellingPoints?.length) {
         return { ok: false, ctaLabel: "补充商品信息" }
       }
-      return { ok: true, ctaLabel: "开始爆款判定" }
-    }
-    if (step === 2) {
-      if (!verdict) return { ok: false, ctaLabel: "等待判定" }
-      if (verdict.verdict === "not_recommended") return { ok: false, ctaLabel: "返回重选素材" }
       return { ok: true, ctaLabel: "进入元素拆解" }
     }
-    if (step === 3) {
+    if (step === 2) {
       return { ok: true, ctaLabel: "生成 3 个方向脚本" }
     }
-    if (step === 4) {
+    if (step === 3) {
       return { ok: true, ctaLabel: "确认生成 3 个结果" }
     }
-    // step 5
+    // step 4
     const allDone = allOutcomes.length > 0 && allOutcomes.every((o) => o.status !== "pending" && o.status !== "generating")
     const adopted = allOutcomes.filter((o) => o.status === "adopted").length
     if (!allDone) return { ok: false, ctaLabel: "等待全部生成完成" }
     if (adopted === 0) return { ok: false, ctaLabel: "至少采纳 1 个结果" }
     return { ok: true, ctaLabel: "创建 GMV Max 实验草稿" }
-  }, [step, source, selectedMaterialId, uploadedFileName, productBrief, verdict, allOutcomes])
+  }, [step, source, selectedMaterialId, uploadedFileName, productBrief, allOutcomes])
 
   function goNext() {
     if (!canNext.ok) return
-    if (step < 5) setStep((step + 1) as StepId)
-    // step === 5 时跳投放看板（mock）
+    if (step < 4) setStep((step + 1) as StepId)
   }
 
   function goPrev() {
@@ -334,13 +300,10 @@ function Inner({ material, productSkuFromQuery, sourceFromQuery, initialStep }: 
 
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-[var(--soft-2)]">
-      {/* 顶部全局上下文条 */}
       <ContextBar source={source} lifecyclePhase={selectedMaterial?.lifecyclePhase} />
 
-      {/* Stepper */}
       <Stepper step={step} setStep={(s) => setStep(s)} />
 
-      {/* Body */}
       <div className="flex-1 overflow-y-auto">
         <div className="max-w-[1280px] mx-auto px-8 py-6">
           {step === 1 && (
@@ -355,16 +318,15 @@ function Inner({ material, productSkuFromQuery, sourceFromQuery, initialStep }: 
               onProductBriefChange={setProductBrief}
             />
           )}
-          {step === 2 && verdict && <VerdictStep verdict={verdict} />}
-          {step === 3 && <BreakdownStep data={videoBreakdown} />}
-          {step === 4 && (
+          {step === 2 && <BreakdownStep data={videoBreakdown} />}
+          {step === 3 && (
             <DirectionStep
               directions={directions}
               selectedDirectionId={selectedDirectionId}
               onSelectDirection={setSelectedDirectionId}
             />
           )}
-          {step === 5 && (
+          {step === 4 && (
             <ConfirmStep
               tasks={tasks}
               directions={directions}
@@ -380,7 +342,6 @@ function Inner({ material, productSkuFromQuery, sourceFromQuery, initialStep }: 
         </div>
       </div>
 
-      {/* Sticky 底部单一主 CTA */}
       <StickyBar
         step={step}
         canNext={canNext}
@@ -395,10 +356,9 @@ function Inner({ material, productSkuFromQuery, sourceFromQuery, initialStep }: 
 
 const STEPS: { id: StepId; label: string; icon: typeof Sparkles }[] = [
   { id: 1, label: "选择素材",  icon: FileText },
-  { id: 2, label: "爆款判定",  icon: Stethoscope },
-  { id: 3, label: "元素拆解",  icon: LayoutGrid },
-  { id: 4, label: "生成方向",  icon: Layers },
-  { id: 5, label: "确认生成",  icon: FlaskConical },
+  { id: 2, label: "元素拆解",  icon: LayoutGrid },
+  { id: 3, label: "生成方向",  icon: Layers },
+  { id: 4, label: "确认生成",  icon: FlaskConical },
 ]
 
 function Stepper({ step, setStep }: { step: StepId; setStep: (s: StepId) => void }) {

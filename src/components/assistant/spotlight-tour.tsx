@@ -4,6 +4,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { ArrowRight, CheckCircle2, X } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { RainbowButton, rainbowButtonClassName } from "@/components/ui/rainbow-button"
 
 export interface SpotlightProps {
   /** CSS selector for the element to spotlight. Tour stays hidden until it resolves. */
@@ -171,20 +172,20 @@ export function SpotlightTour({
             <Link
               href={primaryAction.href}
               onClick={onClose}
-              className="h-8 px-3 rounded-full bg-[var(--near-black)] text-white text-[12px] font-bold flex items-center gap-1 hover:opacity-90"
+              className={cn(rainbowButtonClassName, "h-8 px-3 text-[12px]")}
             >
               {primaryAction.label}
-              <ArrowRight size={12} strokeWidth={2.4} />
+              <ArrowRight size={12} strokeWidth={2.4} className="ml-1" />
             </Link>
           ) : (
-            <button
+            <RainbowButton
               type="button"
               onClick={() => { primaryAction.onClick?.(); onClose() }}
-              className="h-8 px-3 rounded-full bg-[var(--near-black)] text-white text-[12px] font-bold flex items-center gap-1 cursor-pointer hover:opacity-90"
+              className="h-8 px-3 text-[12px]"
             >
               {primaryAction.label}
-              <ArrowRight size={12} strokeWidth={2.4} />
-            </button>
+              <ArrowRight size={12} strokeWidth={2.4} className="ml-1" />
+            </RainbowButton>
           )}
         </div>
       </div>

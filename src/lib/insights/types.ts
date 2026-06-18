@@ -151,17 +151,29 @@ export type SelfProduct = {
 // ─── 爆款源类型 + 复刻项目（最近项目卡） ──────────────────────────────────────
 // "派生迭代" 不是第三种类型，而是项目元数据（见 ReplicaProject.derivedFromProjectId）
 
-export type ReplicaCategory = "market" | "own"
+export type ReplicaCategory = "market" | "competitor" | "own" | "upload"
 
 export const REPLICA_CATEGORY_META: Record<ReplicaCategory, {
   label: string
   short: string
   desc: string
-  tone: "info" | "ok"
+  tone: "info" | "ok" | "warn" | "muted"
   dot: string
 }> = {
-  market:  { label: "市场爆款", short: "市场", desc: "复刻别人，最快验证。需做自有产品匹配检查。", tone: "info", dot: "#0ea5e9" },
-  own:     { label: "自有爆款", short: "自有", desc: "复刻自己，放大已验证素材。生命周期决定窗口。", tone: "ok",   dot: "#22c55e" },
+  market:     { label: "市场爆款", short: "市场", desc: "复刻别人，最快验证。需做自有产品匹配检查。", tone: "info",  dot: "#0ea5e9" },
+  competitor: { label: "竞对爆款", short: "竞对", desc: "复刻竞品在跑素材，看可借鉴 + 差异化。",     tone: "warn",  dot: "#f97316" },
+  own:        { label: "自有爆款", short: "自有", desc: "复刻自己，放大已验证素材。生命周期决定窗口。", tone: "ok",    dot: "#22c55e" },
+  upload:     { label: "自主上传", short: "自传", desc: "用户上传素材，仅做结构识别，低置信。",       tone: "muted", dot: "#a1a1aa" },
+}
+
+// ─── 项目当前阶段（对应 4 步工作流） ────────────────────────────────────────
+export type ReplicaStage = "source" | "breakdown" | "direction" | "confirm"
+
+export const REPLICA_STAGE_META: Record<ReplicaStage, { label: string; dot: string }> = {
+  source:     { label: "选择素材", dot: "#71717a" },
+  breakdown:  { label: "元素拆解", dot: "#0ea5e9" },
+  direction:  { label: "生成方向", dot: "#7c3aed" },
+  confirm:    { label: "确认生成", dot: "#16a34a" },
 }
 
 // 派生关系沿用的变量轴（与 ReplicaDirection.axis 同义）
@@ -208,6 +220,7 @@ export type ReplicaProject = {
   id: string
   title: string
   category: ReplicaCategory
+  stage: ReplicaStage              // 当前所处阶段（对应 4 步工作流）
   sourceFingerprint?: string  // own 用；market 没有自有 fp
   sourceName: string
   productSku: string
@@ -354,6 +367,7 @@ export type ProductBrief = {
   scenes: string[]                 // 使用场景
   price?: string                   // 价格/优惠
   forbidden: string[]              // 禁忌表达
+  competitorBrand?: string         // 竞对品牌（可选，给 Smart Match 用）
 }
 
 // ─── Step 2 爆款判定 ────────────────────────────────────────────────────────
@@ -473,6 +487,7 @@ export type GenerationOutcome = {
   scriptOverride?: ScriptStep[]     // 编辑覆盖
   storyboardOverride?: StoryboardShot[]
   rejectionReason?: RejectionReason
+  rejectionReasonText?: string      // 自定义原因下的文本
   versions?: OutcomeVersion[]       // 历史版本，最多 5 个，新版本在前
   currentVersionId?: string         // 当前展示版本（默认最新）
 }
@@ -496,7 +511,7 @@ export type GenerationTask = {
   outcomes: GenerationOutcome[]
 }
 
-// 不采纳原因 6 选
+// 不采纳原因 6 选 + 自定义
 export type RejectionReason =
   | "hook_weak"
   | "proof_untrust"
@@ -504,6 +519,7 @@ export type RejectionReason =
   | "storyboard_unfilmable"
   | "off_value"
   | "platform_risk"
+  | "custom"
 
 export const REJECTION_REASON_META: Record<RejectionReason, {
   label: string
@@ -515,6 +531,7 @@ export const REJECTION_REASON_META: Record<RejectionReason, {
   storyboard_unfilmable: { label: "分镜不可拍",       desc: "实际拍摄成本高/做不出" },
   off_value:             { label: "不符合商品卖点",   desc: "脚本和产品价值脱节" },
   platform_risk:         { label: "平台风险",         desc: "可能触发红线 / 不通过审核" },
+  custom:                { label: "自定义",           desc: "自己写一句话原因" },
 }
 
 // 4 步生成阶段（Step 5 顶部 progress）
