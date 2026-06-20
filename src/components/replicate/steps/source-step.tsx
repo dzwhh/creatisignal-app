@@ -9,7 +9,10 @@ import {
   ChevronDown,
   Clock3,
   Eye,
+  Film,
   Flame,
+  Package,
+  Play,
   Search,
   Sparkles,
   Star,
@@ -17,6 +20,7 @@ import {
   TrendingUp,
   Upload,
   X,
+  type LucideIcon,
 } from "lucide-react"
 import { RainbowButton } from "@/components/ui/rainbow-button"
 import { cn } from "@/lib/utils"
@@ -39,6 +43,9 @@ interface Props {
   onUploadFile: (name: string) => void
   productBrief: Partial<ProductBrief>
   onProductBriefChange: (next: Partial<ProductBrief>) => void
+  /** 已完成 Step 1 后回流时显示的 summary 视图 */
+  summaryMode?: boolean
+  selectedMaterial?: Material | null
 }
 
 const SOURCE_TABS: MaterialSource[] = ["market_hot", "competitor_hot", "owned_hot", "local_upload"]
@@ -70,6 +77,8 @@ export function SourceStep({
   onUploadFile,
   productBrief,
   onProductBriefChange,
+  summaryMode,
+  selectedMaterial,
 }: Props) {
   const [query, setQuery] = useState("")
   const [filters, setFilters] = useState<Record<string, string>>({
@@ -110,6 +119,11 @@ export function SourceStep({
       setMatchedIds(new Set(top.map((m) => m.fingerprint)))
       setMatching(false)
     }, 900)
+  }
+
+  // Summary 模式 —— 全部 hook 调用之后短路
+  if (summaryMode && selectedMaterial) {
+    return <Step1SummaryView material={selectedMaterial} brief={productBrief} />
   }
 
   return (
@@ -781,6 +795,166 @@ function BasicInfoTable({ material }: { material: Material }) {
         </div>
       ))}
     </div>
+  )
+}
+
+// ─── Step 1 summary view（已完成回流态） ───────────────────────────────────
+
+function Step1SummaryView({ material, brief }: { material: Material; brief: Partial<ProductBrief> }) {
+  const phaseMeta = LIFECYCLE_META[material.lifecyclePhase]
+  return (
+    <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)] gap-6">
+      {/* 左：参考爆款素材 */}
+      <aside className="space-y-3">
+        <SummaryLabel icon={Film} label="参考爆款素材" tone="lime" />
+        <article className="rounded-2xl border border-[var(--line)] bg-white overflow-hidden">
+          <div className="relative bg-black aspect-[9/16] max-h-[420px] flex items-center justify-center">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={material.thumb} alt={material.name} className="w-full h-full object-cover" />
+            <div className="absolute inset-0 flex items-center justify-center bg-black/15">
+              <span className="w-14 h-14 rounded-full bg-white/95 flex items-center justify-center shadow-lg">
+                <Play size={20} className="text-[#18181b] translate-x-0.5" fill="#18181b" />
+              </span>
+            </div>
+            <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between gap-1">
+              <span className="inline-flex items-center gap-1 h-5 px-1.5 rounded-md text-[10px] font-extrabold bg-black/65 text-white backdrop-blur">
+                <Star size={9} strokeWidth={2.6} className="text-[#facc15]" fill="#facc15" />
+                {recommendIndex(material)}
+              </span>
+              <span className="inline-flex items-center gap-1 h-5 px-1.5 rounded-md text-[10px] font-extrabold bg-black/65 text-white backdrop-blur">
+                <Clock3 size={9} strokeWidth={2.6} />
+                {material.ageDays}d
+              </span>
+            </div>
+          </div>
+          <div className="px-4 py-3 border-t border-[var(--line)] space-y-2">
+            <div className="flex items-center gap-2">
+              <p className="text-[13px] font-extrabold text-[var(--text)] truncate flex-1">{material.name}</p>
+              <span
+                className="inline-flex items-center gap-1 h-5 px-1.5 rounded-md text-[10.5px] font-bold border shrink-0"
+                style={{ backgroundColor: phaseMeta.dot + "15", borderColor: phaseMeta.dot + "55", color: phaseMeta.dot }}
+              >
+                <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: phaseMeta.dot }} />
+                {phaseMeta.label}
+              </span>
+            </div>
+            <p className="text-[11px] text-[var(--muted)] font-mono truncate">
+              {material.fingerprint} · SKU {material.sku}
+            </p>
+            {material.sceneTags.length > 0 && (
+              <div className="flex flex-wrap gap-1 pt-1">
+                {material.sceneTags.slice(0, 4).map((t) => (
+                  <span key={t} className="inline-flex items-center h-5 px-1.5 rounded-md bg-[var(--soft)] text-[10.5px] font-bold text-[var(--text)]">
+                    {t}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        </article>
+      </aside>
+
+      {/* 右：你的商品 */}
+      <main className="space-y-3 min-w-0">
+        <SummaryLabel icon={Package} label="你的商品" tone="orange" />
+        <ProductSummaryCard brief={brief} />
+      </main>
+    </div>
+  )
+}
+
+function SummaryLabel({ icon: Icon, label, tone }: { icon: LucideIcon; label: string; tone: "lime" | "orange" }) {
+  const bg = tone === "lime" ? "var(--lime-soft)" : "#fff7ed"
+  const fg = tone === "lime" ? "#5a7821" : "#9a3412"
+  return (
+    <div className="flex items-center gap-2">
+      <span
+        className="w-7 h-7 rounded-lg flex items-center justify-center"
+        style={{ backgroundColor: bg, color: fg }}
+      >
+        <Icon size={13} strokeWidth={2.4} />
+      </span>
+      <h2 className="text-[14px] font-extrabold text-[var(--text)]">{label}</h2>
+    </div>
+  )
+}
+
+function ProductSummaryCard({ brief }: { brief: Partial<ProductBrief> }) {
+  return (
+    <div className="rounded-2xl border border-[var(--line)] bg-white overflow-hidden">
+      {/* hero */}
+      <div className="p-4 flex gap-3 items-start border-b border-[var(--line)]">
+        <div className="w-24 h-24 rounded-xl bg-[var(--soft)] border border-[var(--line)] overflow-hidden shrink-0">
+          {brief.image ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={brief.image} alt={brief.name ?? "product"} className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-[var(--muted-2)]">
+              <Package size={22} />
+            </div>
+          )}
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-[13.5px] font-extrabold text-[var(--text)] leading-snug">{brief.name ?? "未命名商品"}</p>
+          {brief.category && <p className="text-[11px] text-[var(--muted)] mt-1.5">品类 · {brief.category}</p>}
+        </div>
+      </div>
+
+      {/* 主卖点 */}
+      {brief.sellingPoints && brief.sellingPoints.length > 0 && (
+        <SummarySection title="主卖点">
+          <ul className="space-y-1.5">
+            {brief.sellingPoints.map((sp, i) => (
+              <li key={sp} className="flex items-start gap-2 text-[12px] text-[var(--text)] leading-relaxed">
+                <span className="w-4 h-4 rounded-full bg-[var(--lime)] text-[#1a2010] text-[9.5px] font-extrabold flex items-center justify-center shrink-0 mt-0.5">
+                  {i + 1}
+                </span>
+                <span className="font-semibold">{sp}</span>
+              </li>
+            ))}
+          </ul>
+        </SummarySection>
+      )}
+
+      {brief.audience && (
+        <SummarySection title="目标人群">
+          <p className="text-[12px] text-[var(--text)] leading-relaxed">{brief.audience}</p>
+        </SummarySection>
+      )}
+
+      {brief.scenes && brief.scenes.length > 0 && (
+        <SummarySection title="使用场景">
+          <div className="flex flex-wrap gap-1">
+            {brief.scenes.map((s) => (
+              <span key={s} className="inline-flex items-center h-5 px-1.5 rounded-md bg-[#fff7ed] text-[10.5px] font-bold text-[#9a3412]">
+                {s}
+              </span>
+            ))}
+          </div>
+        </SummarySection>
+      )}
+
+      {brief.forbidden && brief.forbidden.length > 0 && (
+        <SummarySection title="禁忌表达">
+          <div className="flex flex-wrap gap-1">
+            {brief.forbidden.map((f) => (
+              <span key={f} className="inline-flex items-center h-5 px-1.5 rounded-md bg-[#fef2f2] text-[10.5px] font-bold text-[#b91c1c] border border-[#fecaca]">
+                {f}
+              </span>
+            ))}
+          </div>
+        </SummarySection>
+      )}
+    </div>
+  )
+}
+
+function SummarySection({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section className="px-4 py-3 border-b border-[var(--line)] last:border-b-0">
+      <p className="text-[10.5px] font-extrabold text-[var(--muted-2)] uppercase tracking-wide mb-2">{title}</p>
+      {children}
+    </section>
   )
 }
 

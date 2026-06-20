@@ -17,7 +17,7 @@ type ActivePopup = "genType" | "model" | "settings" | "count" | null
 const genTypes = [
   { id: "video" as GenType, label: "视频生成", icon: Video },
   { id: "image" as GenType, label: "图片生成", icon: Image },
-  { id: "remix" as GenType, label: "爆款推荐", icon: Link2 },
+  { id: "remix" as GenType, label: "爆款复刻", icon: Link2 },
   { id: "reverse" as GenType, label: "提示词反推", icon: Wand2 },
 ]
 

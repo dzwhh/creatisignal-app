@@ -18,7 +18,7 @@ const INITIAL_DAILY: DailyTask[] = [
   { id: "sign", label: "每日签到",          reward: 20, done: true },
   { id: "task", label: "完成 1 个 AI 任务", reward: 30, done: true },
   { id: "invite", label: "邀请 1 位新好友",  reward: 100, done: false },
-  { id: "replicate", label: "完成首次爆款推荐复刻", reward: 50, done: false },
+  { id: "replicate", label: "完成首次爆款复刻", reward: 50, done: false },
 ]
 
 type ShopItem = {

@@ -8,6 +8,8 @@ import {
   REJECTION_REASON_META,
   type GenerationStage,
   type GenerationTask,
+  type Material,
+  type ProductBrief,
   type RejectionReason,
   type ReplicaDirectionV2,
 } from "@/lib/insights/types"
@@ -18,6 +20,8 @@ interface Props {
   directions: ReplicaDirectionV2[]
   stageProgress: Record<GenerationStage, number>
   hasRunningTask: boolean                                 // 是否还有任务在跑
+  sourceMaterial: Material | null                         // Step 1 选定的素材（用于 详情 → 参考视频 tab）
+  productBrief: Partial<ProductBrief>                     // 商品信息（用于 详情 → 自有商品 tab）
   onAdopt: (outcomeId: string) => void
   onReject: (outcomeId: string, reason: RejectionReason, customText?: string) => void
   onAddVersion: (outcomeId: string, storyboardEdits: Record<string, string>) => void
@@ -32,6 +36,8 @@ export function ConfirmStep({
   directions,
   stageProgress,
   hasRunningTask,
+  sourceMaterial,
+  productBrief,
   onAdopt,
   onReject,
   onAddVersion,
@@ -74,6 +80,8 @@ export function ConfirmStep({
               task={task}
               directions={directions}
               defaultExpanded={task.index === tasks.length}  // 最新（task.index 最大）默认展开
+              sourceMaterial={sourceMaterial}
+              productBrief={productBrief}
               onAdopt={onAdopt}
               onReject={onReject}
               onAddVersion={onAddVersion}
@@ -154,6 +162,8 @@ export function ConfirmStep({
 function TaskGroup({
   task,
   defaultExpanded,
+  sourceMaterial,
+  productBrief,
   onAdopt,
   onReject,
   onAddVersion,
@@ -163,6 +173,8 @@ function TaskGroup({
   task: GenerationTask
   directions: ReplicaDirectionV2[]
   defaultExpanded: boolean
+  sourceMaterial: Material | null
+  productBrief: Partial<ProductBrief>
   onAdopt: (id: string) => void
   onReject: (id: string, r: RejectionReason, customText?: string) => void
   onAddVersion: (id: string, edits: Record<string, string>) => void
@@ -220,6 +232,8 @@ function TaskGroup({
                 key={o.id}
                 outcome={o}
                 direction={dirById(o.directionId)}
+                sourceMaterial={sourceMaterial}
+                productBrief={productBrief}
                 onAdopt={() => onAdopt(o.id)}
                 onReject={(r, t) => onReject(o.id, r, t)}
                 onAddVersion={(edits) => onAddVersion(o.id, edits)}

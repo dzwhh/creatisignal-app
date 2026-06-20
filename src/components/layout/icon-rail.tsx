@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation"
 import { Fragment } from "react"
 import { PanelLeftOpen } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { navSections, getSectionByPath, type NavSection } from "@/lib/nav-config"
+import { findActiveSubMenuHref, navSections, getSectionByPath, type NavSection } from "@/lib/nav-config"
 import { useSidebarCollapsed } from "@/lib/layout/sidebar-state"
 import { HoverList } from "./hover-list"
 
@@ -67,6 +67,11 @@ function IconRailItem({
   pathname: string
 }) {
   const Icon = section.icon
+  const hasSubMenu = section.subMenu.length > 0
+  // 折叠态：仅"有 subMenu 的 section"才弹 flyout；空 subMenu（如 Agent）退回 SimpleTooltip
+  const showFlyout = collapsed && hasSubMenu
+  const showSimpleTooltip = !collapsed || !hasSubMenu
+
   return (
     <div className="group relative">
       <Link
@@ -78,9 +83,9 @@ function IconRailItem({
         aria-label={section.label}
       >
         <Icon size={16} strokeWidth={2} />
-        {!collapsed && <SimpleTooltip>{section.label}</SimpleTooltip>}
+        {showSimpleTooltip && <SimpleTooltip>{section.label}</SimpleTooltip>}
       </Link>
-      {collapsed && <Flyout section={section} pathname={pathname} />}
+      {showFlyout && <Flyout section={section} pathname={pathname} />}
     </div>
   )
 }
@@ -98,7 +103,10 @@ function SimpleTooltip({ children }: { children: React.ReactNode }) {
 // ─── 折叠态的二级菜单飞出卡 ─────────────────────────────────────────────────
 
 function Flyout({ section, pathname }: { section: NavSection; pathname: string }) {
-  const activeIndex = section.subMenu.findIndex((item) => pathname.startsWith(item.href))
+  const activeHref = findActiveSubMenuHref(pathname, section.subMenu)
+  const activeIndex = activeHref
+    ? section.subMenu.findIndex((i) => i.href === activeHref)
+    : -1
   return (
     <div
       className={cn(
@@ -116,7 +124,7 @@ function Flyout({ section, pathname }: { section: NavSection; pathname: string }
         </p>
         <HoverList activeIndex={activeIndex === -1 ? null : activeIndex} gap={2}>
           {section.subMenu.map((item) => {
-            const active = pathname.startsWith(item.href)
+            const active = item.href === activeHref
             const ItemIcon = item.icon
             return (
               <Link

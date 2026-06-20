@@ -81,7 +81,7 @@ export function ReplicateHub() {
         {/* Header */}
         <div className="flex items-end justify-between">
           <div>
-            <h1 className="text-[22px] font-extrabold text-[var(--text)] tracking-tight">爆款推荐</h1>
+            <h1 className="text-[22px] font-extrabold text-[var(--text)] tracking-tight">爆款复刻</h1>
             <p className="text-[12.5px] text-[var(--muted)] mt-1">从市场或自有素材开始复刻 · 系统自动判定生命周期 · 你只做决策</p>
           </div>
           <button

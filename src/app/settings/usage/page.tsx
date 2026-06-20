@@ -17,7 +17,7 @@ const TASK_DIST = [
   { name: "Video 视频生成",     count: 142, color: "#0ea5e9" },
   { name: "Brief 创意 Brief",   count: 64, color: "#16a34a" },
   { name: "Analysis 创意分析",  count: 38, color: "#f97316" },
-  { name: "Replicate 爆款推荐", count: 12, color: "#dc2626" },
+  { name: "Replicate 爆款复刻", count: 12, color: "#dc2626" },
 ]
 
 const HISTORY = [

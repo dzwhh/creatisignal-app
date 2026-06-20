@@ -10,6 +10,7 @@ import {
   FlaskConical,
   LayoutGrid,
   Layers,
+  RefreshCw,
   ShieldCheck,
   Sparkles,
 } from "lucide-react"
@@ -30,7 +31,7 @@ import {
   mockGenerationOutcomes,
   pickDefaultProduct,
 } from "@/lib/insights/mock"
-import { ContextBar } from "./context-bar"
+import { Clock3 } from "lucide-react"
 import { SourceStep } from "./steps/source-step"
 import { BreakdownStep } from "./steps/breakdown-step"
 import { loadSampleBreakdown } from "@/lib/replicate/breakdown-utils"
@@ -47,15 +48,16 @@ interface Props {
   productSkuFromQuery?: string
   sourceFromQuery?: string              // 推断初始 source
   initialStep?: StepId                  // ?step=N 优先；否则按 source 推断
+  projectTitle?: string                 // ?title= 项目名（hub 新建时携带）
 }
 
-export function ReplicateWorkspace({ material, materialId, productSkuFromQuery, sourceFromQuery, initialStep }: Props) {
-  return <Inner material={material} materialId={materialId} productSkuFromQuery={productSkuFromQuery} sourceFromQuery={sourceFromQuery} initialStep={initialStep} />
+export function ReplicateWorkspace({ material, materialId, productSkuFromQuery, sourceFromQuery, initialStep, projectTitle }: Props) {
+  return <Inner material={material} materialId={materialId} productSkuFromQuery={productSkuFromQuery} sourceFromQuery={sourceFromQuery} initialStep={initialStep} projectTitle={projectTitle} />
 }
 
 // ─── Inner workspace with full state machine ─────────────────────────────────
 
-function Inner({ material, productSkuFromQuery, sourceFromQuery, initialStep }: Props) {
+function Inner({ material, productSkuFromQuery, sourceFromQuery, initialStep, projectTitle }: Props) {
   // 推断初始 source：discover→market_hot；insights→owned_hot；否则按 material 决定
   const initialSource: MaterialSource | null =
     sourceFromQuery === "discover" ? "market_hot" :
@@ -68,6 +70,12 @@ function Inner({ material, productSkuFromQuery, sourceFromQuery, initialStep }: 
     (sourceFromQuery === "discover" ? 1 : material ? 2 : 1)
 
   const [step, setStep] = useState<StepId>(computedInitialStep)
+
+  // Step 1 是否已被完成过一次 —— true 时回到 Step 1 显示 summary 视图
+  // 初始：如果带入参素材 + 自动跳到 step 2，视为已完成
+  const [hasCompletedStep1, setHasCompletedStep1] = useState<boolean>(
+    Boolean(material) && computedInitialStep >= 2
+  )
 
   // Step 1 状态
   const [source, setSource] = useState<MaterialSource | null>(initialSource)
@@ -90,6 +98,22 @@ function Inner({ material, productSkuFromQuery, sourceFromQuery, initialStep }: 
     }
     return { sellingPointMode: "manual" }
   })
+
+  // 从「创意分析 → 进入爆款复刻」抽屉传入的 brief —— mount 一次性接收
+  // key 需与 enter-replicate-drawer.tsx 中 REPLICATE_HANDOFF_KEY 保持一致
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    const raw = window.sessionStorage.getItem("replicate.handoffBrief")
+    if (!raw) return
+    try {
+      const handoff = JSON.parse(raw) as Partial<ProductBrief>
+      // 合并：用户配置过的字段覆盖默认 brief，其余保留默认
+      setProductBrief((prev) => ({ ...prev, ...handoff }))
+    } catch {
+      /* ignore malformed handoff */
+    }
+    window.sessionStorage.removeItem("replicate.handoffBrief")
+  }, [])
 
   // 选中的素材对象（按 selectedMaterialId 查表）
   const selectedMaterial = useMemo(() => {
@@ -291,6 +315,7 @@ function Inner({ material, productSkuFromQuery, sourceFromQuery, initialStep }: 
 
   function goNext() {
     if (!canNext.ok) return
+    if (step === 1) setHasCompletedStep1(true)
     if (step < 4) setStep((step + 1) as StepId)
   }
 
@@ -298,9 +323,29 @@ function Inner({ material, productSkuFromQuery, sourceFromQuery, initialStep }: 
     if (step > 1) setStep((step - 1) as StepId)
   }
 
+  function handleReselect() {
+    // 回到 picker 状态：清空已选素材与上传文件，商品 brief 保留
+    setSelectedMaterialId(null)
+    setUploadedFileName(null)
+    setHasCompletedStep1(false)
+  }
+
+  // Step 1 是否进入 summary 模式（已完成 + 仍有选中素材或上传文件）
+  const step1SummaryMode =
+    step === 1 && hasCompletedStep1 && Boolean(selectedMaterialId || uploadedFileName)
+
+  const resolvedTitle = projectTitle?.trim() || (selectedMaterial ? `复刻 · ${selectedMaterial.name}` : "未命名项目")
+
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-[var(--soft-2)]">
-      <ContextBar source={source} lifecyclePhase={selectedMaterial?.lifecyclePhase} />
+      {/* 项目标题 + 时间（替代原 ContextBar） */}
+      <div className="px-8 py-2.5 bg-white flex items-center justify-between gap-3">
+        <h2 className="text-[14px] font-extrabold text-[var(--text)] truncate">{resolvedTitle}</h2>
+        <span className="inline-flex items-center gap-1 text-[11.5px] font-semibold text-[var(--muted)] shrink-0">
+          <Clock3 size={11} strokeWidth={2.2} className="text-[var(--muted-2)]" />
+          刚刚更新
+        </span>
+      </div>
 
       <Stepper step={step} setStep={(s) => setStep(s)} />
 
@@ -316,6 +361,8 @@ function Inner({ material, productSkuFromQuery, sourceFromQuery, initialStep }: 
               onUploadFile={(name) => setUploadedFileName(name || null)}
               productBrief={productBrief}
               onProductBriefChange={setProductBrief}
+              summaryMode={step1SummaryMode}
+              selectedMaterial={selectedMaterial}
             />
           )}
           {step === 2 && <BreakdownStep data={videoBreakdown} />}
@@ -332,6 +379,8 @@ function Inner({ material, productSkuFromQuery, sourceFromQuery, initialStep }: 
               directions={directions}
               stageProgress={stageProgress}
               hasRunningTask={Boolean(runningTaskId)}
+              sourceMaterial={selectedMaterial}
+              productBrief={productBrief}
               onAddVersion={handleAddOutcomeVersion}
               onSwitchVersion={handleSwitchOutcomeVersion}
               onAdopt={handleAdopt}
@@ -347,6 +396,8 @@ function Inner({ material, productSkuFromQuery, sourceFromQuery, initialStep }: 
         canNext={canNext}
         onPrev={goPrev}
         onNext={goNext}
+        showReselect={step1SummaryMode}
+        onReselect={handleReselect}
       />
     </div>
   )
@@ -400,11 +451,13 @@ function Stepper({ step, setStep }: { step: StepId; setStep: (s: StepId) => void
 
 // ─── Sticky bottom bar ──────────────────────────────────────────────────────
 
-function StickyBar({ step, canNext, onPrev, onNext }: {
+function StickyBar({ step, canNext, onPrev, onNext, showReselect, onReselect }: {
   step: StepId
   canNext: { ok: boolean; ctaLabel: string }
   onPrev: () => void
   onNext: () => void
+  showReselect?: boolean
+  onReselect?: () => void
 }) {
   return (
     <div className="sticky bottom-0 bg-white border-t border-[var(--line)] px-8 py-3 flex items-center justify-between gap-3">
@@ -433,20 +486,45 @@ function StickyBar({ step, canNext, onPrev, onNext }: {
         </span>
       </div>
 
-      <button
-        type="button"
-        onClick={onNext}
-        disabled={!canNext.ok}
-        className={cn(
-          "h-10 px-5 rounded-full text-[13px] font-extrabold flex items-center gap-1.5 transition-opacity",
-          canNext.ok
-            ? "bg-[var(--near-black)] text-white cursor-pointer hover:opacity-90"
-            : "bg-[var(--soft)] text-[var(--muted-2)] cursor-not-allowed"
+      <div className="flex items-center gap-2">
+        {/* Step 1 summary 态：左侧弱展示「重新选择爆款」 */}
+        {showReselect && (
+          <button
+            type="button"
+            onClick={onReselect}
+            className="h-9 px-3.5 rounded-full text-[12.5px] font-bold text-[var(--muted)] hover:text-[var(--text)] hover:bg-[var(--soft-2)] cursor-pointer flex items-center gap-1.5"
+          >
+            <RefreshCw size={11} strokeWidth={2.2} />
+            重新选择爆款
+          </button>
         )}
-      >
-        {canNext.ctaLabel}
-        {canNext.ok && <ArrowRight size={13} strokeWidth={2.4} />}
-      </button>
+
+        {/* Step 2 元素拆解 阶段：左侧弱展示「重新理解素材」 */}
+        {step === 2 && (
+          <button
+            type="button"
+            className="h-9 px-3.5 rounded-full text-[12.5px] font-bold text-[var(--muted)] hover:text-[var(--text)] hover:bg-[var(--soft-2)] cursor-pointer flex items-center gap-1.5"
+          >
+            <RefreshCw size={11} strokeWidth={2.2} />
+            重新理解素材
+          </button>
+        )}
+
+        <button
+          type="button"
+          onClick={onNext}
+          disabled={!canNext.ok}
+          className={cn(
+            "h-10 px-5 rounded-full text-[13px] font-extrabold flex items-center gap-1.5 transition-opacity",
+            canNext.ok
+              ? "bg-[var(--near-black)] text-white cursor-pointer hover:opacity-90"
+              : "bg-[var(--soft)] text-[var(--muted-2)] cursor-not-allowed"
+          )}
+        >
+          {canNext.ctaLabel}
+          {canNext.ok && <ArrowRight size={13} strokeWidth={2.4} />}
+        </button>
+      </div>
     </div>
   )
 }

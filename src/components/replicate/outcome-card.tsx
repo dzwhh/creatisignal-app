@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { Check, FileText, History, Play, X } from "lucide-react"
 import { cn } from "@/lib/utils"
-import type { GenerationOutcome, ReplicaDirectionV2, RejectionReason } from "@/lib/insights/types"
+import type { GenerationOutcome, Material, ProductBrief, ReplicaDirectionV2, RejectionReason } from "@/lib/insights/types"
 import { REJECTION_REASON_META } from "@/lib/insights/types"
 import { RejectionReasonPicker } from "./rejection-reason-picker"
 import { OutcomeDetailDrawer } from "./outcome-detail-drawer"
@@ -11,13 +11,15 @@ import { OutcomeDetailDrawer } from "./outcome-detail-drawer"
 interface Props {
   outcome: GenerationOutcome
   direction: ReplicaDirectionV2
+  sourceMaterial: Material | null
+  productBrief: Partial<ProductBrief>
   onAdopt: () => void
   onReject: (reason: RejectionReason, customText?: string) => void
   onAddVersion: (storyboardEdits: Record<string, string>) => void
   onSwitchVersion: (versionId: string) => void
 }
 
-export function OutcomeCard({ outcome, direction, onAdopt, onReject, onAddVersion, onSwitchVersion }: Props) {
+export function OutcomeCard({ outcome, direction, sourceMaterial, productBrief, onAdopt, onReject, onAddVersion, onSwitchVersion }: Props) {
   const [rejectOpen, setRejectOpen] = useState(false)
   const [detailOpen, setDetailOpen] = useState(false)
   const status = outcome.status
@@ -157,6 +159,8 @@ export function OutcomeCard({ outcome, direction, onAdopt, onReject, onAddVersio
         <OutcomeDetailDrawer
           outcome={outcome}
           direction={direction}
+          sourceMaterial={sourceMaterial}
+          productBrief={productBrief}
           open={detailOpen}
           onClose={() => setDetailOpen(false)}
           onRegenerate={onAddVersion}

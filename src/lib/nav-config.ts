@@ -1,12 +1,13 @@
 import {
+  Activity,
   Archive,
   BarChart3,
   Bell,
+  Bot,
   Coins,
   Globe2,
   Home,
   Lightbulb,
-  RadioTower,
   Receipt,
   Settings,
   ShieldCheck,
@@ -27,22 +28,32 @@ export interface NavSection {
   id: string
   icon: LucideIcon
   label: string
-  defaultHref: string // first submenu href
-  groupBreakBefore?: boolean   // IconRail 在此 section 上方加分割线
-  subMenu: SubMenuItem[]
+  defaultHref: string // first submenu href (or direct destination if subMenu is empty)
+  groupBreakBefore?: boolean  // IconRail 在此 section 上方加分割线
+  subMenu: SubMenuItem[]      // 空数组 = 直达项，无二级
 }
 
 export const navSections: NavSection[] = [
   {
     id: "home",
     icon: Home,
-    label: "主页",
+    label: "首页",
     defaultHref: "/assistant",
     subMenu: [
       { label: "创意助手", href: "/assistant" },
-      { label: "素材洞察", href: "/insights" },
-      { label: "爆款推荐", href: "/replicate" },
       { label: "我的任务", href: "/reports" },
+    ],
+  },
+  {
+    id: "insights",
+    icon: Activity,
+    label: "洞察",
+    defaultHref: "/insights",
+    subMenu: [
+      { label: "素材洞察",        href: "/insights" },
+      { label: "Creative Tagging", href: "/insights/tagging" },
+      { label: "疲劳度监测",      href: "/insights/fatigue" },
+      { label: "创意报表",        href: "/insights/reports" },
     ],
   },
   {
@@ -59,22 +70,18 @@ export const navSections: NavSection[] = [
     id: "create",
     icon: Sparkles,
     label: "创作",
-    defaultHref: "/create/image",
+    defaultHref: "/replicate",
     subMenu: [
-      { label: "图片创作", href: "/create/image" },
-      { label: "视频创作", href: "/create/video" },
+      { label: "爆款复刻", href: "/replicate" },
       { label: "创意画布", href: "/create/canvas" },
     ],
   },
   {
-    id: "ads",
-    icon: RadioTower,
-    label: "投放",
-    defaultHref: "/ads/dashboard",
-    subMenu: [
-      { label: "投放看板", href: "/ads/dashboard" },
-      { label: "素材投放", href: "/ads/materials" },
-    ],
+    id: "agent",
+    icon: Bot,
+    label: "Agent",
+    defaultHref: "/agent",
+    subMenu: [],
   },
   {
     id: "tools",
@@ -92,11 +99,7 @@ export const navSections: NavSection[] = [
     icon: Archive,
     label: "资产库",
     defaultHref: "/assets",
-    subMenu: [
-      { label: "AI 生成", href: "/assets/generated" },
-      { label: "上传的资产", href: "/assets/uploaded" },
-      { label: "数字人", href: "/assets/avatars" },
-    ],
+    subMenu: [],
   },
   {
     id: "settings",
@@ -118,9 +121,20 @@ export const navSections: NavSection[] = [
 ]
 
 export function getSectionByPath(pathname: string): NavSection | undefined {
+  if (pathname === "/") return navSections.find((s) => s.id === "home")
   return navSections.find((section) =>
-    section.subMenu.some((item) => pathname.startsWith(item.href)) ||
-    (pathname === "/" && section.id === "home") ||
-    (pathname.startsWith("/assistant") && section.id === "home")
+    section.subMenu.length === 0
+      ? pathname.startsWith(section.defaultHref)
+      : section.subMenu.some((item) => pathname.startsWith(item.href))
   )
+}
+
+/**
+ * 在 subMenu 里挑选最匹配当前 pathname 的 item href（最长前缀胜出）。
+ * 解决 `/insights/reports` 同时 startsWith `/insights` 和 `/insights/reports` 的歧义。
+ */
+export function findActiveSubMenuHref(pathname: string, subMenu: SubMenuItem[]): string | undefined {
+  return subMenu
+    .filter((item) => pathname.startsWith(item.href))
+    .sort((a, b) => b.href.length - a.href.length)[0]?.href
 }

@@ -8,10 +8,10 @@ export default async function ReplicatePage({
   searchParams,
 }: {
   params: Promise<{ id: string }>
-  searchParams: Promise<{ product?: string; source?: string; step?: string }>
+  searchParams: Promise<{ product?: string; source?: string; step?: string; title?: string }>
 }) {
   const { id } = await params
-  const { product, source, step: stepRaw } = await searchParams
+  const { product, source, step: stepRaw, title } = await searchParams
 
   const material = MATERIALS.find((m) => m.fingerprint === id) ?? null
   // step 显式优先；否则交给 workspace 按 source 推断
@@ -20,13 +20,14 @@ export default async function ReplicatePage({
 
   return (
     <>
-      <Topbar title="爆款推荐" />
+      <Topbar title="爆款复刻" />
       <ReplicateWorkspace
         material={material}
         materialId={id}
         productSkuFromQuery={product}
         sourceFromQuery={source}
         initialStep={initialStep}
+        projectTitle={title}
       />
     </>
   )
