@@ -10,8 +10,7 @@ import { SpotlightTour } from "./spotlight-tour"
 import { SubmitArrowTip } from "./submit-arrow-tip"
 import { TaskResultModal } from "./task-result-modal"
 import { TaskResultSection } from "@/components/dashboard/task-result-section"
-import { TopCreativesSection } from "@/components/dashboard/top-creatives-section"
-import { CompetitorSection } from "@/components/dashboard/competitor-section"
+import { DiscoveryHub } from "@/components/assistant/discovery/discovery-hub"
 
 const GENERATION_DELAY_MS = 1500
 
@@ -235,11 +234,7 @@ export function AssistantPageContent() {
           />
 
           <div className="mt-10">
-            <TopCreativesSection />
-          </div>
-
-          <div className="mt-10">
-            <CompetitorSection />
+            <DiscoveryHub />
           </div>
         </>
       )}

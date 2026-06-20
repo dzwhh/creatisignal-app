@@ -1,6 +1,7 @@
 "use client"
 
-import { Bell, Plus } from "lucide-react"
+import { Bell } from "lucide-react"
+import { DataSourceSwitcher } from "./data-source-switcher"
 
 interface TopbarProps {
   title: string
@@ -13,13 +14,7 @@ export function Topbar({ title }: TopbarProps) {
       <div className="flex items-center gap-[14px] text-[#9498a2] text-xs font-medium">
         <span>14h ago</span>
         <Bell size={15} strokeWidth={2} />
-        <button
-          type="button"
-          className="h-[30px] border border-[var(--line-strong)] rounded-lg bg-white text-[#2c2f35] px-[11px] flex items-center gap-[6px] font-bold cursor-pointer text-xs"
-        >
-          <Plus size={13} strokeWidth={2.5} />
-          添加账户
-        </button>
+        <DataSourceSwitcher />
       </div>
     </header>
   )

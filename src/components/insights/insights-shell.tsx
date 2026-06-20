@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { Calendar, ChevronDown, LayoutDashboard, Stethoscope, FileText, FlaskConical, Settings2 } from "lucide-react"
+import { Calendar, Check, ChevronDown, LayoutDashboard, Stethoscope, FileText, FlaskConical, Settings2 } from "lucide-react"
 import * as Popover from "@radix-ui/react-popover"
 import { cn } from "@/lib/utils"
 import { AccountPicker } from "./account-picker"
@@ -25,7 +25,7 @@ const tabs: { id: Tab; label: string; icon: React.ComponentType<{ size?: number;
 
 export function InsightsShell() {
   const [tab, setTab] = useState<Tab>("overview")
-  const [brand] = useState("Hotligh")
+  const [shop, setShop] = useState<Shop>(SHOPS[0])
   const [dateRange, setDateRange] = useState<DateRange>("7d")
   const [view, setView] = useState<ViewMode>("material")
   // Default = all active accounts (≠ paused); empty Set means "all"
@@ -52,7 +52,7 @@ export function InsightsShell() {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <BrandSelector brand={brand} />
+            <ShopSwitcher value={shop} onChange={setShop} />
             <AccountPicker selected={selectedAccounts} onChange={setSelectedAccounts} />
             <DateRangePicker value={dateRange} onChange={setDateRange} />
             {tab === "diagnose" && <ViewSwitcher value={view} onChange={setView} />}
@@ -99,18 +99,83 @@ export function InsightsShell() {
   )
 }
 
-// ─── Brand selector (single brand placeholder) ───────────────────────────────
+// ─── Shop switcher ───────────────────────────────────────────────────────────
 
-function BrandSelector({ brand }: { brand: string }) {
+type Shop = {
+  id: string
+  name: string
+  shopCode: string
+  initial: string
+  color: string    // 头像底色
+}
+
+const SHOPS: Shop[] = [
+  { id: "hotligh",  name: "Hotligh",    shopCode: "HTLGHX001", initial: "H", color: "#fde68a" },
+  { id: "skinmade", name: "SKINMADE",   shopCode: "MYLCX2WLAG", initial: "S", color: "#e0e7ff" },
+  { id: "toolbox",  name: "ToolBox Pro", shopCode: "TBPRO-0421", initial: "T", color: "#bbf7d0" },
+  { id: "outdoor",  name: "Outdoor Crew", shopCode: "OUTCREW9X", initial: "O", color: "#fed7aa" },
+  { id: "anker",    name: "Anker Direct", shopCode: "ANKER-DRT-1", initial: "A", color: "#bae6fd" },
+]
+
+function ShopSwitcher({ value, onChange }: { value: Shop; onChange: (s: Shop) => void }) {
   return (
-    <button
-      type="button"
-      className="h-9 px-3 rounded-full border border-[var(--line)] bg-white text-[13px] font-semibold text-[var(--text)] flex items-center gap-1.5 cursor-pointer hover:border-[var(--line-strong)] transition-colors"
-    >
-      <span className="w-4 h-4 rounded-full bg-[#fde68a] text-[10px] font-black flex items-center justify-center">H</span>
-      {brand}
-      <ChevronDown size={12} className="text-[var(--muted)] -mr-0.5" />
-    </button>
+    <Popover.Root>
+      <Popover.Trigger asChild>
+        <button
+          type="button"
+          className="h-9 px-3 rounded-full border border-[var(--line)] bg-white text-[13px] font-semibold text-[var(--text)] flex items-center gap-1.5 cursor-pointer hover:border-[var(--line-strong)] transition-colors data-[state=open]:border-[var(--line-strong)] data-[state=open]:bg-[var(--soft-2)]"
+        >
+          <span
+            className="w-4 h-4 rounded-full text-[10px] font-black flex items-center justify-center text-[#1a2010]"
+            style={{ backgroundColor: value.color }}
+          >
+            {value.initial}
+          </span>
+          {value.name}
+          <ChevronDown size={12} className="text-[var(--muted)] -mr-0.5" />
+        </button>
+      </Popover.Trigger>
+      <Popover.Portal>
+        <Popover.Content
+          align="end"
+          sideOffset={6}
+          className="z-50 w-[280px] p-1.5 bg-white border border-[var(--line)] rounded-[14px] shadow-[0_18px_42px_rgba(9,9,11,0.14)] data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95"
+        >
+          <p className="px-2.5 pt-1 pb-1.5 text-[10.5px] font-extrabold text-[var(--muted-2)] uppercase tracking-wide">
+            切换店铺
+          </p>
+          {SHOPS.map((s) => {
+            const active = s.id === value.id
+            return (
+              <Popover.Close key={s.id} asChild>
+                <button
+                  type="button"
+                  onClick={() => onChange(s)}
+                  className={cn(
+                    "w-full px-2 py-2 rounded-[9px] flex items-center gap-2.5 cursor-pointer text-left transition-colors",
+                    active ? "bg-[var(--soft)]" : "hover:bg-[var(--soft-2)]"
+                  )}
+                >
+                  <span
+                    className="w-9 h-9 rounded-lg flex items-center justify-center text-[14px] font-extrabold text-[#1a2010] shrink-0"
+                    style={{ backgroundColor: s.color }}
+                  >
+                    {s.initial}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[12.5px] font-extrabold text-[var(--text)] truncate">{s.name}</p>
+                    <p className="text-[10.5px] text-[var(--muted)] font-mono truncate mt-0.5">
+                      Shop code: {s.shopCode}
+                    </p>
+                  </div>
+                  {active && <Check size={12} strokeWidth={2.6} className="text-[var(--text)] shrink-0" />}
+                </button>
+              </Popover.Close>
+            )
+          })}
+        </Popover.Content>
+      </Popover.Portal>
+    </Popover.Root>
   )
 }
 

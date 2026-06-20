@@ -1,16 +1,26 @@
 import {
+  Archive,
+  BarChart3,
+  Bell,
+  Coins,
+  Globe2,
   Home,
   Lightbulb,
-  Sparkles,
   RadioTower,
+  Receipt,
+  Settings,
+  ShieldCheck,
+  Sparkles,
+  UserCircle,
+  Users,
   Wrench,
-  Archive,
   type LucideIcon,
 } from "lucide-react"
 
 export interface SubMenuItem {
   label: string
   href: string
+  icon?: LucideIcon
 }
 
 export interface NavSection {
@@ -18,6 +28,7 @@ export interface NavSection {
   icon: LucideIcon
   label: string
   defaultHref: string // first submenu href
+  groupBreakBefore?: boolean   // IconRail 在此 section 上方加分割线
   subMenu: SubMenuItem[]
 }
 
@@ -85,6 +96,23 @@ export const navSections: NavSection[] = [
       { label: "AI 生成", href: "/assets/generated" },
       { label: "上传的资产", href: "/assets/uploaded" },
       { label: "数字人", href: "/assets/avatars" },
+    ],
+  },
+  {
+    id: "settings",
+    icon: Settings,
+    label: "设置",
+    defaultHref: "/settings/account",
+    groupBreakBefore: true,
+    subMenu: [
+      { label: "账户",     href: "/settings/account",       icon: UserCircle },
+      { label: "用量",     href: "/settings/usage",         icon: BarChart3 },
+      { label: "账单",     href: "/settings/billing",       icon: Receipt },
+      { label: "积分",     href: "/settings/credits",       icon: Coins },
+      { label: "邀请裂变", href: "/settings/invite",        icon: Users },
+      { label: "安全",     href: "/settings/security",      icon: ShieldCheck },
+      { label: "语言",     href: "/settings/language",      icon: Globe2 },
+      { label: "通知",     href: "/settings/notifications", icon: Bell },
     ],
   },
 ]

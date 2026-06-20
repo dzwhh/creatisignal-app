@@ -1164,3 +1164,42 @@ export function mockGenerationOutcomes(directions: ReplicaDirectionV2[]): Genera
     durationSec: 15,
   }))
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Discovery Hub mock helpers（自有 / 市场 / 竞对）
+// ═══════════════════════════════════════════════════════════════════════════
+
+export type OwnHotSort = "order" | "roi"
+export function getOwnHotPicks(n: number, sort: OwnHotSort = "roi"): Material[] {
+  const list = MATERIALS.filter((m) => m.bucket === "core").slice()
+  list.sort((a, b) =>
+    sort === "order"
+      ? b.metrics.orders - a.metrics.orders
+      : b.metrics.roi - a.metrics.roi
+  )
+  return list.slice(0, n)
+}
+
+export type MarketHotSort = "latest" | "played" | "engaged"
+export function getMarketHotPicks(n: number, sort: MarketHotSort = "latest"): Material[] {
+  const list = MATERIALS.slice(0, n * 2)
+  list.sort((a, b) => {
+    if (sort === "latest")  return a.ageDays - b.ageDays
+    if (sort === "played")  return b.metrics.impressions - a.metrics.impressions
+    /* engaged */            return b.metrics.ctr - a.metrics.ctr
+  })
+  return list.slice(0, n)
+}
+
+export type CompetitorSort = "latest" | "played" | "engaged" | "sustained"
+
+// 用 brand 名做 seed 拿稳定子集；每个品牌得到一组不同缩略图
+// 加 sort 后缀 → 切 tab 时缩略图也轮换，视觉上能感知切换
+export function getCompetitorMaterialsByBrand(brandSeed: string, n: number, sort: CompetitorSort = "latest"): { thumb: string; id: string }[] {
+  const base = brandSeed.toLowerCase().replace(/[^a-z0-9]/g, "")
+  return Array.from({ length: n }, (_, i) => ({
+    id: `${base}_${sort}_ad_${i + 1}`,
+    thumb: `https://picsum.photos/seed/${base}_${sort}_${i + 1}/480/854`,
+  }))
+}
+
