@@ -16,7 +16,7 @@ export function Topbar({ title, showActions = true, bordered = true }: TopbarPro
   return (
     <header
       className={cn(
-        "h-12 flex items-center justify-between px-6 bg-white text-[#1f2228] text-sm font-semibold shrink-0",
+        "h-12 flex items-center justify-between px-6 bg-white text-[#1f2228] text-sm font-medium shrink-0",
         bordered && "border-b border-[var(--line)]"
       )}
     >

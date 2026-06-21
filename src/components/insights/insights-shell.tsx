@@ -1,30 +1,51 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { Calendar, Check, ChevronDown, LayoutDashboard, Stethoscope, FileText, FlaskConical, Settings2 } from "lucide-react"
+import { Battery, Calendar, Check, ChevronDown, Gauge, Megaphone, Stethoscope, Tags } from "lucide-react"
 import * as Popover from "@radix-ui/react-popover"
 import { cn } from "@/lib/utils"
 import { AccountPicker } from "./account-picker"
 import { ACCOUNTS } from "@/lib/insights/mock"
 import { DATE_RANGE_LABEL, type DateRange, type ViewMode } from "@/lib/insights/types"
-import { OverviewPage } from "./pages/overview-page"
+import { DashboardPage } from "./pages/dashboard-page"
 import { DiagnosePage } from "./pages/diagnose-page"
-import { ReportPage } from "./pages/report-page"
-import { ExperimentPage } from "./pages/experiment-page"
-import { AccountManagePage } from "./pages/account-manage-page"
+import { TaggingPage } from "./pages/tagging-page"
+import { FatiguePage } from "./pages/fatigue-page"
 
-type Tab = "overview" | "diagnose" | "report" | "experiment" | "accounts"
+// ─── Ad product (广告产品) ──────────────────────────────────────────────────
+type AdProductId = "gmv_max" | "standard"
 
-const tabs: { id: Tab; label: string; icon: React.ComponentType<{ size?: number; strokeWidth?: number }> }[] = [
-  { id: "overview",   label: "概览",       icon: LayoutDashboard },
-  { id: "diagnose",   label: "素材诊断",   icon: Stethoscope },
-  { id: "report",     label: "洞察报告",   icon: FileText },
-  { id: "experiment", label: "实验追踪",   icon: FlaskConical },
-  { id: "accounts",   label: "账户管理",   icon: Settings2 },
+type AdProduct = {
+  id: AdProductId
+  label: string
+  desc: string
+}
+
+const AD_PRODUCTS: AdProduct[] = [
+  {
+    id: "gmv_max",
+    label: "GMV Max",
+    desc: "监测商品 × 素材在 GMV Max 自动投放中的 GMV 贡献",
+  },
+  {
+    id: "standard",
+    label: "标准竞价广告",
+    desc: "适用于普通 TikTok Ads、Spark Ads、Website Conversion、Traffic 等场景",
+  },
 ]
 
-export function InsightsShell() {
-  const [tab, setTab] = useState<Tab>("overview")
+type Tab = "dashboard" | "diagnose" | "tagging" | "fatigue"
+
+const tabs: { id: Tab; label: string; icon: React.ComponentType<{ size?: number; strokeWidth?: number }> }[] = [
+  { id: "dashboard",  label: "Dashboard",       icon: Gauge },
+  { id: "diagnose",   label: "素材诊断",        icon: Stethoscope },
+  { id: "tagging",    label: "Creative Tagging", icon: Tags },
+  { id: "fatigue",    label: "疲劳度监测",      icon: Battery },
+]
+
+export function InsightsShell({ initialTab = "dashboard" }: { initialTab?: Tab } = {}) {
+  const [tab, setTab] = useState<Tab>(initialTab)
+  const [adProduct, setAdProduct] = useState<AdProduct>(AD_PRODUCTS[0])
   const [shop, setShop] = useState<Shop>(SHOPS[0])
   const [dateRange, setDateRange] = useState<DateRange>("7d")
   const [view, setView] = useState<ViewMode>("material")
@@ -52,7 +73,8 @@ export function InsightsShell() {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <ShopSwitcher value={shop} onChange={setShop} />
+            <AdProductSwitcher value={adProduct} onChange={setAdProduct} />
+            {adProduct.id === "gmv_max" && <ShopSwitcher value={shop} onChange={setShop} />}
             <AccountPicker selected={selectedAccounts} onChange={setSelectedAccounts} />
             <DateRangePicker value={dateRange} onChange={setDateRange} />
             {tab === "diagnose" && <ViewSwitcher value={view} onChange={setView} />}
@@ -83,19 +105,67 @@ export function InsightsShell() {
 
       {/* Page body */}
       <main className="flex-1 overflow-y-auto bg-[var(--soft-2)]">
-        {tab === "overview" && (
-          <OverviewPage accountIds={effectiveAccountIds} dateRange={dateRange} onJumpTab={(t) => setTab(t)} />
+        {tab === "dashboard" && (
+          <DashboardPage accountIds={effectiveAccountIds} dateRange={dateRange} />
         )}
         {tab === "diagnose" && (
           <DiagnosePage accountIds={effectiveAccountIds} view={view} onChangeView={setView} />
         )}
-        {tab === "report" && (
-          <ReportPage accountIds={effectiveAccountIds} dateRange={dateRange} />
-        )}
-        {tab === "experiment" && <ExperimentPage />}
-        {tab === "accounts" && <AccountManagePage />}
+        {tab === "tagging" && <TaggingPage />}
+        {tab === "fatigue" && <FatiguePage />}
       </main>
     </div>
+  )
+}
+
+// ─── Ad product switcher (广告产品) ────────────────────────────────────────
+
+function AdProductSwitcher({ value, onChange }: { value: AdProduct; onChange: (p: AdProduct) => void }) {
+  return (
+    <Popover.Root>
+      <Popover.Trigger asChild>
+        <button
+          type="button"
+          className="h-9 px-3 rounded-full border border-[var(--line)] bg-white text-[13px] font-semibold text-[var(--text)] flex items-center gap-1.5 cursor-pointer hover:border-[var(--line-strong)] transition-colors data-[state=open]:border-[var(--line-strong)] data-[state=open]:bg-[var(--soft-2)]"
+        >
+          <Megaphone size={13} strokeWidth={2.2} className="text-[var(--muted)]" />
+          {value.label}
+          <ChevronDown size={12} className="text-[var(--muted)] -mr-0.5" />
+        </button>
+      </Popover.Trigger>
+      <Popover.Portal>
+        <Popover.Content
+          align="end"
+          sideOffset={6}
+          className="z-50 w-[320px] p-1.5 bg-white border border-[var(--line)] rounded-[14px] shadow-[0_18px_42px_rgba(9,9,11,0.14)] data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95"
+        >
+          <p className="px-2.5 pt-1 pb-1.5 text-[10.5px] font-extrabold text-[var(--muted-2)] uppercase tracking-wide">
+            广告产品
+          </p>
+          {AD_PRODUCTS.map((p) => {
+            const active = p.id === value.id
+            return (
+              <Popover.Close key={p.id} asChild>
+                <button
+                  type="button"
+                  onClick={() => onChange(p)}
+                  className={cn(
+                    "w-full px-2.5 py-2 rounded-[9px] flex items-start gap-2 cursor-pointer text-left transition-colors",
+                    active ? "bg-[var(--soft)]" : "hover:bg-[var(--soft-2)]"
+                  )}
+                >
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[12.5px] font-extrabold text-[var(--text)]">{p.label}</p>
+                    <p className="text-[10.5px] text-[var(--muted)] leading-relaxed mt-0.5">{p.desc}</p>
+                  </div>
+                  {active && <Check size={12} strokeWidth={2.6} className="text-[var(--text)] shrink-0 mt-1" />}
+                </button>
+              </Popover.Close>
+            )
+          })}
+        </Popover.Content>
+      </Popover.Portal>
+    </Popover.Root>
   )
 }
 

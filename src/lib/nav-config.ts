@@ -51,9 +51,8 @@ export const navSections: NavSection[] = [
     defaultHref: "/insights",
     subMenu: [
       { label: "素材洞察",        href: "/insights" },
-      { label: "Creative Tagging", href: "/insights/tagging" },
-      { label: "疲劳度监测",      href: "/insights/fatigue" },
-      { label: "创意报表",        href: "/insights/reports" },
+      { label: "自定义报表",      href: "/insights/custom-report" },
+      { label: "账户管理",        href: "/insights/accounts" },
     ],
   },
   {

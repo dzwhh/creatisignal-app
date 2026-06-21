@@ -9,6 +9,7 @@ import { useSidebarCollapsed } from "@/lib/layout/sidebar-state"
 import { ProjectSwitcher } from "./project-switcher"
 import { HoverList } from "./hover-list"
 import { AgentSidebar } from "@/components/agent/agent-sidebar"
+import { ReportsBoard } from "@/components/insights/reports-board"
 
 export function Sidebar() {
   const pathname = usePathname()
@@ -52,7 +53,7 @@ export function Sidebar() {
                   key={href}
                   href={href}
                   className={cn(
-                    "h-[38px] rounded-lg flex items-center gap-[10px] px-[10px] text-sm font-semibold transition-colors duration-200",
+                    "h-[38px] rounded-lg flex items-center gap-[10px] px-[10px] text-sm font-medium transition-colors duration-200",
                     isActive ? "text-[#17181c]" : "text-[#4f535b] hover:text-[#17181c]"
                   )}
                 >
@@ -62,6 +63,7 @@ export function Sidebar() {
               )
             })}
           </HoverList>
+          {activeSection.id === "insights" && <ReportsBoard />}
         </nav>
       ) : (
         <div className="mt-4 px-2 text-[11.5px] text-[var(--muted-2)] leading-relaxed">

@@ -107,7 +107,7 @@ export function OverviewPage({
         issues={DIAGNOSTIC_ISSUES}
         onGenerateBrief={() => setBriefSeed({})}
         onJumpDiagnose={() => onJumpTab("diagnose")}
-        onJumpReport={() => onJumpTab("report")}
+        onJumpReport={() => onJumpTab("diagnose")}
       />
 
       {/* Tag split-view */}
