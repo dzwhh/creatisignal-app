@@ -1072,82 +1072,117 @@ export function getDirectionsV2(
   material: Material,
   productBrief?: ProductBrief
 ): ReplicaDirectionV2[] {
-  const sp1 = material.sellingPointTags[0] ?? "核心卖点"
-  const sp2 = material.sellingPointTags[1] ?? "辅助卖点"
-  const sc1 = material.sceneTags[0] ?? "通用场景"
-  const product = productBrief?.name ?? "Hotligh 1200LM Magnetic Work Light"
-  const phase = material.lifecyclePhase
+  // 内容脚本原文（菲律宾普惠金融视频）—— 自由文本，不改字
+  const briefText = `帮我做一条 22 秒的菲律宾普惠金融短视频，目标受众为有短期资金需求、关注还款压力与平台合规的成年用户。
 
-  const baseScript = (variantTitle: string, hookLine: string, ctaLine: string): ScriptStep[] => [
-    { timeRange: "0-3s",   voiceover: hookLine,                                              subtitle: `${hookLine}`,                       action: "首秒结果画面 + 反差对比" },
-    { timeRange: "3-8s",   voiceover: `这是 ${product}，专为${sc1}设计`,                       subtitle: `${product} for ${sc1}`,             action: `产品出现 + ${sp1} 演示` },
-    { timeRange: "8-13s",  voiceover: `${sp1} + ${sp2}，双手解放还能扛冲洗`,                   subtitle: `${sp1} & ${sp2}`,                    action: "多场景 Demo + 极端测试" },
-    { timeRange: "13-15s", voiceover: ctaLine,                                                subtitle: ctaLine,                              action: "商品卡 + CTA 引导" },
-  ]
+镜头结构：
+- 0–4s：女主持人正面口播痛点反问（"还款压力大？"），背景叠加乌云贴纸 + 集中线
+- 4–9s：切到平台 UI 截图，逐项展示利率 / 额度 / 还款方案
+- 9–14s：动效"集中线"汇聚到品牌 Logo，强化记忆
+- 14–18s：法律免责声明小字，资质 ID 居中淡入
+- 18–22s：CTA「立即申请」+ 二维码 + 主持人最后一句安抚
 
-  const baseStoryboard = (extraNotes?: string): StoryboardShot[] => [
-    { timeRange: "0-3s",   shot: "特写：手机灯 vs 工作灯对比",     framing: "特写",     materials: ["手机", "工作灯", "暗光车库"],         notes: extraNotes },
-    { timeRange: "3-8s",   shot: "中景：产品全貌 + 磁吸吸附",       framing: "中景",     materials: ["产品", "车身", "工作台"] },
-    { timeRange: "8-13s",  shot: "多镜头快切：Demo + 冲水测试",     framing: "近景/特写", materials: ["产品", "水管", "户外", "车库"] },
-    { timeRange: "13-15s", shot: "全景：使用结果 + 商品卡",         framing: "全景",     materials: ["产品", "商品卡 overlay"] },
-  ]
+风格 & 节奏：
+- 主持人中近景为主，暖色调，字幕全程同步关键词
+- 节奏档位 fast_dense → moderate_escalating → urgent_push
+- 情绪曲线 焦虑 → 安心 → 信任 → 紧迫
+
+卖点优先级：1) 月供低 2) 5 分钟到账 3) SEC 持牌合规
+禁忌：避免对利率做承诺、避免对比竞品、保留法律免责声明`
+  // 22 秒菲律宾普惠金融视频 5 段脚本基线
+  // 0-4s 痛点反问 / 4-9s 平台 UI / 9-14s 品牌动效 / 14-18s 法律资质 / 18-22s CTA
+  const baseScript = (variant: "hook" | "proof" | "cta"): ScriptStep[] => {
+    // Hook 段：A 方向更具痛点张力
+    const hook = variant === "hook"
+      ? { vo: "晚一天就要罚息？还款压力大？", sub: "Stressed about late fees & repayments?", action: "女主持人正面口播痛点反问 + 背景乌云贴纸 + 集中线汇聚" }
+      : { vo: "还款压力大？", sub: "Stressed about repayments?", action: "女主持人正面口播痛点反问 + 乌云贴纸 + 集中线" }
+    // Proof 段：B 方向中段更密集
+    const proof = variant === "proof"
+      ? { vo: "查看利率、额度、还款方案，5 分钟到账", sub: "Rates · limits · plans · 5-min payout", action: "平台 UI 截图快切：利率 / 额度 / 还款方案，叠加 5 分钟到账标签" }
+      : { vo: "查看你的利率、额度和还款方案", sub: "Check rates, limits and repayment plans", action: "切到平台 UI 截图，逐项展示利率 / 额度 / 还款方案" }
+    // CTA 段：C 方向更紧迫
+    const cta = variant === "cta"
+      ? { vo: "限时立即申请，扫码 30 秒搞定", sub: "Apply now · 30s · Scan QR", action: "CTA「立即申请」放大 + 二维码弹出 + 主持人安抚收尾 + 倒计时" }
+      : { vo: "立即申请，扫码下载", sub: "Apply now · Scan QR", action: "CTA「立即申请」+ 二维码 + 主持人最后一句安抚" }
+    return [
+      { timeRange: "0-4s",   voiceover: hook.vo,                                 subtitle: hook.sub,                              action: hook.action },
+      { timeRange: "4-9s",   voiceover: proof.vo,                                subtitle: proof.sub,                             action: proof.action },
+      { timeRange: "9-14s",  voiceover: "汇聚到品牌 Logo，5 分钟到账更省心",       subtitle: "Logo focus · 5-min payout, peace of mind", action: "动效\"集中线\"汇聚到品牌 Logo，强化记忆" },
+      { timeRange: "14-18s", voiceover: "SEC 持牌合规，放心借款",                  subtitle: "SEC licensed · compliant lending",   action: "法律免责声明小字 + 资质 ID 居中淡入" },
+      { timeRange: "18-22s", voiceover: cta.vo,                                  subtitle: cta.sub,                              action: cta.action },
+    ]
+  }
+
+  const baseStoryboard = (variant: "hook" | "proof" | "cta", extraNotes?: string): StoryboardShot[] => {
+    const hookShot = variant === "hook"
+      ? { shot: "近景：女主持人面部反问表情 + 乌云贴纸压顶 + 集中线极速汇聚", materials: ["女主持人", "乌云贴纸", "集中线动效", "暖色调灯光", "罚息提示气泡"], notes: extraNotes ?? "首镜需要极端反差 + 痛点字幕放大" }
+      : { shot: "近景：女主持人正面口播 + 乌云贴纸叠加 + 集中线", materials: ["女主持人", "乌云贴纸", "集中线动效", "暖色调灯光"], notes: extraNotes }
+    const proofShot = variant === "proof"
+      ? { shot: "屏录快切：平台 UI 利率/额度/还款方案 + 5 分钟到账标签", materials: ["平台 UI 截图", "利率信息", "额度信息", "还款方案", "5 分钟到账标签"], notes: "中段需要 3-4 个 UI 快切镜头" }
+      : { shot: "屏录：平台 UI 截图逐项滑过利率/额度/还款方案", materials: ["平台 UI 截图", "利率信息", "额度信息", "还款方案"] }
+    const ctaShot = variant === "cta"
+      ? { shot: "中近景：主持人安抚收尾 + CTA「立即申请」放大 + 二维码 + 限时倒计时", materials: ["女主持人面部", "CTA 按钮放大", "二维码", "倒计时", "限时角标"], notes: "CTA 字幕需动态放大 + 倒计时强化紧迫感" }
+      : { shot: "中近景：主持人安抚收尾 + CTA「立即申请」+ 二维码", materials: ["女主持人面部", "CTA 按钮", "二维码", "品牌色"] }
+    return [
+      { timeRange: "0-4s",   shot: hookShot.shot,    framing: "近景",       materials: hookShot.materials,    notes: hookShot.notes },
+      { timeRange: "4-9s",   shot: proofShot.shot,   framing: "屏录全屏",   materials: proofShot.materials,   notes: proofShot.notes },
+      { timeRange: "9-14s",  shot: "中景：动效\"集中线\"汇聚到品牌 Logo 中心，粒子聚拢强化记忆", framing: "中景",  materials: ["品牌 Logo", "集中线动效", "粒子聚拢", "Logo 高亮"] },
+      { timeRange: "14-18s", shot: "全景：法律免责声明小字底部滚动 + SEC 资质 ID 居中淡入", framing: "全景", materials: ["法律免责声明文字", "SEC 资质 ID 卡片", "淡入动画"], notes: "资质 ID 必须可读，避免被覆盖" },
+      { timeRange: "18-22s", shot: ctaShot.shot,     framing: "中近景",     materials: ctaShot.materials,     notes: ctaShot.notes },
+    ]
+  }
 
   return [
     {
       id: "A",
       title: "强化 Hook · 提升 2 秒观看率",
-      desc: "保留卖点和节奏，只改前 3 秒：用最反差的画面 + 一句话痛点抓住注意力",
+      desc: "保留中段证明和合规收尾，强化前 4s 痛点反问：让目标受众第一秒就停留",
       axis: "hook",
-      keep: ["产品价值", "Demo 结构", "15 秒节奏"],
-      change: `前 3 秒：从"问题切入"改为"极端反差结果前置"`,
+      keep: ["平台 UI 证明", "合规资质强信任", "CTA 节奏"],
+      change: "前 4s：从普通反问升级为\"晚一天就要罚息？\"+ 集中线极速汇聚",
       impact: "2 秒观看率 / CTR ↗",
       confidence: 0.82,
       lifecycleFit: ["peak", "scaling", "potential"],
-      brief: `Stop using your phone light under the hood.`,
-      script: baseScript("强化 Hook", "Stop using your phone light. Use this.", "Keep one in your car."),
-      storyboard: baseStoryboard("第 1 个镜头需要鲜明色差"),
+      brief: "用最具体的还款压力痛点 + 视觉反差，把目标受众钉在前 4 秒。",
+      briefText,
+      script: baseScript("hook"),
+      storyboard: baseStoryboard("hook"),
       expectedDelta: "预计 2 秒观看率 +15~25%，CTR +8~12%",
-      risks: ["首秒反差不够会反向降低完播率"],
+      risks: ["反问过激可能影响平台合规审核 · 需走法务复核"],
     },
     {
       id: "B",
       title: "强化 Proof · 提升 CVR / ROI",
-      desc: "保留 Hook，加大中段验证密度：冲水 + 多场景 + 真实评价闪现",
+      desc: "保留 Hook 和 CTA，加大中段 UI 证明密度：利率、额度、5 分钟到账多维呈现",
       axis: "scene",
-      keep: ["Hook 风格", "产品价值表达", "CTA"],
-      change: "中段 5-13 秒：加入极端冲洗、连续场景切换、用户评价闪现",
+      keep: ["Hook 反问", "合规资质", "CTA 节奏"],
+      change: "4-9s：UI 截图快切节奏加密，叠加 5 分钟到账标签和实时审批动效",
       impact: "CVR / ROAS ↗",
       confidence: 0.74,
       lifecycleFit: ["scaling", "peak"],
-      brief: `Watch what real mechanics actually use.`,
-      script: baseScript(
-        "强化 Proof",
-        "Real mechanics aren't using their phones anymore.",
-        "Get yours before next service."
-      ),
-      storyboard: baseStoryboard("中段需要 4-5 个快切镜头"),
+      brief: "把抽象的金融产品变成可视的 UI + 数字证明，建立点击信任。",
+      briefText,
+      script: baseScript("proof"),
+      storyboard: baseStoryboard("proof", "中段 4-9s 要 3 个以上 UI 快切"),
       expectedDelta: "预计 CVR +10~18%，ROAS +12~20%",
-      risks: ["镜头过密可能打断节奏，需控制每段 1.5-2s"],
+      risks: ["UI 信息密度过高可能让用户跳出 · 单镜头需控制 1.5-2s"],
     },
     {
       id: "C",
-      title: "强化 CTA · 提升商品点击 / 下单",
-      desc: "保留 Hook 和 Proof，只动结尾 3 秒：把 CTA 从软推变成场景化下单引导",
+      title: "强化 CTA · 提升下载 / 申请",
+      desc: "保留 Hook 和证明，只动结尾 4 秒：把 CTA 从软推改成限时紧迫感",
       axis: "selling",
-      keep: ["Hook", "Demo 节奏", "卖点优先级"],
-      change: `结尾 13-15s：从 "Keep one in your car" 改为 "Tap to keep yours ready" + 商品卡放大`,
-      impact: "商品点击 / 下单转化 ↗",
+      keep: ["Hook 反问", "UI 证明", "合规资质"],
+      change: "18-22s：CTA 从「立即申请」升级为「限时立即申请」+ 倒计时 + 二维码放大",
+      impact: "下载 / 申请转化 ↗",
       confidence: 0.68,
       lifecycleFit: ["scaling", "potential"],
-      brief: `Tap below to grab yours before your next breakdown.`,
-      script: baseScript(
-        "强化 CTA",
-        "Don't wait for a breakdown to wish you had this.",
-        "Tap to keep yours ready."
-      ),
-      storyboard: baseStoryboard("结尾镜头需要 CTA 字幕动态放大"),
-      expectedDelta: "预计商品点击率 +12~18%",
-      risks: ["CTA 过硬可能反向影响信任感"],
+      brief: "用紧迫感 + 30 秒承诺降低决策成本，把观看转成 CTA 点击。",
+      briefText,
+      script: baseScript("cta"),
+      storyboard: baseStoryboard("cta", "结尾倒计时不超过 1.5s，避免和资质 ID 信任感冲突"),
+      expectedDelta: "预计 CTA 点击率 +12~18%",
+      risks: ["紧迫感过强可能影响平台合规 · 必须保留 SEC 资质和免责声明"],
     },
   ]
 }

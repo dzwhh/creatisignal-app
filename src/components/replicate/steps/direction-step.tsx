@@ -105,6 +105,7 @@ function DirectionItem({
           <ScriptStoryboardPair
             script={direction.script}
             storyboard={direction.storyboard}
+            briefText={direction.briefText}
           />
 
           {/* 风险提示 */}

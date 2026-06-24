@@ -445,7 +445,7 @@ export type ElementBreakdown = {
 
 // ─── Step 4 内容脚本 + 分镜脚本 ─────────────────────────────────────────────
 
-export type ScriptTimeRange = "0-3s" | "3-8s" | "8-13s" | "13-15s"
+export type ScriptTimeRange = string
 
 export type ScriptStep = {
   timeRange: ScriptTimeRange
@@ -467,7 +467,8 @@ export type StoryboardShot = {
 // 注：原 ReplicaDirection（types.ts 上方）的字段保留并向下兼容；
 // V2 扩展字段可通过 ReplicaDirectionV2 引用
 export type ReplicaDirectionV2 = ReplicaDirection & {
-  script: ScriptStep[]              // 内容脚本（按时间轴）
+  script: ScriptStep[]              // 内容脚本（按时间轴，结构化）
+  briefText?: string                // 内容脚本原文（自由文本，优先在左栏渲染）
   storyboard: StoryboardShot[]      // 分镜脚本（按镜头）
   expectedDelta: string             // 预期提升指标文案（短）
   risks: string[]                   // 风险提示

@@ -8,43 +8,54 @@ import type { ScriptStep, ScriptTimeRange, StoryboardShot } from "@/lib/insights
 interface Props {
   script: ScriptStep[]
   storyboard: StoryboardShot[]
+  /** 若提供，则左栏直接显示这段原文（同步解析也用它），否则按 script[] 派生 */
+  briefText?: string
 }
-
-const TIME_RANGES: ScriptTimeRange[] = ["0-3s", "3-8s", "8-13s", "13-15s"]
 
 // 把 ScriptStep[] 拼成一段可编辑文本（带 [timeRange] 标记）
 function scriptToText(steps: ScriptStep[]): string {
   return steps.map((s) => `[${s.timeRange}] ${s.voiceover}`).join("\n\n")
 }
 
-// 把编辑后的文本解析回 timeRange 段落，便于"同步"到分镜
-function parseScriptText(text: string): Record<ScriptTimeRange, string> {
-  const out: Record<ScriptTimeRange, string> = { "0-3s": "", "3-8s": "", "8-13s": "", "13-15s": "" }
-  // 用 [time] 切分
-  const regex = /\[(\d+-\d+s)\]([^\[]*)/g
+// 把编辑后的文本解析回 timeRange 段落（兼容 [0-4s] 和 0–4s：两种格式）
+function parseScriptText(text: string, knownTimeRanges: ScriptTimeRange[]): Record<string, string> {
+  const out: Record<string, string> = {}
+  for (const tr of knownTimeRanges) out[tr] = ""
+  // 格式 1：[0-4s] content
+  const r1 = /\[([\d.]+-[\d.]+s)\]([^[]*)/g
   let m: RegExpExecArray | null
-  while ((m = regex.exec(text)) !== null) {
-    const tr = m[1] as ScriptTimeRange
-    if (TIME_RANGES.includes(tr)) {
-      out[tr] = m[2].trim()
+  while ((m = r1.exec(text)) !== null) {
+    const tr = m[1]
+    if (tr in out) out[tr] = m[2].trim()
+  }
+  // 格式 2：- 0–4s：content  或  0-4s：content（带破折号或连字符 + 中文/英文冒号）
+  const r2 = /[-•]?\s*([\d.]+)[-–]([\d.]+)s\s*[：:]\s*([^]*?)(?=(?:\n[-•]?\s*[\d.]+[-–][\d.]+s\s*[：:])|\n\s*\n|$)/g
+  while ((m = r2.exec(text)) !== null) {
+    const tr = `${m[1]}-${m[2]}s`
+    if (tr in out && !out[tr]) {
+      out[tr] = m[3].trim().replace(/\s+/g, " ").slice(0, 200)
     }
   }
   return out
 }
 
-export function ScriptStoryboardPair({ script, storyboard }: Props) {
-  // ─── 内容脚本（整段编辑） ───────────────────────────────────────────────
-  const [scriptText, setScriptText] = useState(() => scriptToText(script))
-  const [editingScript, setEditingScript] = useState(false)
-  const [scriptDraft, setScriptDraft] = useState(scriptText)
+export function ScriptStoryboardPair({ script, storyboard, briefText }: Props) {
+  // 时间槽位从内容脚本派生（兼容任意分段、任意时长模板）
+  const timeRanges = useMemo<ScriptTimeRange[]>(() => script.map((s) => s.timeRange), [script])
 
-  // 父级方向切换时（script 数组变），重置内部状态
+  // ─── 内容脚本（整段编辑） ───────────────────────────────────────────────
+  // briefText 优先：左栏直接渲染原文；否则按 [timeRange] 标记格式渲染
+  const initialText = briefText ?? scriptToText(script)
+  const [scriptText, setScriptText] = useState(initialText)
+  const [editingScript, setEditingScript] = useState(false)
+  const [scriptDraft, setScriptDraft] = useState(initialText)
+
   useEffect(() => {
-    const fresh = scriptToText(script)
+    const fresh = briefText ?? scriptToText(script)
     setScriptText(fresh)
     setScriptDraft(fresh)
     setEditingScript(false)
-  }, [script])
+  }, [script, briefText])
 
   function startEditScript() {
     setScriptDraft(scriptText)
@@ -61,20 +72,19 @@ export function ScriptStoryboardPair({ script, storyboard }: Props) {
 
   // ─── 分镜：默认空（仅时间槽位），同步按钮 AI 生成 ──────────────────────
   const emptyShots = useMemo<StoryboardShot[]>(() => {
-    return TIME_RANGES.map((tr) => ({
+    return timeRanges.map((tr) => ({
       timeRange: tr,
       framing: "—",
       shot: "",
       materials: [],
     }))
-  }, [])
+  }, [timeRanges])
   const [shots, setShots] = useState<StoryboardShot[]>(() => emptyShots)
   const [generated, setGenerated] = useState(false)
   const [locked, setLocked] = useState<Set<ScriptTimeRange>>(new Set())
   const [editingShotKey, setEditingShotKey] = useState<ScriptTimeRange | null>(null)
   const [shotDraft, setShotDraft] = useState("")
 
-  // 父级方向切换时，分镜重新归零
   useEffect(() => {
     setShots(emptyShots)
     setGenerated(false)
@@ -104,16 +114,22 @@ export function ScriptStoryboardPair({ script, storyboard }: Props) {
 
   // ─── 同步 = AI 根据内容脚本生成分镜 ─────────────────────────────────────
   const [syncing, setSyncing] = useState(false)
-  // 把内容脚本的旁白 + 时间槽 → 一段分镜描述（mock AI）
-  function synthesizeShot(tr: ScriptTimeRange, voiceover: string, fallback: StoryboardShot): { framing: string; shot: string; materials: string[] } {
-    if (!voiceover.trim()) return { framing: fallback.framing || "—", shot: fallback.shot, materials: fallback.materials }
-    const fallbackByTr: Record<ScriptTimeRange, { framing: string; materials: string[] }> = {
-      "0-3s":   { framing: "近景",   materials: ["主角面部特写", "动效气泡"] },
-      "3-8s":   { framing: "中景",   materials: ["产品手持", "使用场景"] },
-      "8-13s":  { framing: "中近景", materials: ["产品细节", "对比演示"] },
-      "13-15s": { framing: "全景",   materials: ["品牌 Logo", "CTA 字幕"] },
+  // 基于槽位序号给一个合理的景别 / 默认素材回退
+  function fallbackByPosition(index: number, total: number): { framing: string; materials: string[] } {
+    if (total <= 1) return { framing: "中景", materials: ["主体", "场景元素"] }
+    if (index === 0) return { framing: "近景", materials: ["主角面部特写", "动效气泡"] }
+    if (index === total - 1) return { framing: "中近景", materials: ["品牌 Logo", "CTA 字幕", "二维码"] }
+    // 中段按相对位置切换
+    const pos = index / (total - 1)
+    if (pos < 0.4) return { framing: "中景", materials: ["产品/界面", "使用场景"] }
+    if (pos < 0.7) return { framing: "中近景", materials: ["产品细节", "对比演示"] }
+    return { framing: "全景", materials: ["品牌动效", "信任元素"] }
+  }
+  function synthesizeShot(index: number, total: number, voiceover: string, fallback: StoryboardShot): { framing: string; shot: string; materials: string[] } {
+    if (!voiceover.trim()) {
+      return { framing: fallback.framing || "—", shot: fallback.shot, materials: fallback.materials }
     }
-    const cfg = fallbackByTr[tr]
+    const cfg = fallbackByPosition(index, total)
     const headline = voiceover.length > 38 ? voiceover.slice(0, 38) + "…" : voiceover
     return {
       framing: cfg.framing,
@@ -124,14 +140,13 @@ export function ScriptStoryboardPair({ script, storyboard }: Props) {
   function handleSync() {
     if (syncing) return
     setSyncing(true)
-    const parsed = parseScriptText(scriptText)
-    // 模拟 AI 生成延时（更长一点显示「生成中」状态）
+    const parsed = parseScriptText(scriptText, timeRanges)
     window.setTimeout(() => {
-      setShots((prev) => prev.map((s) => {
+      setShots((prev) => prev.map((s, i) => {
         if (locked.has(s.timeRange)) return s
         const voiceover = parsed[s.timeRange] ?? ""
         const fallback = storyboard.find((x) => x.timeRange === s.timeRange) ?? s
-        const synth = synthesizeShot(s.timeRange, voiceover, fallback)
+        const synth = synthesizeShot(i, prev.length, voiceover, fallback)
         return { ...s, ...synth }
       }))
       setGenerated(true)
@@ -139,7 +154,7 @@ export function ScriptStoryboardPair({ script, storyboard }: Props) {
     }, 1100)
   }
 
-  const unlockedCount = TIME_RANGES.length - locked.size
+  const unlockedCount = timeRanges.length - locked.size
 
   return (
     <div className="flex items-stretch gap-3">
@@ -208,7 +223,7 @@ export function ScriptStoryboardPair({ script, storyboard }: Props) {
               rows={12}
               autoFocus
               className="flex-1 rounded-lg border-2 border-[#cdf066] bg-white p-2.5 text-[11.5px] font-mono leading-relaxed text-[var(--text)] outline-none focus:border-[var(--lime)] focus:shadow-[0_0_0_3px_rgba(201,255,41,0.28)] resize-none transition-shadow"
-              placeholder="用 [0-3s] / [3-8s] / [8-13s] / [13-15s] 标记每段口播"
+              placeholder={`用 ${timeRanges.map((tr) => `[${tr}]`).join(" / ")} 标记每段口播`}
             />
             <p className="mt-1.5 text-[10px] text-[#5a7821] font-bold flex items-center gap-1">
               <Check size={9} strokeWidth={2.6} />

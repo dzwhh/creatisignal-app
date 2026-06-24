@@ -37,10 +37,10 @@ const AD_PRODUCTS: AdProduct[] = [
 type Tab = "dashboard" | "diagnose" | "tagging" | "fatigue"
 
 const tabs: { id: Tab; label: string; icon: React.ComponentType<{ size?: number; strokeWidth?: number }> }[] = [
-  { id: "dashboard",  label: "Dashboard",       icon: Gauge },
-  { id: "diagnose",   label: "素材诊断",        icon: Stethoscope },
+  { id: "dashboard",  label: "Dashboard",        icon: Gauge },
+  { id: "diagnose",   label: "素材 360",          icon: Stethoscope },
+  { id: "fatigue",    label: "疲劳度监测",       icon: Battery },
   { id: "tagging",    label: "Creative Tagging", icon: Tags },
-  { id: "fatigue",    label: "疲劳度监测",      icon: Battery },
 ]
 
 export function InsightsShell({ initialTab = "dashboard" }: { initialTab?: Tab } = {}) {
