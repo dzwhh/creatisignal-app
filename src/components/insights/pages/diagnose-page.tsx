@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils"
 import { ACCOUNTS, MATERIALS } from "@/lib/insights/mock"
 import { BUCKET_META, STATUS_META, type Material, type MaterialBucket, type Account, type AccountStatus, type ViewMode } from "@/lib/insights/types"
 import { AccountDistBar, ActionBadge, MaterialThumb, MoneyShort, Pct, StatusBadge } from "../shared"
+import { LifecycleCurveSection } from "../lifecycle-curve"
 import { MaterialDrawer } from "../material-drawer"
 import { AccountDrawer } from "../account-drawer"
 import { BriefDrawer, type BriefSeedTrigger } from "../brief-drawer"
@@ -81,6 +82,9 @@ function MaterialView({ accountSet }: { accountSet: Set<string> }) {
 
   return (
     <div className="px-8 py-5">
+      {/* A. 生命周期趋势 */}
+      <LifecycleCurveSection />
+
       {/* Top filter row */}
       <div className="flex items-center justify-between gap-2 mb-3">
         <div className="flex items-center gap-2">

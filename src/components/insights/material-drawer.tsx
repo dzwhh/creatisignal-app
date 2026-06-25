@@ -3,14 +3,14 @@
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import * as Dialog from "@radix-ui/react-dialog"
-import * as Popover from "@radix-ui/react-popover"
-import { X, Wand2, Send, AlertTriangle, ChevronRight, ChevronDown, Sparkles, Play, Tag, Zap, ShieldCheck, Ban, ArrowRight, Check, Boxes } from "lucide-react"
+import { X, Wand2, Send, AlertTriangle, ChevronRight, Play, Tag, Zap, Ban, ArrowRight } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { ActionBadge, MoneyShort, Pct, StatusBadge } from "./shared"
-import { CPO_REASONS, LIFECYCLE_META, type Material, type SelfProduct, type MatchSignal } from "@/lib/insights/types"
-import { SELF_PRODUCTS, computeMatchScore, pickDefaultProduct } from "@/lib/insights/mock"
+import { LifecycleCurveSection } from "./lifecycle-curve"
+import { CPO_REASONS, LIFECYCLE_META, type Material, type SelfProduct } from "@/lib/insights/types"
+import { computeMatchScore, pickDefaultProduct } from "@/lib/insights/mock"
 
-type Tab = "breakdown" | "match" | "accounts" | "reason"
+type Tab = "breakdown" | "accounts" | "reason"
 
 export function MaterialDrawer({
   material,
@@ -22,25 +22,20 @@ export function MaterialDrawer({
   onSendBrief: () => void
 }) {
   const [tab, setTab] = useState<Tab>("breakdown")
-  const [productSku, setProductSku] = useState<string>(() =>
-    material ? pickDefaultProduct(material).sku : SELF_PRODUCTS[0].sku
-  )
 
-  // 当切换素材时，刷新默认配对产品
+  // 当切换素材时，复位到默认 tab
   useEffect(() => {
-    if (material) {
-      setProductSku(pickDefaultProduct(material).sku)
-      setTab("breakdown")
-    }
+    if (material) setTab("breakdown")
   }, [material?.fingerprint])
 
-  const selectedProduct = useMemo<SelfProduct>(() => {
-    if (!material) return SELF_PRODUCTS[0]
-    return SELF_PRODUCTS.find((p) => p.sku === productSku) ?? pickDefaultProduct(material)
-  }, [material, productSku])
+  // 默认配对产品（保留供 ReplicaFooter 校验阻断/低匹配 hint 使用）
+  const selectedProduct = useMemo<SelfProduct | null>(() => {
+    if (!material) return null
+    return pickDefaultProduct(material)
+  }, [material])
 
   const matchResult = useMemo(() => {
-    if (!material) return null
+    if (!material || !selectedProduct) return null
     return computeMatchScore(material, selectedProduct)
   }, [material, selectedProduct])
 
@@ -48,7 +43,7 @@ export function MaterialDrawer({
     <Dialog.Root open={material !== null} onOpenChange={(v) => { if (!v) onClose() }}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-black/40 z-50 data-[state=open]:animate-in data-[state=open]:fade-in-0" />
-        <Dialog.Content className="fixed right-0 top-0 bottom-0 z-50 w-[560px] bg-white shadow-[0_24px_64px_rgba(0,0,0,0.18)] flex flex-col data-[state=open]:animate-in data-[state=open]:slide-in-from-right-1/2">
+        <Dialog.Content className="fixed right-0 top-0 bottom-0 z-50 w-[50vw] min-w-[760px] max-w-[1080px] bg-white shadow-[0_24px_64px_rgba(0,0,0,0.18)] flex flex-col data-[state=open]:animate-in data-[state=open]:slide-in-from-right-1/2">
           {material && (
             <>
               <div className="px-6 pt-5 pb-4 border-b border-[var(--line)] flex items-start justify-between gap-3">
@@ -67,22 +62,34 @@ export function MaterialDrawer({
                 </Dialog.Close>
               </div>
 
-              {/* Top summary */}
-              <div className="px-6 pt-4 pb-3">
-                <div className="flex gap-4">
-                  <div className="relative w-32 h-32 rounded-xl overflow-hidden bg-[var(--soft)] shrink-0">
+              {/* Top hero —— thumb / 6 metrics 2x3 / 5 tag rows */}
+              <div className="px-6 pt-5 pb-4">
+                <div className="grid grid-cols-[160px_minmax(0,1.1fr)_minmax(0,1.6fr)] gap-5 items-start">
+                  {/* 左：thumb */}
+                  <div className="relative aspect-square rounded-xl overflow-hidden bg-[var(--soft)]">
                     <img src={material.thumb} alt={material.name} className="w-full h-full object-cover" />
                     <div className="absolute inset-0 flex items-center justify-center bg-black/15">
-                      <Play size={20} className="text-white" fill="white" />
+                      <Play size={22} className="text-white" fill="white" />
                     </div>
                   </div>
-                  <div className="flex-1 grid grid-cols-2 gap-y-2 gap-x-3 content-start">
-                    <Metric label="综合评级" value={material.rating.toString()} />
-                    <Metric label="ROI" value={material.metrics.roi.toFixed(2)} accent={material.metrics.roi >= 2 ? "ok" : material.metrics.roi >= 1.4 ? "warn" : "bad"} />
-                    <Metric label="CPO" value={`$${material.metrics.cpo.toFixed(2)}`} />
-                    <Metric label="CTR" value={<Pct value={material.metrics.ctr} />} />
-                    <Metric label="花费 (7d)" value={<MoneyShort value={material.metrics.spend} />} />
-                    <Metric label="账户分布" value={`${material.accountCount} 个账户`} />
+
+                  {/* 中：6 metrics 2 列 × 3 行 */}
+                  <div className="grid grid-cols-2 gap-y-3 gap-x-4 content-start">
+                    <HeroMetric label="综合评级" value={material.rating.toString()} />
+                    <HeroMetric label="ROI"      value={material.metrics.roi.toFixed(2)} accent={material.metrics.roi >= 2 ? "ok" : material.metrics.roi >= 1.4 ? "warn" : "bad"} />
+                    <HeroMetric label="CPO"      value={`$${material.metrics.cpo.toFixed(2)}`} />
+                    <HeroMetric label="CTR"      value={<Pct value={material.metrics.ctr} />} />
+                    <HeroMetric label="花费 (7d)" value={<MoneyShort value={material.metrics.spend} />} />
+                    <HeroMetric label="账户分布"  value={`${material.accountCount} 个账户`} />
+                  </div>
+
+                  {/* 右：5 tag rows */}
+                  <div className="space-y-1.5">
+                    <HeroTagRow label="行业"    tags={[material.industryTag]}    tone="blue" />
+                    <HeroTagRow label="视频风格" tags={[material.videoStyleTag]}  tone="violet" />
+                    <HeroTagRow label="场景"    tags={material.sceneTags.slice(0, 3)}        tone="green" />
+                    <HeroTagRow label="卖点"    tags={material.sellingPointTags.slice(0, 3)} tone="orange" />
+                    <HeroTagRow label="结构"    tags={material.structureTags.slice(0, 3)}    tone="gray" />
                   </div>
                 </div>
               </div>
@@ -91,7 +98,6 @@ export function MaterialDrawer({
               <div className="px-6 border-b border-[var(--line)] flex items-center gap-1 overflow-x-auto">
                 {[
                   { id: "breakdown" as Tab, label: "素材拆解" },
-                  { id: "match" as Tab,     label: <span className="inline-flex items-center gap-1">复刻匹配{matchResult && <ScoreDot level={matchResult.level} />}</span> },
                   { id: "accounts" as Tab,  label: `账户级表现 (${material.accountCount})` },
                   { id: "reason" as Tab,    label: "高 CPO 原因" },
                 ].map((t) => (
@@ -112,31 +118,61 @@ export function MaterialDrawer({
 
               <div className="flex-1 overflow-y-auto px-6 py-4">
                 {tab === "breakdown" && <BreakdownTab material={material} />}
-                {tab === "match" && matchResult && (
-                  <MatchTab
-                    material={material}
-                    product={selectedProduct}
-                    productSku={productSku}
-                    onProductChange={setProductSku}
-                    result={matchResult}
-                  />
-                )}
                 {tab === "accounts" && <AccountsTab material={material} />}
                 {tab === "reason" && <ReasonTab material={material} />}
               </div>
 
               {/* Footer */}
-              <ReplicaFooter
-                material={material}
-                product={selectedProduct}
-                matchResult={matchResult}
-                onSendBrief={onSendBrief}
-              />
+              {selectedProduct && (
+                <ReplicaFooter
+                  material={material}
+                  product={selectedProduct}
+                  matchResult={matchResult}
+                  onSendBrief={onSendBrief}
+                />
+              )}
             </>
           )}
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>
+  )
+}
+
+// ─── Hero metric / tag row primitives ────────────────────────────────────────
+
+function HeroMetric({ label, value, accent }: { label: string; value: React.ReactNode; accent?: "ok" | "warn" | "bad" }) {
+  const cls = accent === "ok" ? "text-[#16a34a]" : accent === "warn" ? "text-[#a16207]" : accent === "bad" ? "text-[#dc2626]" : "text-[var(--text)]"
+  return (
+    <div>
+      <p className="text-[11.5px] font-medium text-[var(--muted)]">{label}</p>
+      <p className={cn("text-[19px] font-semibold tracking-tight tabular-nums leading-tight mt-0.5", cls)}>{value}</p>
+    </div>
+  )
+}
+
+function HeroTagRow({ label, tags, tone }: { label: string; tags: string[]; tone: "blue" | "violet" | "green" | "orange" | "gray" }) {
+  const cls: Record<string, string> = {
+    blue:   "bg-[#dbeafe] text-[#1e40af]",
+    violet: "bg-[#ede9fe] text-[#6d28d9]",
+    green:  "bg-[#dcfce7] text-[#15803d]",
+    orange: "bg-[#fff7ed] text-[#9a3412]",
+    gray:   "bg-[var(--soft)] text-[var(--muted)]",
+  }
+  return (
+    <div className="flex items-center gap-2 min-w-0">
+      <span className="inline-flex items-center gap-1 text-[11.5px] text-[var(--muted)] w-[68px] shrink-0">
+        <Tag size={11} strokeWidth={1.8} />
+        {label}
+      </span>
+      <div className="flex flex-wrap gap-1 min-w-0">
+        {tags.map((t) => (
+          <span key={t} className={cn("h-5 px-1.5 rounded text-[11px] font-medium inline-flex items-center", cls[tone])}>
+            {t}
+          </span>
+        ))}
+      </div>
+    </div>
   )
 }
 
@@ -222,26 +258,15 @@ function ReplicaFooter({
   )
 }
 
-function Metric({ label, value, accent }: { label: string; value: React.ReactNode; accent?: "ok" | "warn" | "bad" }) {
-  const cls = accent === "ok" ? "text-[#16a34a]" : accent === "warn" ? "text-[#a16207]" : accent === "bad" ? "text-[#dc2626]" : "text-[var(--text)]"
-  return (
-    <div>
-      <p className="text-[10.5px] font-semibold text-[var(--muted)]">{label}</p>
-      <p className={cn("text-[15px] font-extrabold", cls)}>{value}</p>
-    </div>
-  )
-}
 
 // ─── Breakdown tab ───────────────────────────────────────────────────────────
 
 function BreakdownTab({ material }: { material: Material }) {
   return (
     <div className="space-y-4 text-[13px] text-[var(--text)]">
-      <TagSection label="行业" tags={[material.industryTag]} tone="blue" />
-      <TagSection label="视频风格" tags={[material.videoStyleTag]} tone="violet" />
-      <TagSection label="场景" tags={material.sceneTags} tone="green" />
-      <TagSection label="卖点" tags={material.sellingPointTags} tone="orange" />
-      <TagSection label="结构" tags={material.structureTags} tone="gray" />
+      {/* 生命周期趋势曲线 */}
+      <LifecycleCurveSection />
+
       <div className="rounded-xl border border-[var(--line)] bg-[var(--soft-2)] p-3">
         <p className="text-[11.5px] font-bold text-[var(--muted)] mb-1.5">📝 系统拆解</p>
         <p className="text-[12.5px] leading-relaxed">
@@ -255,25 +280,6 @@ function BreakdownTab({ material }: { material: Material }) {
   )
 }
 
-function TagSection({ label, tags, tone }: { label: string; tags: string[]; tone: "blue" | "violet" | "green" | "orange" | "gray" }) {
-  const cls: Record<string, string> = {
-    blue:   "bg-[#dbeafe] text-[#1e40af]",
-    violet: "bg-[#ede9fe] text-[#6d28d9]",
-    green:  "bg-[#dcfce7] text-[#15803d]",
-    orange: "bg-[#fff7ed] text-[#9a3412]",
-    gray:   "bg-[var(--soft)] text-[var(--muted)]",
-  }
-  return (
-    <div>
-      <p className="text-[11px] font-semibold text-[var(--muted)] mb-1.5 flex items-center gap-1"><Tag size={10} /> {label}</p>
-      <div className="flex flex-wrap gap-1.5">
-        {tags.map((t) => (
-          <span key={t} className={cn("h-6 px-2 rounded-md text-[11.5px] font-semibold inline-flex items-center", cls[tone])}>{t}</span>
-        ))}
-      </div>
-    </div>
-  )
-}
 
 // ─── Accounts tab ────────────────────────────────────────────────────────────
 
@@ -337,7 +343,7 @@ function AccountsTab({ material }: { material: Material }) {
       </div>
 
       <div className="rounded-xl border border-[#fde68a] bg-[#fffbea] p-3">
-        <p className="text-[11.5px] font-bold text-[#a16207] mb-1.5 flex items-center gap-1"><Sparkles size={11} /> 系统建议</p>
+        <p className="text-[11.5px] font-bold text-[#a16207] mb-1.5 flex items-center gap-1"><Wand2 size={11} /> 系统建议</p>
         <ul className="space-y-1 text-[12px] text-[var(--text)]">
           {sorted.slice(0, 2).filter((r) => r.recommendation === "scale").map((r) => (
             <li key={r.accountId} className="flex items-start gap-1.5">
@@ -422,202 +428,4 @@ function LifecycleBadge({ phase, ageDays }: { phase: Material["lifecyclePhase"];
   )
 }
 
-function ScoreDot({ level }: { level: "high" | "mid" | "low" }) {
-  const color = level === "high" ? "#16a34a" : level === "mid" ? "#eab308" : "#dc2626"
-  return <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: color }} />
-}
 
-// ─── Match tab：左爆款骨架 / 右自有产品 / 上方 match 评分 ────────────────────
-
-function MatchTab({
-  material,
-  product,
-  productSku,
-  onProductChange,
-  result,
-}: {
-  material: Material
-  product: SelfProduct
-  productSku: string
-  onProductChange: (sku: string) => void
-  result: ReturnType<typeof computeMatchScore>
-}) {
-  const levelMeta = {
-    high: { label: "高度匹配 · 建议复刻", color: "#16a34a", bg: "#f0fdf4", border: "#bbf7d0" },
-    mid:  { label: "中等匹配 · 可复刻但需调整", color: "#a16207", bg: "#fffbeb", border: "#fde68a" },
-    low:  { label: "匹配度偏低 · 建议改写或换产品", color: "#b91c1c", bg: "#fef2f2", border: "#fecaca" },
-  }[result.level]
-
-  return (
-    <div className="space-y-4 text-[13px]">
-      {/* 顶部 match 评分总览 */}
-      <div
-        className="rounded-xl p-3 border"
-        style={{ backgroundColor: levelMeta.bg, borderColor: levelMeta.border }}
-      >
-        <div className="flex items-center gap-3">
-          <ScoreRing total={result.total} color={levelMeta.color} />
-          <div className="flex-1 min-w-0">
-            <p className="text-[11.5px] font-semibold" style={{ color: levelMeta.color }}>匹配度评分</p>
-            <p className="text-[14px] font-extrabold text-[var(--text)]">{levelMeta.label}</p>
-            <p className="text-[11px] text-[var(--muted)] mt-0.5">爆款骨架 ↔ 自有产品双向匹配，决定复刻可行性</p>
-          </div>
-        </div>
-        {result.blockers.length > 0 && (
-          <div className="mt-2 pt-2 border-t border-dashed flex items-start gap-1.5" style={{ borderColor: levelMeta.border }}>
-            <Ban size={12} className="mt-0.5 shrink-0" style={{ color: "#b91c1c" }} />
-            <p className="text-[11.5px] font-semibold text-[#b91c1c]">{result.blockers[0]}</p>
-          </div>
-        )}
-      </div>
-
-      {/* 左右对照 */}
-      <div className="grid grid-cols-2 gap-3">
-        {/* 左：爆款骨架 */}
-        <div className="rounded-xl border border-[var(--line)] p-3">
-          <p className="text-[10.5px] font-bold text-[var(--muted)] mb-2 flex items-center gap-1">
-            <Sparkles size={10} /> 爆款骨架
-          </p>
-          <div className="aspect-video rounded-lg overflow-hidden bg-[var(--soft)] mb-2 relative">
-            <img src={material.thumb} alt={material.name} className="w-full h-full object-cover" />
-            <div className="absolute inset-0 flex items-center justify-center bg-black/15">
-              <Play size={18} className="text-white" fill="white" />
-            </div>
-          </div>
-          <p className="text-[12px] font-bold text-[var(--text)] truncate">{material.name}</p>
-          <p className="text-[10.5px] text-[var(--muted)] mb-2">{material.industryTag} · {material.videoStyleTag}</p>
-          <MiniRow label="场景" tags={material.sceneTags} tone="green" />
-          <MiniRow label="卖点" tags={material.sellingPointTags} tone="orange" />
-        </div>
-
-        {/* 右：自有产品 */}
-        <div className="rounded-xl border border-[var(--line)] p-3">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-[10.5px] font-bold text-[var(--muted)] flex items-center gap-1">
-              <Boxes size={10} /> 自有产品
-            </p>
-            <ProductPicker selected={productSku} onChange={onProductChange} />
-          </div>
-          <div className="aspect-video rounded-lg overflow-hidden bg-[var(--soft)] mb-2">
-            <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
-          </div>
-          <p className="text-[12px] font-bold text-[var(--text)] truncate">{product.name}</p>
-          <p className="text-[10.5px] text-[var(--muted)] mb-2">SKU {product.sku} · {product.category}</p>
-          <MiniRow label="卖点" tags={product.coreSellingPoints} tone="orange" linkable />
-          <MiniRow label="可配场景" tags={product.matchableSceneTags} tone="green" />
-          {product.inventoryStatus !== "in_stock" && (
-            <p className="mt-1.5 text-[10.5px] font-bold flex items-center gap-1" style={{ color: product.inventoryStatus === "out" ? "#dc2626" : "#a16207" }}>
-              <AlertTriangle size={10} /> {product.inventoryStatus === "out" ? "已断货" : "库存偏低"}
-            </p>
-          )}
-        </div>
-      </div>
-
-      {/* 5 项 match 信号清单 */}
-      <div className="rounded-xl border border-[var(--line)] p-3">
-        <p className="text-[10.5px] font-bold text-[var(--muted)] mb-2">5 项匹配信号</p>
-        <div className="space-y-1.5">
-          {result.signals.map((s) => <SignalRow key={s.key} signal={s} />)}
-        </div>
-      </div>
-
-      <div className="rounded-xl border border-dashed border-[var(--line)] bg-[var(--soft-2)] p-3 text-[11.5px] text-[var(--muted)] leading-relaxed flex items-start gap-1.5">
-        <ShieldCheck size={12} className="mt-0.5 shrink-0" />
-        <span>下一步可进入<span className="font-bold text-[var(--text)]">爆款复刻</span>，选择只动一个变量轴生成 2–3 个变体；卖点点击可直接跳到 Brief。</span>
-      </div>
-    </div>
-  )
-}
-
-function ScoreRing({ total, color }: { total: number; color: string }) {
-  const size = 60
-  const stroke = 6
-  const r = (size - stroke) / 2
-  const c = 2 * Math.PI * r
-  const offset = c - (total / 100) * c
-  return (
-    <div className="relative shrink-0" style={{ width: size, height: size }}>
-      <svg width={size} height={size} className="-rotate-90">
-        <circle cx={size / 2} cy={size / 2} r={r} stroke="rgba(0,0,0,0.08)" strokeWidth={stroke} fill="none" />
-        <circle cx={size / 2} cy={size / 2} r={r} stroke={color} strokeWidth={stroke} fill="none" strokeDasharray={c} strokeDashoffset={offset} strokeLinecap="round" />
-      </svg>
-      <div className="absolute inset-0 flex items-center justify-center">
-        <span className="text-[16px] font-extrabold" style={{ color }}>{total}</span>
-      </div>
-    </div>
-  )
-}
-
-function MiniRow({ label, tags, tone, linkable }: { label: string; tags: string[]; tone: "green" | "orange"; linkable?: boolean }) {
-  const cls = tone === "green" ? "bg-[#dcfce7] text-[#15803d]" : "bg-[#fff7ed] text-[#9a3412]"
-  return (
-    <div className="mt-1.5">
-      <p className="text-[10px] font-semibold text-[var(--muted)] mb-1">{label}</p>
-      <div className="flex flex-wrap gap-1">
-        {tags.slice(0, 4).map((t) => (
-          <span key={t} className={cn("h-5 px-1.5 rounded-md text-[10.5px] font-semibold inline-flex items-center gap-0.5", cls, linkable && "cursor-pointer hover:opacity-80")} title={linkable ? "点击跳转生成 Brief" : undefined}>
-            {t}
-            {linkable && <ChevronRight size={9} className="opacity-60" />}
-          </span>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-function SignalRow({ signal }: { signal: MatchSignal }) {
-  const color = signal.score >= 75 ? "#16a34a" : signal.score >= 55 ? "#eab308" : "#dc2626"
-  return (
-    <div className="flex items-center gap-2">
-      <span className="w-[68px] shrink-0 text-[11px] font-semibold text-[var(--muted)]">{signal.label}</span>
-      <div className="flex-1 h-1.5 rounded-full bg-[var(--soft)] overflow-hidden">
-        <div className="h-full rounded-full" style={{ width: `${signal.score}%`, backgroundColor: color }} />
-      </div>
-      <span className="w-6 text-right text-[11px] font-extrabold" style={{ color }}>{signal.score}</span>
-      <span className="w-[170px] text-[10.5px] text-[var(--muted)] truncate" title={signal.detail}>{signal.detail}</span>
-    </div>
-  )
-}
-
-function ProductPicker({ selected, onChange }: { selected: string; onChange: (sku: string) => void }) {
-  return (
-    <Popover.Root>
-      <Popover.Trigger asChild>
-        <button
-          type="button"
-          className="h-6 px-2 rounded-md border border-[var(--line)] bg-white text-[10.5px] font-bold text-[var(--text)] flex items-center gap-1 cursor-pointer hover:border-[var(--line-strong)]"
-        >
-          切换产品
-          <ChevronDown size={10} className="text-[var(--muted)]" />
-        </button>
-      </Popover.Trigger>
-      <Popover.Portal>
-        <Popover.Content
-          align="end"
-          sideOffset={6}
-          className="z-[60] w-[240px] p-1 bg-white border border-[var(--line)] rounded-xl shadow-[0_18px_42px_rgba(9,9,11,0.14)]"
-        >
-          {SELF_PRODUCTS.map((p) => (
-            <Popover.Close key={p.sku} asChild>
-              <button
-                type="button"
-                onClick={() => onChange(p.sku)}
-                className={cn(
-                  "w-full px-2 py-1.5 rounded-lg text-left cursor-pointer flex items-center gap-2 transition-colors",
-                  selected === p.sku ? "bg-[var(--soft)]" : "hover:bg-[var(--soft-2)]"
-                )}
-              >
-                <img src={p.image} alt={p.name} className="w-8 h-8 rounded-md object-cover shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-[11.5px] font-bold text-[var(--text)] truncate">{p.name}</p>
-                  <p className="text-[10px] text-[var(--muted)] truncate">SKU {p.sku} · {p.category.split("/")[0].trim()}</p>
-                </div>
-                {selected === p.sku && <Check size={12} strokeWidth={2.5} className="text-[var(--text)] shrink-0" />}
-              </button>
-            </Popover.Close>
-          ))}
-        </Popover.Content>
-      </Popover.Portal>
-    </Popover.Root>
-  )
-}
