@@ -27,7 +27,7 @@ export function LifecycleCurveSection({ className }: { className?: string }) {
 
   return (
     <section className={`rounded-lg border border-[var(--line)] bg-white p-5 ${className ?? ""}`}>
-      <h3 className="text-sm font-semibold text-[var(--text)] mb-2">A. 生命周期趋势</h3>
+      <h3 className="text-sm font-semibold text-[var(--text)] mb-2">生命周期趋势</h3>
 
       <div className="relative">
         <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" preserveAspectRatio="xMidYMid meet">

@@ -9,6 +9,7 @@ import {
   ChevronDown,
   Download,
   Eye,
+  Languages,
   Layers,
   RefreshCw,
   Share2,
@@ -16,9 +17,11 @@ import {
   Wand2,
   Zap,
 } from "lucide-react"
+import * as Popover from "@radix-ui/react-popover"
 import { cn } from "@/lib/utils"
 import { type VideoBreakdown } from "@/lib/replicate/breakdown-types"
 import { findActiveSceneId } from "@/lib/replicate/breakdown-utils"
+import { LANGUAGES, type LangCode, translatePrompt } from "@/lib/replicate/prompt-translations"
 import { VideoBreakdownPlayer, type VideoBreakdownPlayerHandle } from "@/components/replicate/video-breakdown-player"
 import { useAssetsState } from "@/lib/assets/state"
 import { AnalysisSceneCard } from "./analysis-scene-card"
@@ -271,13 +274,19 @@ function RhythmPill({ label, value }: { label: string; value: string }) {
   )
 }
 
-// ─── 提示词反推卡（含一键复制） ────────────────────────────────────────────
+// ─── 提示词反推卡（含一键复制 + 多语翻译） ─────────────────────────────────
 
 function ReversePromptCard({ prompt }: { prompt: string }) {
   const [copied, setCopied] = useState(false)
+  const [lang, setLang] = useState<LangCode>("zh")
+  const [langOpen, setLangOpen] = useState(false)
+
+  const activeLang = LANGUAGES.find((l) => l.code === lang) ?? LANGUAGES[0]
+  const displayPrompt = translatePrompt(prompt, lang)
+
   function copy() {
     if (typeof navigator !== "undefined") {
-      navigator.clipboard?.writeText(prompt).catch(() => {})
+      navigator.clipboard?.writeText(displayPrompt).catch(() => {})
     }
     setCopied(true)
     window.setTimeout(() => setCopied(false), 1800)
@@ -291,22 +300,70 @@ function ReversePromptCard({ prompt }: { prompt: string }) {
           </span>
           <p className="text-[12.5px] font-extrabold text-[var(--text)]">提示词反推</p>
         </div>
-        <button
-          type="button"
-          onClick={copy}
-          className={cn(
-            "h-7 px-2.5 rounded-md text-[11px] font-extrabold cursor-pointer transition-colors flex items-center gap-1",
-            copied
-              ? "bg-[#dcfce7] text-[#15803d]"
-              : "border border-[var(--line)] text-[var(--muted)] hover:text-[var(--text)] hover:bg-[var(--soft-2)]"
-          )}
-        >
-          {copied ? <Check size={10} strokeWidth={2.8} /> : <Sparkles size={10} strokeWidth={2.4} />}
-          {copied ? "已复制" : "复制"}
-        </button>
+        <div className="flex items-center gap-1.5">
+          <Popover.Root open={langOpen} onOpenChange={setLangOpen}>
+            <Popover.Trigger asChild>
+              <button
+                type="button"
+                className="h-7 px-2.5 rounded-md border border-[var(--line)] bg-white text-[11px] font-extrabold text-[var(--muted)] hover:text-[var(--text)] hover:bg-[var(--soft-2)] flex items-center gap-1 cursor-pointer transition-colors data-[state=open]:bg-[var(--soft-2)] data-[state=open]:text-[var(--text)] data-[state=open]:border-[var(--line-strong)]"
+              >
+                <Languages size={10} strokeWidth={2.4} />
+                {activeLang.label}
+                <ChevronDown size={10} strokeWidth={2.4} className="-mr-0.5" />
+              </button>
+            </Popover.Trigger>
+            <Popover.Portal>
+              <Popover.Content
+                align="end"
+                sideOffset={6}
+                className="z-50 w-[180px] p-1 bg-white border border-[var(--line)] rounded-[10px] shadow-[0_18px_42px_rgba(9,9,11,0.14)] data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95"
+              >
+                <p className="px-2 pt-1 pb-1 text-[9.5px] font-extrabold text-[var(--muted-2)] uppercase tracking-wide">
+                  翻译为
+                </p>
+                <div className="max-h-[280px] overflow-y-auto">
+                  {LANGUAGES.map((l) => {
+                    const active = l.code === lang
+                    return (
+                      <Popover.Close key={l.code} asChild>
+                        <button
+                          type="button"
+                          onClick={() => setLang(l.code)}
+                          className={cn(
+                            "w-full px-2 py-1.5 rounded-[7px] flex items-center gap-2 cursor-pointer text-left transition-colors",
+                            active ? "bg-[var(--soft)]" : "hover:bg-[var(--soft-2)]"
+                          )}
+                        >
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[11.5px] font-extrabold text-[var(--text)] truncate">{l.label}</p>
+                            <p className="text-[9.5px] text-[var(--muted)] leading-tight truncate">{l.native}</p>
+                          </div>
+                          {active && <Check size={11} strokeWidth={2.8} className="text-[var(--text)] shrink-0" />}
+                        </button>
+                      </Popover.Close>
+                    )
+                  })}
+                </div>
+              </Popover.Content>
+            </Popover.Portal>
+          </Popover.Root>
+          <button
+            type="button"
+            onClick={copy}
+            className={cn(
+              "h-7 px-2.5 rounded-md text-[11px] font-extrabold cursor-pointer transition-colors flex items-center gap-1",
+              copied
+                ? "bg-[#dcfce7] text-[#15803d]"
+                : "border border-[var(--line)] text-[var(--muted)] hover:text-[var(--text)] hover:bg-[var(--soft-2)]"
+            )}
+          >
+            {copied ? <Check size={10} strokeWidth={2.8} /> : <Sparkles size={10} strokeWidth={2.4} />}
+            {copied ? "已复制" : "复制"}
+          </button>
+        </div>
       </div>
       <pre className="rounded-lg bg-[var(--soft-2)] border border-[var(--line)] p-3 text-[11.5px] leading-relaxed text-[var(--text)] whitespace-pre-wrap font-sans">
-        {prompt}
+        {displayPrompt}
       </pre>
     </section>
   )
