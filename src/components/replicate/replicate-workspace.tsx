@@ -27,6 +27,7 @@ import {
 } from "@/lib/insights/types"
 import {
   MATERIALS,
+  WEDDING_DRESS_FINGERPRINT,
   getDirectionsV2,
   mockGenerationOutcomes,
   pickDefaultProduct,
@@ -34,7 +35,7 @@ import {
 import { Clock3 } from "lucide-react"
 import { SourceStep } from "./steps/source-step"
 import { BreakdownStep } from "./steps/breakdown-step"
-import { loadSampleBreakdown } from "@/lib/replicate/breakdown-utils"
+import { loadSampleBreakdown, loadWeddingDressBreakdown } from "@/lib/replicate/breakdown-utils"
 import { DirectionStep } from "./steps/direction-step"
 import { ConfirmStep } from "./steps/confirm-step"
 
@@ -85,15 +86,16 @@ function Inner({ material, productSkuFromQuery, sourceFromQuery, initialStep, pr
     const initialProd = material ? pickDefaultProduct(material) : null
     if (productSkuFromQuery || initialProd) {
       const p = initialProd ?? pickDefaultProduct(MATERIALS[0])
+      const isInitialWeddingDress = material?.fingerprint === WEDDING_DRESS_FINGERPRINT
       return {
         image: p.image,
         name: p.name,
         category: p.category,
         sellingPoints: p.coreSellingPoints,
         sellingPointMode: "manual",
-        audience: "户外通勤 / 修车爱好者 / EDC 用户（25-44 男）",
+        audience: isInitialWeddingDress ? "正在备婚、挑选婚礼主纱，关注闪钻、大拖尾、展厅高级感和上镜效果的新娘。" : "户外通勤 / 修车爱好者 / EDC 用户（25-44 男）",
         scenes: p.matchableSceneTags,
-        forbidden: ["医疗承诺", "竞品对比"],
+        forbidden: isInitialWeddingDress ? ["虚构门店权益", "夸大身材承诺", "遮挡钻面和拖尾"] : ["医疗承诺", "竞品对比"],
       }
     }
     return { sellingPointMode: "manual" }
@@ -121,8 +123,12 @@ function Inner({ material, productSkuFromQuery, sourceFromQuery, initialStep, pr
     return MATERIALS.find((m) => m.fingerprint === selectedMaterialId) ?? null
   }, [selectedMaterialId])
 
+  const isWeddingDressMaterial = selectedMaterial?.fingerprint === WEDDING_DRESS_FINGERPRINT
+
   // Step 2 真实视频 breakdown
-  const videoBreakdown = useMemo(() => loadSampleBreakdown(), [])
+  const videoBreakdown = useMemo(() => {
+    return isWeddingDressMaterial ? loadWeddingDressBreakdown() : loadSampleBreakdown()
+  }, [isWeddingDressMaterial])
 
   // Step 3 directions
   const directions: ReplicaDirectionV2[] = useMemo(() => {
@@ -365,7 +371,7 @@ function Inner({ material, productSkuFromQuery, sourceFromQuery, initialStep, pr
               selectedMaterial={selectedMaterial}
             />
           )}
-          {step === 2 && <BreakdownStep data={videoBreakdown} />}
+          {step === 2 && <BreakdownStep data={videoBreakdown} isWeddingDress={isWeddingDressMaterial} />}
           {step === 3 && (
             <DirectionStep
               directions={directions}

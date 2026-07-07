@@ -1,10 +1,15 @@
 import sampleData from "./sample-breakdown.json"
+import weddingDressData from "./wedding-dress-breakdown.json"
 import type { BoundaryKind, DynamicElement, Scene, VideoBreakdown } from "./breakdown-types"
 
 // ─── 加载示例 breakdown ─────────────────────────────────────────────────────
 
 export function loadSampleBreakdown(): VideoBreakdown {
   return sampleData as unknown as VideoBreakdown
+}
+
+export function loadWeddingDressBreakdown(): VideoBreakdown {
+  return weddingDressData as unknown as VideoBreakdown
 }
 
 // ─── AI 启发式：初始判定每个 dynamic element 的复刻边界 ───────────────────

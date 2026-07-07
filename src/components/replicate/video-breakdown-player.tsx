@@ -57,6 +57,7 @@ export const VideoBreakdownPlayer = forwardRef<VideoBreakdownPlayerHandle, Props
             controls
             playsInline
             preload="metadata"
+            suppressHydrationWarning
             onTimeUpdate={handleTimeUpdate}
             className="w-full h-full object-contain"
           />
@@ -66,7 +67,7 @@ export const VideoBreakdownPlayer = forwardRef<VideoBreakdownPlayerHandle, Props
         <div className="p-3 space-y-2 border-t border-[var(--line)]">
           <div className="flex items-center justify-between text-[10.5px] font-bold text-[var(--muted-2)]">
             <span>{formatTime(currentTime)} / {formatTime(totalDuration)}</span>
-            <span>5 个场景 · 22s</span>
+            <span>{data.scenes.length} 个场景 · {formatDurationLabel(totalDuration)}</span>
           </div>
 
           {/* 主时间轴：低饱和 + 主题色强调 active */}
@@ -121,4 +122,9 @@ function formatTime(seconds: number): string {
   const m = Math.floor(seconds / 60)
   const s = Math.floor(seconds % 60)
   return `${m}:${s.toString().padStart(2, "0")}`
+}
+
+function formatDurationLabel(seconds: number): string {
+  const rounded = Number(seconds.toFixed(2))
+  return Number.isInteger(rounded) ? `${rounded}s` : `${rounded.toFixed(2)}s`
 }

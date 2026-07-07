@@ -106,6 +106,7 @@ function DirectionItem({
             script={direction.script}
             storyboard={direction.storyboard}
             briefText={direction.briefText}
+            initialStoryboardGenerated={direction.briefText?.includes("婚纱") ?? false}
           />
 
           {/* 风险提示 */}

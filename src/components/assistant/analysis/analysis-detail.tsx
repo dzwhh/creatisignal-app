@@ -190,7 +190,7 @@ export function AnalysisDetail({ data, title = "高 CTR 素材分析", generated
 
           {/* 右：叙事策略 + 场景拆解 */}
           <div className="space-y-4 min-w-0">
-            {/* 叙事策略全景 — 默认展开 + 可折叠 */}
+            {/* 故事策略全景 — 默认展开 + 可折叠 */}
             <NarrativeStrategyCard data={data} />
 
             {/* 场景拆解 */}
@@ -312,7 +312,7 @@ function ReversePromptCard({ prompt }: { prompt: string }) {
   )
 }
 
-// ─── 叙事策略全景卡（默认展开 + 可折叠） ───────────────────────────────────
+// ─── 故事策略全景卡（默认展开 + 可折叠） ───────────────────────────────────
 
 export function NarrativeStrategyCard({ data }: { data: VideoBreakdown }) {
   const [expanded, setExpanded] = useState(true)
@@ -326,7 +326,7 @@ export function NarrativeStrategyCard({ data }: { data: VideoBreakdown }) {
         <span className="w-7 h-7 rounded-lg bg-[var(--lime-soft)] text-[#5a7821] flex items-center justify-center shrink-0">
           <Sparkles size={13} strokeWidth={2.4} />
         </span>
-        <h2 className="text-[14px] font-extrabold text-[var(--text)] flex-1">叙事策略全景</h2>
+        <h2 className="text-[14px] font-extrabold text-[var(--text)] flex-1">故事策略全景</h2>
         <span className="text-[11px] text-[var(--muted)] font-bold">
           {expanded ? "收起" : "展开"}
         </span>

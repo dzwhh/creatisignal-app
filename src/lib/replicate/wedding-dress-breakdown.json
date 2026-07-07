@@ -1,0 +1,178 @@
+{
+  "source_video_url": "/creative-assets/wedding-dress-ad.mp4",
+  "narrative_overview": {
+    "overall_strategy": "用暗场婚纱展厅和聚光构图先建立整裙惊艳，再用持续展示证明闪钻重工、大拖尾体量、腰线版型和展厅质感。视频本身是纯产品展示，结构只包含 Hook 钩子和产品演示。",
+    "target_audience": "正在备婚、挑选主纱，关注婚礼入场仪式感、闪钻细节、大拖尾体量和镜头表现的新娘。",
+    "emotional_journey": "第一眼惊艳停留 → 观察闪钻与裙摆细节 → 记住大拖尾和高定轮廓",
+    "viral_analysis": {
+      "hook_trigger_mechanism": "spotlight_full_gown_reveal",
+      "hook_sentence_pattern": "视觉结果前置 + 整裙聚光展示",
+      "persuasion_type": "atelier_product_demo",
+      "conversion_trigger": "product_visual_interest",
+      "emotion_curve": [
+        "awe",
+        "detail trust",
+        "silhouette memory"
+      ],
+      "rhythm_profile": {
+        "hook_pace": "slow_reveal",
+        "body_pace": "continuous_product_demo",
+        "cta_pace": "none_in_source_video"
+      }
+    }
+  },
+  "scenes": [
+    {
+      "scene_id": 0,
+      "start_time": 0,
+      "end_time": 1.5,
+      "duration": 1.5,
+      "narrative_role": [
+        "hook"
+      ],
+      "narrative_context": "Hook 钩子：暗场聚光下的整裙首帧，先让闪钻婚纱成为唯一视觉中心",
+      "transcript": [
+        {
+          "time": "00:00.00 - 00:01.50",
+          "speaker": "画面 / 无口播",
+          "state": "克制、惊艳、拉停浏览",
+          "content": "Spotlight reveal of the full crystal ball gown.",
+          "content_chinese": "聚光揭示整件闪钻公主裙。"
+        }
+      ],
+      "local_path": "scenes/0_0.00-1.50s.mp4",
+      "video_url": null,
+      "profile": {
+        "shot": {
+          "shot_size": "远景",
+          "camera_movement": "缓慢推进",
+          "camera_angle": "平视略低"
+        },
+        "host": {
+          "present": false,
+          "pip_mode": false
+        },
+        "scene_type": "video_only",
+        "visual_description": {
+          "hyperframes_layer": "无额外 UI，依靠暗场、顶灯和聚光形成高级展厅氛围。",
+          "video_layer": "银白闪钻大拖尾婚纱置于展厅中心，背景压暗，聚光让胸口和裙摆反光先被看见。"
+        }
+      },
+      "dynamic_elements": [
+        {
+          "id": 0,
+          "category": "effect",
+          "content": "暗场聚光",
+          "visual_description": "聚光集中在婚纱胸口和裙摆区域，背景保持低照度。",
+          "animation": "none",
+          "start": 0,
+          "end": 1.5
+        },
+        {
+          "id": 1,
+          "category": "shape",
+          "content": "整裙轮廓",
+          "visual_description": "公主裙体量和拖尾轮廓在首帧建立完整记忆。",
+          "animation": "slow-reveal",
+          "start": 0,
+          "end": 1.5
+        }
+      ]
+    },
+    {
+      "scene_id": 1,
+      "start_time": 1.5,
+      "end_time": 9.38,
+      "duration": 7.88,
+      "narrative_role": [
+        "product_demo"
+      ],
+      "narrative_context": "产品演示：持续展示闪钻重工、蓬裙体量、大拖尾、腰线结构和展厅质感",
+      "transcript": [
+        {
+          "time": "00:01.50 - 00:09.38",
+          "speaker": "画面 / 无口播",
+          "state": "放慢、展示细节、保留高定感",
+          "content": "Crystal details, full skirt volume, long train and structured waistline stay in view.",
+          "content_chinese": "闪钻细节、蓬裙体量、大拖尾和腰线结构持续入镜。"
+        }
+      ],
+      "local_path": "scenes/1_1.50-9.38s.mp4",
+      "video_url": null,
+      "profile": {
+        "shot": {
+          "shot_size": "中远景 / 全景",
+          "camera_movement": "缓慢靠近与轻微调整",
+          "camera_angle": "平视"
+        },
+        "host": {
+          "present": false,
+          "pip_mode": false
+        },
+        "scene_type": "video_only",
+        "visual_description": {
+          "hyperframes_layer": "可轻量标注闪钻、腰线、大拖尾三处真实可见卖点；不添加原视频没有的转化按钮。",
+          "video_layer": "镜头持续围绕展厅中央婚纱，展示胸口水钻、裙面反光、蓬裙体量、拖尾延展和腰线比例。"
+        }
+      },
+      "dynamic_elements": [
+        {
+          "id": 0,
+          "category": "annotation",
+          "content": "闪钻重工",
+          "visual_description": "标注胸口和裙面密集闪钻区域。",
+          "animation": "draw",
+          "start": 1.8,
+          "end": 4
+        },
+        {
+          "id": 1,
+          "category": "annotation",
+          "content": "大拖尾公主裙",
+          "visual_description": "沿裙摆与拖尾边缘轻量提示体量感。",
+          "animation": "fade-in",
+          "start": 3.4,
+          "end": 6.2
+        },
+        {
+          "id": 2,
+          "category": "annotation",
+          "content": "高定腰线",
+          "visual_description": "标注腰线和裙摆衔接位置，突出版型结构。",
+          "animation": "draw",
+          "start": 5.8,
+          "end": 7.4
+        },
+        {
+          "id": 3,
+          "category": "caption",
+          "content": "Crystal ball gown in spotlight",
+          "visual_description": "轻量英文字幕放在安全区，不遮挡胸口、腰线和拖尾。",
+          "animation": "fade-in",
+          "start": 7.4,
+          "end": 9.38
+        }
+      ]
+    }
+  ],
+  "narrative_sections": [
+    {
+      "sect_id": 0,
+      "role": "hook",
+      "time": "00:00.000 - 00:01.500",
+      "scene_context": "scene_0 Hook 钩子",
+      "description": "暗场聚光先给出整件闪钻婚纱和大拖尾轮廓，负责首帧拉停。",
+      "strategy": "用完整商品结果前置吸引注意力，不靠口播或转化按钮。",
+      "transcript": []
+    },
+    {
+      "sect_id": 1,
+      "role": "product_demo",
+      "time": "00:01.500 - 00:09.380",
+      "scene_context": "scene_1 产品演示",
+      "description": "持续展示胸口闪钻、裙面反光、蓬裙体量、大拖尾和腰线版型。",
+      "strategy": "用真实可见细节证明婚纱高级感，保持慢节奏和展厅氛围。",
+      "transcript": []
+    }
+  ]
+}

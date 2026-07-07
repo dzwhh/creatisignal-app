@@ -10,6 +10,7 @@ interface Props {
   storyboard: StoryboardShot[]
   /** 若提供，则左栏直接显示这段原文（同步解析也用它），否则按 script[] 派生 */
   briefText?: string
+  initialStoryboardGenerated?: boolean
 }
 
 // 把 ScriptStep[] 拼成一段可编辑文本（带 [timeRange] 标记）
@@ -39,7 +40,7 @@ function parseScriptText(text: string, knownTimeRanges: ScriptTimeRange[]): Reco
   return out
 }
 
-export function ScriptStoryboardPair({ script, storyboard, briefText }: Props) {
+export function ScriptStoryboardPair({ script, storyboard, briefText, initialStoryboardGenerated = false }: Props) {
   // 时间槽位从内容脚本派生（兼容任意分段、任意时长模板）
   const timeRanges = useMemo<ScriptTimeRange[]>(() => script.map((s) => s.timeRange), [script])
 
@@ -79,18 +80,22 @@ export function ScriptStoryboardPair({ script, storyboard, briefText }: Props) {
       materials: [],
     }))
   }, [timeRanges])
-  const [shots, setShots] = useState<StoryboardShot[]>(() => emptyShots)
-  const [generated, setGenerated] = useState(false)
+  const initialStoryboardReady = useMemo(() => {
+    return initialStoryboardGenerated && storyboard.some((shot) => shot.shot.trim() || shot.materials.length > 0)
+  }, [initialStoryboardGenerated, storyboard])
+  const initialShots = useMemo<StoryboardShot[]>(() => initialStoryboardReady ? storyboard : emptyShots, [emptyShots, initialStoryboardReady, storyboard])
+  const [shots, setShots] = useState<StoryboardShot[]>(() => initialShots)
+  const [generated, setGenerated] = useState(initialStoryboardReady)
   const [locked, setLocked] = useState<Set<ScriptTimeRange>>(new Set())
   const [editingShotKey, setEditingShotKey] = useState<ScriptTimeRange | null>(null)
   const [shotDraft, setShotDraft] = useState("")
 
   useEffect(() => {
-    setShots(emptyShots)
-    setGenerated(false)
+    setShots(initialShots)
+    setGenerated(initialStoryboardReady)
     setLocked(new Set())
     setEditingShotKey(null)
-  }, [storyboard, emptyShots])
+  }, [initialShots, initialStoryboardReady])
 
   function toggleLock(tr: ScriptTimeRange) {
     setLocked((prev) => {

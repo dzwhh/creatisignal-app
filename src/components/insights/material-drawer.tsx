@@ -8,7 +8,7 @@ import { X, Wand2, Send, AlertTriangle, ChevronRight, ChevronDown, Sparkles, Pla
 import { cn } from "@/lib/utils"
 import { ActionBadge, MoneyShort, Pct, StatusBadge } from "./shared"
 import { CPO_REASONS, LIFECYCLE_META, type Material, type SelfProduct, type MatchSignal } from "@/lib/insights/types"
-import { SELF_PRODUCTS, computeMatchScore, pickDefaultProduct } from "@/lib/insights/mock"
+import { SELF_PRODUCTS, WEDDING_DRESS_FINGERPRINT, computeMatchScore, pickDefaultProduct } from "@/lib/insights/mock"
 
 type Tab = "breakdown" | "match" | "accounts" | "reason"
 
@@ -235,6 +235,30 @@ function Metric({ label, value, accent }: { label: string; value: React.ReactNod
 // ─── Breakdown tab ───────────────────────────────────────────────────────────
 
 function BreakdownTab({ material }: { material: Material }) {
+  if (material.fingerprint === WEDDING_DRESS_FINGERPRINT) {
+    return (
+      <div className="space-y-4 text-[13px] text-[var(--text)]">
+        <TagSection label="行业" tags={[material.industryTag]} tone="blue" />
+        <TagSection label="视频风格" tags={[material.videoStyleTag]} tone="violet" />
+        <TagSection label="场景" tags={material.sceneTags} tone="green" />
+        <TagSection label="卖点" tags={material.sellingPointTags} tone="orange" />
+        <TagSection label="结构" tags={material.structureTags} tone="gray" />
+        <div className="rounded-xl border border-[var(--line)] bg-[var(--soft-2)] p-3">
+          <p className="text-[11.5px] font-bold text-[var(--muted)] mb-1.5">系统拆解</p>
+          <p className="text-[12.5px] leading-relaxed">
+            这条素材把暗场婚纱展厅当成天然舞台，先用远景聚光展示银白闪钻大拖尾，随后让镜头缓慢贴近胸口重工、腰线和裙摆层次。
+            产品不靠口播解释，而靠灯光反射和空间留白建立“高定、显贵、适合婚礼主视觉”的第一印象。
+          </p>
+          <ul className="mt-2 space-y-1 text-[12px] leading-relaxed text-[var(--text)]">
+            <li>• 必须保留：暗场聚光、正中心陈列、裙摆拖尾完整入镜。</li>
+            <li>• 可变化：开场聚光强度、镜头推进速度、细节标注位置。</li>
+            <li>• 不建议复制：过暗导致细节丢失，或快速切镜破坏奢华感。</li>
+          </ul>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-4 text-[13px] text-[var(--text)]">
       <TagSection label="行业" tags={[material.industryTag]} tone="blue" />
@@ -243,7 +267,7 @@ function BreakdownTab({ material }: { material: Material }) {
       <TagSection label="卖点" tags={material.sellingPointTags} tone="orange" />
       <TagSection label="结构" tags={material.structureTags} tone="gray" />
       <div className="rounded-xl border border-[var(--line)] bg-[var(--soft-2)] p-3">
-        <p className="text-[11.5px] font-bold text-[var(--muted)] mb-1.5">📝 系统拆解</p>
+        <p className="text-[11.5px] font-bold text-[var(--muted)] mb-1.5">系统拆解</p>
         <p className="text-[12.5px] leading-relaxed">
           素材聚焦 <span className="font-bold">{material.sceneTags[0] ?? "通用"}</span> 场景，主打
           <span className="font-bold"> {material.sellingPointTags.slice(0, 2).join(" / ")}</span>，
@@ -366,6 +390,37 @@ function AccountsTab({ material }: { material: Material }) {
 // ─── Reason tab ──────────────────────────────────────────────────────────────
 
 function ReasonTab({ material }: { material: Material }) {
+  if (material.fingerprint === WEDDING_DRESS_FINGERPRINT) {
+    return (
+      <div className="space-y-3">
+        <div className="rounded-xl border border-[#fed7aa] bg-[#fff7ed] p-4">
+          <p className="text-[12px] font-bold text-[#9a3412] mb-1.5 flex items-center gap-1.5">
+            <AlertTriangle size={13} /> 触发原因：高意向但决策链路偏长
+          </p>
+          <p className="text-[12.5px] text-[var(--text)] leading-relaxed">
+            婚纱属于高客单、强审美决策品类，用户会先被视觉吸引，再反复确认款式细节、裙摆体量和镜头表现，所以 CPO 高于普通快消素材。
+            当前素材的首帧聚光和整裙展示很强，但产品演示段还可以更系统地放大闪钻、腰线和拖尾证明，降低用户理解成本。
+          </p>
+        </div>
+        <div className="space-y-1.5 text-[12.5px]">
+          <p className="text-[11.5px] font-semibold text-[var(--muted)]">判断依据</p>
+          <ul className="space-y-1 list-disc pl-5 text-[var(--text)]">
+            <li>CTR {(material.metrics.ctr * 100).toFixed(2)}%，首帧聚光和闪钻细节能有效拉停浏览。</li>
+            <li>ROI {material.metrics.roi.toFixed(2)}，说明高客单价值能覆盖较高获客成本。</li>
+            <li>CPO ${material.metrics.cpo.toFixed(2)}，主要来自高客单价格敏感、细节确认成本和婚礼主纱决策周期。</li>
+          </ul>
+        </div>
+        <div className="rounded-xl border border-[var(--line)] bg-[var(--soft-2)] p-3 text-[12px] text-[var(--text)]">
+          <p className="font-bold mb-1.5">下一步建议</p>
+          <ul className="space-y-1">
+            <li>• 强聚光 Hook：保留暗场聚光和闪钻大拖尾首帧，继续放大停留优势。</li>
+            <li>• 强细节 Proof：在产品演示段放大闪钻重工、腰线结构和拖尾体量。</li>
+            <li>• Hook + Proof 组合：先用整裙聚光拉停，再用真实细节证明婚纱价值。</li>
+          </ul>
+        </div>
+      </div>
+    )
+  }
   if (!material.cpoReason) {
     return (
       <div className="rounded-xl border border-[#dff9e7] bg-[#f0fdf4] p-4 text-[12.5px] text-[#16a34a] font-semibold">
@@ -520,6 +575,16 @@ function MatchTab({
           {result.signals.map((s) => <SignalRow key={s.key} signal={s} />)}
         </div>
       </div>
+
+      {material.fingerprint === WEDDING_DRESS_FINGERPRINT && (
+        <div className="rounded-xl border border-[#dff9e7] bg-[#f0fdf4] p-3 text-[12px] text-[var(--text)] leading-relaxed">
+          <p className="font-extrabold text-[#15803d] mb-1.5">复刻匹配建议</p>
+          <p>
+            建议进入爆款复刻后围绕三条方向生成：强聚光 Hook、强细节 Proof，以及 Hook + Proof 组合。
+            优先保留“暗场聚光 + 闪钻大拖尾 + 缓慢推进”的视觉骨架，不要把画面改成普通货架展示，否则会丢失高定仪式感。
+          </p>
+        </div>
+      )}
 
       <div className="rounded-xl border border-dashed border-[var(--line)] bg-[var(--soft-2)] p-3 text-[11.5px] text-[var(--muted)] leading-relaxed flex items-start gap-1.5">
         <ShieldCheck size={12} className="mt-0.5 shrink-0" />
