@@ -3,10 +3,11 @@
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import * as Dialog from "@radix-ui/react-dialog"
-import * as Popover from "@radix-ui/react-popover"
-import { X, Wand2, Send, AlertTriangle, ChevronRight, ChevronDown, Sparkles, Play, Tag, Zap, ShieldCheck, Ban, ArrowRight, Check, Boxes } from "lucide-react"
+import { X, Wand2, Send, AlertTriangle, ChevronRight, ChevronDown, Play, Tag, Zap, Ban, ArrowRight, Check, Boxes, ShieldCheck, Sparkles } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { ActionBadge, MoneyShort, Pct, StatusBadge } from "./shared"
+import * as Popover from "@radix-ui/react-popover"
+import { LifecycleCurveSection } from "./lifecycle-curve"
 import { CPO_REASONS, LIFECYCLE_META, type Material, type SelfProduct, type MatchSignal } from "@/lib/insights/types"
 import { SELF_PRODUCTS, WEDDING_DRESS_FINGERPRINT, computeMatchScore, pickDefaultProduct } from "@/lib/insights/mock"
 
@@ -26,7 +27,7 @@ export function MaterialDrawer({
     material ? pickDefaultProduct(material).sku : SELF_PRODUCTS[0].sku
   )
 
-  // 当切换素材时，刷新默认配对产品
+  // 当切换素材时，复位到默认 tab，并刷新默认配对产品
   useEffect(() => {
     if (material) {
       setProductSku(pickDefaultProduct(material).sku)
@@ -34,13 +35,13 @@ export function MaterialDrawer({
     }
   }, [material?.fingerprint])
 
-  const selectedProduct = useMemo<SelfProduct>(() => {
-    if (!material) return SELF_PRODUCTS[0]
+  const selectedProduct = useMemo<SelfProduct | null>(() => {
+    if (!material) return null
     return SELF_PRODUCTS.find((p) => p.sku === productSku) ?? pickDefaultProduct(material)
   }, [material, productSku])
 
   const matchResult = useMemo(() => {
-    if (!material) return null
+    if (!material || !selectedProduct) return null
     return computeMatchScore(material, selectedProduct)
   }, [material, selectedProduct])
 
@@ -48,7 +49,7 @@ export function MaterialDrawer({
     <Dialog.Root open={material !== null} onOpenChange={(v) => { if (!v) onClose() }}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-black/40 z-50 data-[state=open]:animate-in data-[state=open]:fade-in-0" />
-        <Dialog.Content className="fixed right-0 top-0 bottom-0 z-50 w-[560px] bg-white shadow-[0_24px_64px_rgba(0,0,0,0.18)] flex flex-col data-[state=open]:animate-in data-[state=open]:slide-in-from-right-1/2">
+        <Dialog.Content className="fixed right-0 top-0 bottom-0 z-50 w-[50vw] min-w-[760px] max-w-[1080px] bg-white shadow-[0_24px_64px_rgba(0,0,0,0.18)] flex flex-col data-[state=open]:animate-in data-[state=open]:slide-in-from-right-1/2">
           {material && (
             <>
               <div className="px-6 pt-5 pb-4 border-b border-[var(--line)] flex items-start justify-between gap-3">
@@ -67,22 +68,34 @@ export function MaterialDrawer({
                 </Dialog.Close>
               </div>
 
-              {/* Top summary */}
-              <div className="px-6 pt-4 pb-3">
-                <div className="flex gap-4">
-                  <div className="relative w-32 h-32 rounded-xl overflow-hidden bg-[var(--soft)] shrink-0">
+              {/* Top hero —— thumb / 6 metrics 2x3 / 5 tag rows */}
+              <div className="px-6 pt-5 pb-4">
+                <div className="grid grid-cols-[160px_minmax(0,1.1fr)_minmax(0,1.6fr)] gap-5 items-start">
+                  {/* 左：thumb */}
+                  <div className="relative aspect-square rounded-xl overflow-hidden bg-[var(--soft)]">
                     <img src={material.thumb} alt={material.name} className="w-full h-full object-cover" />
                     <div className="absolute inset-0 flex items-center justify-center bg-black/15">
-                      <Play size={20} className="text-white" fill="white" />
+                      <Play size={22} className="text-white" fill="white" />
                     </div>
                   </div>
-                  <div className="flex-1 grid grid-cols-2 gap-y-2 gap-x-3 content-start">
-                    <Metric label="综合评级" value={material.rating.toString()} />
-                    <Metric label="ROI" value={material.metrics.roi.toFixed(2)} accent={material.metrics.roi >= 2 ? "ok" : material.metrics.roi >= 1.4 ? "warn" : "bad"} />
-                    <Metric label="CPO" value={`$${material.metrics.cpo.toFixed(2)}`} />
-                    <Metric label="CTR" value={<Pct value={material.metrics.ctr} />} />
-                    <Metric label="花费 (7d)" value={<MoneyShort value={material.metrics.spend} />} />
-                    <Metric label="账户分布" value={`${material.accountCount} 个账户`} />
+
+                  {/* 中：6 metrics 2 列 × 3 行 */}
+                  <div className="grid grid-cols-2 gap-y-3 gap-x-4 content-start">
+                    <HeroMetric label="综合评级" value={material.rating.toString()} />
+                    <HeroMetric label="ROI"      value={material.metrics.roi.toFixed(2)} accent={material.metrics.roi >= 2 ? "ok" : material.metrics.roi >= 1.4 ? "warn" : "bad"} />
+                    <HeroMetric label="CPO"      value={`$${material.metrics.cpo.toFixed(2)}`} />
+                    <HeroMetric label="CTR"      value={<Pct value={material.metrics.ctr} />} />
+                    <HeroMetric label="花费 (7d)" value={<MoneyShort value={material.metrics.spend} />} />
+                    <HeroMetric label="账户分布"  value={`${material.accountCount} 个账户`} />
+                  </div>
+
+                  {/* 右：5 tag rows */}
+                  <div className="space-y-1.5">
+                    <HeroTagRow label="行业"    tags={[material.industryTag]}    tone="blue" />
+                    <HeroTagRow label="视频风格" tags={[material.videoStyleTag]}  tone="violet" />
+                    <HeroTagRow label="场景"    tags={material.sceneTags.slice(0, 3)}        tone="green" />
+                    <HeroTagRow label="卖点"    tags={material.sellingPointTags.slice(0, 3)} tone="orange" />
+                    <HeroTagRow label="结构"    tags={material.structureTags.slice(0, 3)}    tone="gray" />
                   </div>
                 </div>
               </div>
@@ -91,7 +104,7 @@ export function MaterialDrawer({
               <div className="px-6 border-b border-[var(--line)] flex items-center gap-1 overflow-x-auto">
                 {[
                   { id: "breakdown" as Tab, label: "素材拆解" },
-                  { id: "match" as Tab,     label: <span className="inline-flex items-center gap-1">复刻匹配{matchResult && <ScoreDot level={matchResult.level} />}</span> },
+                  { id: "match" as Tab,     label: "复刻匹配" },
                   { id: "accounts" as Tab,  label: `账户级表现 (${material.accountCount})` },
                   { id: "reason" as Tab,    label: "高 CPO 原因" },
                 ].map((t) => (
@@ -112,7 +125,7 @@ export function MaterialDrawer({
 
               <div className="flex-1 overflow-y-auto px-6 py-4">
                 {tab === "breakdown" && <BreakdownTab material={material} />}
-                {tab === "match" && matchResult && (
+                {tab === "match" && selectedProduct && matchResult && (
                   <MatchTab
                     material={material}
                     product={selectedProduct}
@@ -126,17 +139,76 @@ export function MaterialDrawer({
               </div>
 
               {/* Footer */}
-              <ReplicaFooter
-                material={material}
-                product={selectedProduct}
-                matchResult={matchResult}
-                onSendBrief={onSendBrief}
-              />
+              {selectedProduct && (
+                <ReplicaFooter
+                  material={material}
+                  product={selectedProduct}
+                  matchResult={matchResult}
+                  onSendBrief={onSendBrief}
+                />
+              )}
             </>
           )}
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>
+  )
+}
+
+// ─── Hero metric / tag row primitives ────────────────────────────────────────
+
+function HeroMetric({ label, value, accent }: { label: string; value: React.ReactNode; accent?: "ok" | "warn" | "bad" }) {
+  const cls = accent === "ok" ? "text-[#16a34a]" : accent === "warn" ? "text-[#a16207]" : accent === "bad" ? "text-[#dc2626]" : "text-[var(--text)]"
+  return (
+    <div>
+      <p className="text-[11.5px] font-medium text-[var(--muted)]">{label}</p>
+      <p className={cn("text-[19px] font-semibold tracking-tight tabular-nums leading-tight mt-0.5", cls)}>{value}</p>
+    </div>
+  )
+}
+
+function HeroTagRow({ label, tags, tone }: { label: string; tags: string[]; tone: "blue" | "violet" | "green" | "orange" | "gray" }) {
+  const cls: Record<string, string> = {
+    blue:   "bg-[#dbeafe] text-[#1e40af]",
+    violet: "bg-[#ede9fe] text-[#6d28d9]",
+    green:  "bg-[#dcfce7] text-[#15803d]",
+    orange: "bg-[#fff7ed] text-[#9a3412]",
+    gray:   "bg-[var(--soft)] text-[var(--muted)]",
+  }
+  return (
+    <div className="flex items-center gap-2 min-w-0">
+      <span className="inline-flex items-center gap-1 text-[11.5px] text-[var(--muted)] w-[68px] shrink-0">
+        <Tag size={11} strokeWidth={1.8} />
+        {label}
+      </span>
+      <div className="flex flex-wrap gap-1 min-w-0">
+        {tags.map((t) => (
+          <span key={t} className={cn("h-5 px-1.5 rounded text-[11px] font-medium inline-flex items-center", cls[tone])}>
+            {t}
+          </span>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function TagSection({ label, tags, tone }: { label: string; tags: string[]; tone: "blue" | "violet" | "green" | "orange" | "gray" }) {
+  const cls: Record<string, string> = {
+    blue:   "bg-[#dbeafe] text-[#1e40af]",
+    violet: "bg-[#ede9fe] text-[#6d28d9]",
+    green:  "bg-[#dcfce7] text-[#15803d]",
+    orange: "bg-[#fff7ed] text-[#9a3412]",
+    gray:   "bg-[var(--soft)] text-[var(--muted)]",
+  }
+  return (
+    <div>
+      <p className="text-[11px] font-semibold text-[var(--muted)] mb-1.5 flex items-center gap-1"><Tag size={10} /> {label}</p>
+      <div className="flex flex-wrap gap-1.5">
+        {tags.map((t) => (
+          <span key={t} className={cn("h-6 px-2 rounded-md text-[11.5px] font-semibold inline-flex items-center", cls[tone])}>{t}</span>
+        ))}
+      </div>
+    </div>
   )
 }
 
@@ -222,15 +294,6 @@ function ReplicaFooter({
   )
 }
 
-function Metric({ label, value, accent }: { label: string; value: React.ReactNode; accent?: "ok" | "warn" | "bad" }) {
-  const cls = accent === "ok" ? "text-[#16a34a]" : accent === "warn" ? "text-[#a16207]" : accent === "bad" ? "text-[#dc2626]" : "text-[var(--text)]"
-  return (
-    <div>
-      <p className="text-[10.5px] font-semibold text-[var(--muted)]">{label}</p>
-      <p className={cn("text-[15px] font-extrabold", cls)}>{value}</p>
-    </div>
-  )
-}
 
 // ─── Breakdown tab ───────────────────────────────────────────────────────────
 
@@ -261,11 +324,9 @@ function BreakdownTab({ material }: { material: Material }) {
 
   return (
     <div className="space-y-4 text-[13px] text-[var(--text)]">
-      <TagSection label="行业" tags={[material.industryTag]} tone="blue" />
-      <TagSection label="视频风格" tags={[material.videoStyleTag]} tone="violet" />
-      <TagSection label="场景" tags={material.sceneTags} tone="green" />
-      <TagSection label="卖点" tags={material.sellingPointTags} tone="orange" />
-      <TagSection label="结构" tags={material.structureTags} tone="gray" />
+      {/* 生命周期趋势曲线 */}
+      <LifecycleCurveSection />
+
       <div className="rounded-xl border border-[var(--line)] bg-[var(--soft-2)] p-3">
         <p className="text-[11.5px] font-bold text-[var(--muted)] mb-1.5">系统拆解</p>
         <p className="text-[12.5px] leading-relaxed">
@@ -279,25 +340,6 @@ function BreakdownTab({ material }: { material: Material }) {
   )
 }
 
-function TagSection({ label, tags, tone }: { label: string; tags: string[]; tone: "blue" | "violet" | "green" | "orange" | "gray" }) {
-  const cls: Record<string, string> = {
-    blue:   "bg-[#dbeafe] text-[#1e40af]",
-    violet: "bg-[#ede9fe] text-[#6d28d9]",
-    green:  "bg-[#dcfce7] text-[#15803d]",
-    orange: "bg-[#fff7ed] text-[#9a3412]",
-    gray:   "bg-[var(--soft)] text-[var(--muted)]",
-  }
-  return (
-    <div>
-      <p className="text-[11px] font-semibold text-[var(--muted)] mb-1.5 flex items-center gap-1"><Tag size={10} /> {label}</p>
-      <div className="flex flex-wrap gap-1.5">
-        {tags.map((t) => (
-          <span key={t} className={cn("h-6 px-2 rounded-md text-[11.5px] font-semibold inline-flex items-center", cls[tone])}>{t}</span>
-        ))}
-      </div>
-    </div>
-  )
-}
 
 // ─── Accounts tab ────────────────────────────────────────────────────────────
 
@@ -361,7 +403,7 @@ function AccountsTab({ material }: { material: Material }) {
       </div>
 
       <div className="rounded-xl border border-[#fde68a] bg-[#fffbea] p-3">
-        <p className="text-[11.5px] font-bold text-[#a16207] mb-1.5 flex items-center gap-1"><Sparkles size={11} /> 系统建议</p>
+        <p className="text-[11.5px] font-bold text-[#a16207] mb-1.5 flex items-center gap-1"><Wand2 size={11} /> 系统建议</p>
         <ul className="space-y-1 text-[12px] text-[var(--text)]">
           {sorted.slice(0, 2).filter((r) => r.recommendation === "scale").map((r) => (
             <li key={r.accountId} className="flex items-start gap-1.5">
@@ -477,10 +519,6 @@ function LifecycleBadge({ phase, ageDays }: { phase: Material["lifecyclePhase"];
   )
 }
 
-function ScoreDot({ level }: { level: "high" | "mid" | "low" }) {
-  const color = level === "high" ? "#16a34a" : level === "mid" ? "#eab308" : "#dc2626"
-  return <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: color }} />
-}
 
 // ─── Match tab：左爆款骨架 / 右自有产品 / 上方 match 评分 ────────────────────
 
@@ -686,3 +724,4 @@ function ProductPicker({ selected, onChange }: { selected: string; onChange: (sk
     </Popover.Root>
   )
 }
+
