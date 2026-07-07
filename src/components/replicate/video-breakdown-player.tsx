@@ -1,6 +1,6 @@
 "use client"
 
-import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react"
+import { forwardRef, useImperativeHandle, useRef, useState } from "react"
 import { NARRATIVE_ROLE_META, type Scene, type VideoBreakdown } from "@/lib/replicate/breakdown-types"
 import { cn } from "@/lib/utils"
 

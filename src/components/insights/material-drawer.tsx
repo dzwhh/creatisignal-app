@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 import Link from "next/link"
 import * as Dialog from "@radix-ui/react-dialog"
 import { X, Wand2, Send, AlertTriangle, ChevronRight, ChevronDown, Play, Tag, Zap, Ban, ArrowRight, Check, Boxes, ShieldCheck, Sparkles } from "lucide-react"
@@ -12,6 +12,11 @@ import { CPO_REASONS, LIFECYCLE_META, type Material, type SelfProduct, type Matc
 import { SELF_PRODUCTS, WEDDING_DRESS_FINGERPRINT, computeMatchScore, pickDefaultProduct } from "@/lib/insights/mock"
 
 type Tab = "breakdown" | "match" | "accounts" | "reason"
+type DrawerUiState = {
+  fingerprint: string | null
+  productSku: string
+  tab: Tab
+}
 
 export function MaterialDrawer({
   material,
@@ -22,18 +27,26 @@ export function MaterialDrawer({
   onClose: () => void
   onSendBrief: () => void
 }) {
-  const [tab, setTab] = useState<Tab>("breakdown")
-  const [productSku, setProductSku] = useState<string>(() =>
-    material ? pickDefaultProduct(material).sku : SELF_PRODUCTS[0].sku
-  )
+  const materialFingerprint = material?.fingerprint ?? null
+  const defaultProductSku = useMemo(() => {
+    return material ? pickDefaultProduct(material).sku : SELF_PRODUCTS[0].sku
+  }, [material])
+  const [uiState, setUiState] = useState<DrawerUiState>({
+    fingerprint: null,
+    productSku: SELF_PRODUCTS[0].sku,
+    tab: "breakdown",
+  })
+  const hasStateForCurrentMaterial = uiState.fingerprint === materialFingerprint
+  const tab = hasStateForCurrentMaterial ? uiState.tab : "breakdown"
+  const productSku = hasStateForCurrentMaterial ? uiState.productSku : defaultProductSku
 
-  // 当切换素材时，复位到默认 tab，并刷新默认配对产品
-  useEffect(() => {
-    if (material) {
-      setProductSku(pickDefaultProduct(material).sku)
-      setTab("breakdown")
-    }
-  }, [material?.fingerprint])
+  function setTabForCurrentMaterial(nextTab: Tab) {
+    setUiState({ fingerprint: materialFingerprint, productSku, tab: nextTab })
+  }
+
+  function setProductForCurrentMaterial(nextProductSku: string) {
+    setUiState({ fingerprint: materialFingerprint, productSku: nextProductSku, tab })
+  }
 
   const selectedProduct = useMemo<SelfProduct | null>(() => {
     if (!material) return null
@@ -111,7 +124,7 @@ export function MaterialDrawer({
                   <button
                     key={t.id}
                     type="button"
-                    onClick={() => setTab(t.id)}
+                    onClick={() => setTabForCurrentMaterial(t.id)}
                     className={cn(
                       "relative h-10 px-3 text-[13px] font-bold cursor-pointer transition-colors whitespace-nowrap",
                       tab === t.id ? "text-[var(--text)]" : "text-[var(--muted)] hover:text-[var(--text)]"
@@ -130,7 +143,7 @@ export function MaterialDrawer({
                     material={material}
                     product={selectedProduct}
                     productSku={productSku}
-                    onProductChange={setProductSku}
+                    onProductChange={setProductForCurrentMaterial}
                     result={matchResult}
                   />
                 )}
@@ -191,7 +204,8 @@ function HeroTagRow({ label, tags, tone }: { label: string; tags: string[]; tone
     </div>
   )
 }
-
+
+
 function TagSection({ label, tags, tone }: { label: string; tags: string[]; tone: "blue" | "violet" | "green" | "orange" | "gray" }) {
   const cls: Record<string, string> = {
     blue:   "bg-[#dbeafe] text-[#1e40af]",
@@ -724,4 +738,3 @@ function ProductPicker({ selected, onChange }: { selected: string; onChange: (sk
     </Popover.Root>
   )
 }
-
