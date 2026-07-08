@@ -1,12 +1,22 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { Video, Image, Link2, Wand2, Plus, ChevronDown, SlidersHorizontal, Hash, Star, X, Play } from "lucide-react"
+import { motion, AnimatePresence } from "framer-motion"
+import { Video, Image, Link2, Wand2, Plus, ChevronDown, SlidersHorizontal, Hash, Star, X, Play, Package, Sparkles, Undo2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { SendButton } from "../send-button"
 import { ImageSelectModal, type ImageItem } from "@/components/modals/image-select-modal"
 import { VideoSelectModal, type VideoItem } from "@/components/modals/video-select-modal"
 import { DigitalHumanModal, type DHItem } from "@/components/modals/digital-human-modal"
+import { PromptEditor } from "../generate/prompt-editor"
+import { TemplateStrip } from "../generate/template-strip"
+import { TemplateGalleryModal } from "../generate/template-gallery-modal"
+import { ProductModal } from "../generate/product-modal"
+import { HookSceneBar } from "../generate/hook-scene-bar"
+import { applyTemplate, replaceSegment } from "@/lib/generate/templates"
+import { tokenOf, nextIndex, renumber, removeReference } from "@/lib/generate/references"
+import { PRESET_PRODUCTS } from "@/lib/generate/products"
+import type { Template, SlotOption, Reference, Product } from "@/lib/generate/types"
 
 // ─── Types & Data ────────────────────────────────────────────────────────────
 
@@ -186,7 +196,7 @@ function CountPopup({ count, setCount, unit }: { count: number; setCount: (v: nu
   )
 }
 
-// ─── Media thumbnail ──────────────────────────────────────────────────────────
+// ─── Media thumbnail（非视频类型沿用）────────────────────────────────────────
 
 function MediaThumb({ src, type, label, onRemove }: {
   src: string; type: "image" | "video" | "dh"; label?: string; onRemove: () => void
@@ -197,6 +207,7 @@ function MediaThumb({ src, type, label, onRemove }: {
         "overflow-hidden rounded-lg border border-[var(--line)] bg-[var(--soft)]",
         type === "video" ? "w-[60px] h-[38px]" : type === "dh" ? "w-[30px] h-[42px]" : "w-[42px] h-[42px]"
       )}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={src} alt={label} className="w-full h-full object-cover" />
         {type === "video" && (
           <div className="absolute inset-0 flex items-center justify-center">
@@ -221,13 +232,32 @@ function MediaThumb({ src, type, label, onRemove }: {
 
 const pickerBtn = "h-[34px] border border-transparent rounded-full bg-white text-[#18181b] px-[9px] flex items-center gap-1.5 text-[13px] font-[650] cursor-pointer hover:bg-[var(--soft)] whitespace-nowrap"
 
-function UploadSlot({ label, icon: Icon, onClick }: { label: string; icon: React.ElementType; onClick?: () => void }) {
+function UploadSlot({ label, icon: Icon, onClick, accent }: { label: string; icon: React.ElementType; onClick?: () => void; accent?: boolean }) {
   return (
-    <button type="button" onClick={onClick} aria-label={label}
-      className="w-[40px] h-[40px] border border-dashed border-[var(--line-strong)] rounded-[10px] bg-white/60 text-[var(--muted)] flex items-center justify-center cursor-pointer hover:border-[var(--muted)] hover:text-[var(--text)] transition-colors">
+    <button type="button" onClick={onClick} aria-label={label} title={label}
+      className={cn(
+        "w-[40px] h-[40px] border border-dashed rounded-[10px] flex items-center justify-center cursor-pointer transition-colors",
+        accent
+          ? "border-[#b8d94a] bg-[var(--lime-soft)]/60 text-[#5a6b1a] hover:border-[#9ab826] hover:bg-[var(--lime-soft)]"
+          : "border-[var(--line-strong)] bg-white/60 text-[var(--muted)] hover:border-[var(--muted)] hover:text-[var(--text)]"
+      )}>
       <Icon size={16} strokeWidth={2} />
     </button>
   )
+}
+
+// ─── 模板态快照（undo toast 用）──────────────────────────────────────────────
+
+interface Snapshot {
+  text: string
+  references: Reference[]
+  template: Template | null
+  hook: SlotOption | null
+  scene: SlotOption | null
+  videoResolution: string
+  videoRatio: string
+  videoDuration: number
+  model: string
 }
 
 // ─── Main Component ──────────────────────────────────────────────────────────
@@ -250,7 +280,6 @@ export function GenerateMode({ initialPrompt, onSubmit, submitting }: GenerateMo
     if (!initialPrompt) return
     setGenType("video")
     setText(initialPrompt)
-    // Focus + move cursor to end on next tick
     window.setTimeout(() => {
       const el = textareaRef.current
       if (!el) return
@@ -279,7 +308,21 @@ export function GenerateMode({ initialPrompt, onSubmit, submitting }: GenerateMo
   // Count
   const [count, setCount] = useState(1)
 
-  // Selected media
+  // ── 模板态 ──
+  const [template, setTemplate] = useState<Template | null>(null)
+  const [hook, setHook] = useState<SlotOption | null>(null)
+  const [scene, setScene] = useState<SlotOption | null>(null)
+  const [flash, setFlash] = useState<{ text: string; nonce: number } | null>(null)
+  const [glowKey, setGlowKey] = useState(0)
+  const [galleryOpen, setGalleryOpen] = useState(false)
+  const [toast, setToast] = useState<{ message: string; snapshot: Snapshot } | null>(null)
+
+  // ── 引用与商品（视频生成专用）──
+  const [references, setReferences] = useState<Reference[]>([])
+  const [products, setProducts] = useState<Product[]>(PRESET_PRODUCTS)
+  const [productModalOpen, setProductModalOpen] = useState(false)
+
+  // 旧版媒体选择（非视频类型沿用）
   const [selectedImages, setSelectedImages] = useState<ImageItem[]>([])
   const [selectedVideos, setSelectedVideos] = useState<VideoItem[]>([])
   const [digitalHuman, setDigitalHuman] = useState<DHItem | null>(null)
@@ -300,6 +343,13 @@ export function GenerateMode({ initialPrompt, onSubmit, submitting }: GenerateMo
     return () => document.removeEventListener("mousedown", onOutside)
   }, [activePopup])
 
+  // Toast 自动消失
+  useEffect(() => {
+    if (!toast) return
+    const t = window.setTimeout(() => setToast(null), 5000)
+    return () => window.clearTimeout(t)
+  }, [toast])
+
   const toggle = (popup: ActivePopup) => setActivePopup((prev) => (prev === popup ? null : popup))
 
   const handleGenTypeChange = (v: GenType) => {
@@ -310,24 +360,154 @@ export function GenerateMode({ initialPrompt, onSubmit, submitting }: GenerateMo
     setModel(opts[0])
   }
 
+  // ── 模板机制 ──
+
+  function takeSnapshot(): Snapshot {
+    return { text, references, template, hook, scene, videoResolution, videoRatio, videoDuration, model }
+  }
+
+  function restoreSnapshot(s: Snapshot) {
+    setText(s.text); setReferences(s.references)
+    setTemplate(s.template); setHook(s.hook); setScene(s.scene)
+    setVideoResolution(s.videoResolution); setVideoRatio(s.videoRatio); setVideoDuration(s.videoDuration)
+    setModel(s.model)
+    setFlash(null)
+    setToast(null)
+  }
+
+  function handleApplyTemplate(t: Template) {
+    const snapshot = takeSnapshot()
+    const kept = references.filter((r) => r.source === "product" && r.kind === "image")
+    const app = applyTemplate(t, kept, products[0] ?? null)
+    setTemplate(t)
+    setHook(app.hook)
+    setScene(app.scene)
+    setText(app.text)
+    setReferences(app.references)
+    setVideoResolution(t.settings.resolution)
+    setVideoRatio(t.settings.ratio)
+    setVideoDuration(t.settings.duration)
+    setModel(t.settings.model)
+    setFlash(null)
+    setGlowKey((k) => k + 1)
+    setToast({ message: `已应用「${t.name}」模板`, snapshot })
+  }
+
+  function handleClearTemplate() {
+    const snapshot = takeSnapshot()
+    setTemplate(null)
+    setHook(null)
+    setScene(null)
+    setText("")
+    // 商品图是用户资产，清模板时保留并重新编号
+    setReferences(renumber(references.filter((r) => r.source === "product")))
+    setFlash(null)
+    setToast({ message: "已清除模板", snapshot })
+  }
+
+  function handleSelectHook(opt: SlotOption) {
+    if (!hook || opt.id === hook.id) return
+    const { text: nextText } = replaceSegment(text, hook.sentence, opt.sentence)
+    setText(nextText)
+    setHook(opt)
+    setFlash({ text: opt.sentence, nonce: Date.now() })
+  }
+
+  function handleSelectScene(opt: SlotOption) {
+    if (!scene || opt.id === scene.id) return
+    const { text: nextText } = replaceSegment(text, scene.sentence, opt.sentence)
+    setText(nextText)
+    setScene(opt)
+    setFlash({ text: opt.sentence, nonce: Date.now() })
+  }
+
+  // ── 引用插入 / 移除（视频生成）──
+
+  function insertRefs(items: Omit<Reference, "index">[]) {
+    const counters = {
+      image: nextIndex(references, "image") - 1,
+      video: nextIndex(references, "video") - 1,
+    }
+    const fresh: Reference[] = items
+      .filter((it) => !references.some((r) => r.id === it.id))
+      .map((it) => ({ ...it, index: ++counters[it.kind] }))
+    if (fresh.length === 0) return
+    const tokens = fresh.map(tokenOf).join(" ")
+    setReferences([...references, ...fresh])
+    // 追加到文本末尾（保持 token 与引用一致）
+    setText((prev) => {
+      const trimmed = prev.trimEnd()
+      return trimmed ? `${trimmed} ${tokens} ` : `${tokens} `
+    })
+  }
+
+  function handleRemoveReference(id: string) {
+    const { refs, text: nextText } = removeReference(references, id, text)
+    setReferences(refs)
+    setText(nextText)
+  }
+
+  function handleInsertProduct(product: Product, imageIds: string[]) {
+    insertRefs(
+      product.images
+        .filter((img) => imageIds.includes(img.id))
+        .map((img) => ({
+          id: `ref-${img.id}`,
+          kind: "image" as const,
+          thumb: img.src,
+          name: product.title,
+          source: "product" as const,
+          productId: product.id,
+        }))
+    )
+  }
+
+  const isVideo = genType === "video"
   const models = genType === "image" ? imageModels : genType === "reverse" ? reverseModels : videoModels
   const maxLen = genType === "video" ? 8000 : 2000
   const countUnit = genType === "image" ? "张" : "条"
   const settingsLabel = genType === "image" ? `${imageResolution} · ${imageRatio}` : `${videoResolution} · ${videoRatio} · ${videoDuration}s`
 
   const placeholders: Record<GenType, string> = {
-    video: "描述视频画面内容和动态过程，使用 @ 指定参考图或参考视频",
+    video: "描述视频画面内容和动态过程，或从下方选择模板一键开始",
     image: "描述你想生成的图片内容、构图、风格与商品信息",
     remix: "粘贴爆款素材链接，或描述想复刻的画面结构、卖点与节奏",
     reverse: "贴入视频链接，或上传图片 / 视频，反推出可复用提示词",
   }
 
-  const hasMedia = selectedImages.length > 0 || selectedVideos.length > 0 || !!digitalHuman
+  const hasLegacyMedia = selectedImages.length > 0 || selectedVideos.length > 0 || !!digitalHuman
 
   return (
     <div className="flex flex-col gap-3.5">
+      {/* Undo toast */}
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            initial={{ opacity: 0, y: -8, height: 0 }}
+            animate={{ opacity: 1, y: 0, height: "auto" }}
+            exit={{ opacity: 0, y: -8, height: 0 }}
+            className="overflow-hidden"
+          >
+            <div className="flex items-center justify-between h-9 px-3.5 rounded-[10px] bg-[#18181b] text-white">
+              <span className="text-[12.5px] font-semibold flex items-center gap-1.5">
+                <Sparkles size={13} className="text-[var(--lime)]" />
+                {toast.message}
+              </span>
+              <button
+                type="button"
+                onClick={() => restoreSnapshot(toast.snapshot)}
+                className="flex items-center gap-1 text-[12px] font-bold text-[var(--lime)] hover:brightness-110 cursor-pointer"
+              >
+                <Undo2 size={12} strokeWidth={2.4} />
+                撤销
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Video mode tabs */}
-      {genType === "video" && (
+      {isVideo && (
         <div className="flex items-center gap-[3px] border border-[var(--line)] rounded-full bg-[var(--soft)] p-[3px] w-max">
           {(["reference", "frames"] as VideoMode[]).map((m) => (
             <button key={m} type="button" onClick={() => setVideoMode(m)}
@@ -339,18 +519,34 @@ export function GenerateMode({ initialPrompt, onSubmit, submitting }: GenerateMo
         </div>
       )}
 
+      {/* Hook / 场景（仅模板态）*/}
+      <AnimatePresence initial={false}>
+        {isVideo && template && hook && scene && (
+          <HookSceneBar
+            key={template.id}
+            hooks={template.hooks}
+            scenes={template.scenes}
+            selectedHookId={hook.id}
+            selectedSceneId={scene.id}
+            onSelectHook={handleSelectHook}
+            onSelectScene={handleSelectScene}
+          />
+        )}
+      </AnimatePresence>
+
       {/* Upload slots + input area */}
       <div className="flex items-start gap-3.5 min-h-[52px]">
         {/* Upload slots */}
         <div className="flex items-center gap-2 shrink-0 pt-0.5">
-          {genType === "video" && videoMode === "reference" && (
+          {isVideo && videoMode === "reference" && (
             <>
+              <UploadSlot label="商品" icon={Package} accent onClick={() => setProductModalOpen(true)} />
               <UploadSlot label="图片" icon={Image} onClick={() => setImageModalOpen(true)} />
               <UploadSlot label="视频" icon={Video} onClick={() => setVideoModalOpen(true)} />
               <UploadSlot label="数字人" icon={Plus} onClick={() => setDhModalOpen(true)} />
             </>
           )}
-          {genType === "video" && videoMode === "frames" && (
+          {isVideo && videoMode === "frames" && (
             <>
               <UploadSlot label="首帧" icon={Plus} onClick={() => setImageModalOpen(true)} />
               <UploadSlot label="尾帧" icon={Plus} onClick={() => setImageModalOpen(true)} />
@@ -362,45 +558,95 @@ export function GenerateMode({ initialPrompt, onSubmit, submitting }: GenerateMo
           )}
         </div>
 
-        {/* Input area: media previews + textarea */}
-        <div className="flex-1 flex flex-col gap-2">
-          {hasMedia && (
-            <div className="flex flex-wrap gap-2">
-              {selectedImages.map((img) => (
-                <MediaThumb
-                  key={img.id} src={img.thumb} type="image" label={img.name}
-                  onRemove={() => setSelectedImages((prev) => prev.filter((i) => i.id !== img.id))}
-                />
-              ))}
-              {selectedVideos.map((vid) => (
-                <MediaThumb
-                  key={vid.id} src={vid.thumb} type="video" label={vid.name}
-                  onRemove={() => setSelectedVideos((prev) => prev.filter((v) => v.id !== vid.id))}
-                />
-              ))}
-              {digitalHuman && (
-                <MediaThumb
-                  src={digitalHuman.thumb} type="dh" label={digitalHuman.name}
-                  onRemove={() => setDigitalHuman(null)}
-                />
-              )}
-            </div>
-          )}
-          <textarea
-            ref={textareaRef}
-            className="w-full min-h-[52px] border-0 outline-none resize-none text-[#24272f] text-[15px] leading-[1.5] bg-transparent placeholder:text-[var(--muted-2)]"
-            placeholder={placeholders[genType]}
+        {/* 视频生成：带高亮叠层与参考区的编辑器 */}
+        {isVideo ? (
+          <PromptEditor
             value={text}
-            onChange={(e) => setText(e.target.value)}
+            onChange={setText}
+            references={references}
+            onRemoveReference={handleRemoveReference}
+            placeholder={placeholders.video}
             maxLength={maxLen}
-            rows={2}
+            textareaRef={textareaRef}
+            flash={flash}
+            extraChips={digitalHuman && (
+              <MediaThumb
+                src={digitalHuman.thumb} type="dh" label={digitalHuman.name}
+                onRemove={() => setDigitalHuman(null)}
+              />
+            )}
           />
-        </div>
+        ) : (
+          <div className="flex-1 flex flex-col gap-2">
+            {hasLegacyMedia && (
+              <div className="flex flex-wrap gap-2">
+                {selectedImages.map((img) => (
+                  <MediaThumb
+                    key={img.id} src={img.thumb} type="image" label={img.name}
+                    onRemove={() => setSelectedImages((prev) => prev.filter((i) => i.id !== img.id))}
+                  />
+                ))}
+                {selectedVideos.map((vid) => (
+                  <MediaThumb
+                    key={vid.id} src={vid.thumb} type="video" label={vid.name}
+                    onRemove={() => setSelectedVideos((prev) => prev.filter((v) => v.id !== vid.id))}
+                  />
+                ))}
+                {digitalHuman && (
+                  <MediaThumb
+                    src={digitalHuman.thumb} type="dh" label={digitalHuman.name}
+                    onRemove={() => setDigitalHuman(null)}
+                  />
+                )}
+              </div>
+            )}
+            <textarea
+              ref={textareaRef}
+              className="w-full min-h-[52px] border-0 outline-none resize-none text-[#24272f] text-[15px] leading-[1.5] bg-transparent placeholder:text-[var(--muted-2)]"
+              placeholder={placeholders[genType]}
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              maxLength={maxLen}
+              rows={2}
+            />
+          </div>
+        )}
       </div>
 
       {/* Config row */}
       <div ref={configRef} className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2 flex-wrap">
+
+          {/* 模板 chip（模板态）*/}
+          <AnimatePresence>
+            {isVideo && template && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.85, x: -6 }}
+                animate={{ opacity: 1, scale: 1, x: 0 }}
+                exit={{ opacity: 0, scale: 0.85, x: -6 }}
+                transition={{ type: "spring", stiffness: 480, damping: 30 }}
+                className="flex items-center h-[34px] rounded-full bg-[var(--lime-soft)] border border-[#d4e89a] pl-[9px] pr-1"
+              >
+                <button
+                  type="button"
+                  onClick={() => setGalleryOpen(true)}
+                  title="切换模板"
+                  className="flex items-center gap-1.5 text-[13px] font-[650] text-[#3a4a10] cursor-pointer"
+                >
+                  <Sparkles size={13} strokeWidth={2.2} />
+                  {template.name}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleClearTemplate}
+                  aria-label="清除模板"
+                  className="ml-1 w-6 h-6 rounded-full flex items-center justify-center text-[#5a6b1a] hover:bg-[#dff0a8] cursor-pointer"
+                >
+                  <X size={12} strokeWidth={2.4} />
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Gen type */}
           <div className="relative">
@@ -413,7 +659,7 @@ export function GenerateMode({ initialPrompt, onSubmit, submitting }: GenerateMo
 
           {/* Model */}
           <div className="relative">
-            <button type="button" onClick={() => toggle("model")} className={pickerBtn}>
+            <button key={`model-${glowKey}`} type="button" onClick={() => toggle("model")} className={cn(pickerBtn, glowKey > 0 && "picker-glow")}>
               <span className="w-4 h-4 rounded bg-[var(--soft)] text-[9px] font-black flex items-center justify-center shrink-0">{model.slice(0, 2)}</span>
               <span className="font-medium">{model}</span>
               <ChevronDown size={12} className={cn("text-[var(--muted)] -ml-0.5 transition-transform", activePopup === "model" && "rotate-180")} />
@@ -426,7 +672,7 @@ export function GenerateMode({ initialPrompt, onSubmit, submitting }: GenerateMo
           {/* Settings */}
           {genType !== "reverse" && (
             <div className="relative">
-              <button type="button" onClick={() => toggle("settings")} className={pickerBtn}>
+              <button key={`settings-${glowKey}`} type="button" onClick={() => toggle("settings")} className={cn(pickerBtn, glowKey > 0 && "picker-glow")}>
                 <SlidersHorizontal size={15} strokeWidth={2} />
                 <span>{settingsLabel}</span>
                 {genType !== "image" && videoResolution === "720P" && videoRatio === "9:16" && videoDuration === 30 && (
@@ -471,27 +717,61 @@ export function GenerateMode({ initialPrompt, onSubmit, submitting }: GenerateMo
         </div>
       </div>
 
+      {/* 模板卡片流（仅视频生成）*/}
+      {isVideo && (
+        <TemplateStrip
+          activeTemplateId={template?.id ?? null}
+          onApply={handleApplyTemplate}
+          onOpenGallery={() => setGalleryOpen(true)}
+        />
+      )}
+
       {/* Modals */}
       <ImageSelectModal
         open={imageModalOpen}
         onOpenChange={setImageModalOpen}
-        onConfirm={(items) => setSelectedImages((prev) => {
-          const existingIds = new Set(prev.map((i) => i.id))
-          return [...prev, ...items.filter((i) => !existingIds.has(i.id))]
-        })}
+        onConfirm={(items) => {
+          if (isVideo) {
+            insertRefs(items.map((i) => ({ id: `ref-${i.id}`, kind: "image" as const, thumb: i.thumb, name: i.name, source: "library" as const })))
+          } else {
+            setSelectedImages((prev) => {
+              const existingIds = new Set(prev.map((i) => i.id))
+              return [...prev, ...items.filter((i) => !existingIds.has(i.id))]
+            })
+          }
+        }}
       />
       <VideoSelectModal
         open={videoModalOpen}
         onOpenChange={setVideoModalOpen}
-        onConfirm={(items) => setSelectedVideos((prev) => {
-          const existingIds = new Set(prev.map((v) => v.id))
-          return [...prev, ...items.filter((v) => !existingIds.has(v.id))]
-        })}
+        onConfirm={(items) => {
+          if (isVideo) {
+            insertRefs(items.map((v) => ({ id: `ref-${v.id}`, kind: "video" as const, thumb: v.thumb, name: v.name, source: "library" as const })))
+          } else {
+            setSelectedVideos((prev) => {
+              const existingIds = new Set(prev.map((v) => v.id))
+              return [...prev, ...items.filter((v) => !existingIds.has(v.id))]
+            })
+          }
+        }}
       />
       <DigitalHumanModal
         open={dhModalOpen}
         onOpenChange={setDhModalOpen}
         onConfirm={(item) => setDigitalHuman(item)}
+      />
+      <TemplateGalleryModal
+        open={galleryOpen}
+        onOpenChange={setGalleryOpen}
+        activeTemplateId={template?.id ?? null}
+        onApply={handleApplyTemplate}
+      />
+      <ProductModal
+        open={productModalOpen}
+        onOpenChange={setProductModalOpen}
+        products={products}
+        onAddProduct={(p) => setProducts((prev) => [p, ...prev])}
+        onInsert={handleInsertProduct}
       />
     </div>
   )
