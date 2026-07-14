@@ -1,22 +1,21 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { motion, AnimatePresence } from "framer-motion"
-import { Video, Image, Link2, Wand2, Plus, ChevronDown, SlidersHorizontal, Hash, Star, X, Play, Package, Sparkles, Undo2 } from "lucide-react"
+import { Video, Image, Link2, Wand2, Plus, ChevronDown, SlidersHorizontal, Hash, Star, X, Play, Package, TriangleAlert } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { SendButton } from "../send-button"
 import { ImageSelectModal, type ImageItem } from "@/components/modals/image-select-modal"
 import { VideoSelectModal, type VideoItem } from "@/components/modals/video-select-modal"
 import { DigitalHumanModal, type DHItem } from "@/components/modals/digital-human-modal"
 import { PromptEditor } from "../generate/prompt-editor"
-import { TemplateStrip } from "../generate/template-strip"
+import { TemplateStrip, type StripTab } from "../generate/template-strip"
 import { TemplateGalleryModal } from "../generate/template-gallery-modal"
 import { ProductModal } from "../generate/product-modal"
-import { HookSceneBar } from "../generate/hook-scene-bar"
+import { ContextChips } from "../generate/context-chips"
 import { applyTemplate, replaceSegment } from "@/lib/generate/templates"
 import { tokenOf, nextIndex, renumber, removeReference } from "@/lib/generate/references"
 import { PRESET_PRODUCTS } from "@/lib/generate/products"
-import type { Template, SlotOption, Reference, Product } from "@/lib/generate/types"
+import type { Template, SlotOption, Reference, Product, Targeting } from "@/lib/generate/types"
 
 // ─── Types & Data ────────────────────────────────────────────────────────────
 
@@ -86,9 +85,11 @@ function GenTypePopup({ value, onChange }: { value: GenType; onChange: (v: GenTy
   )
 }
 
-function ModelPopup({ options, selected, onSelect }: { options: string[]; selected: string; onSelect: (v: string) => void }) {
+function ModelPopup({ options, selected, onSelect }: {
+  options: string[]; selected: string; onSelect: (v: string) => void
+}) {
   return (
-    <PopupCard className="w-[200px] p-1.5">
+    <PopupCard className="w-[220px] p-1.5">
       {options.map((opt) => (
         <button key={opt} type="button" onClick={() => onSelect(opt)}
           className={cn("w-full h-[34px] rounded-[9px] text-left px-[9px] flex items-center gap-2 text-[13px] font-[650] cursor-pointer", selected === opt ? "bg-[var(--soft)]" : "hover:bg-[var(--soft)]")}>
@@ -133,10 +134,10 @@ function VideoSettingsPopup({ resolution, setResolution, ratio, setRatio, durati
       <div>
         <SectionLabel>时长</SectionLabel>
         <div className="flex items-center gap-3">
-          <input type="range" min={5} max={60} value={duration} onChange={(e) => setDuration(Number(e.target.value))}
+          <input type="range" min={5} max={30} value={duration} onChange={(e) => setDuration(Number(e.target.value))}
             className="dh-range flex-1 h-1.5 appearance-none rounded-full cursor-pointer"
             style={{
-              background: `linear-gradient(to right, #18181b 0%, #18181b ${((duration - 5) / 55) * 100}%, var(--line) ${((duration - 5) / 55) * 100}%, var(--line) 100%)`,
+              background: `linear-gradient(to right, #18181b 0%, #18181b ${((duration - 5) / 25) * 100}%, var(--line) ${((duration - 5) / 25) * 100}%, var(--line) 100%)`,
             }} />
           <div className="flex items-center gap-1.5 shrink-0">
             <div className="w-9 h-7 border border-[var(--line)] rounded-lg text-[13px] font-semibold text-[var(--text)] flex items-center justify-center">{duration}</div>
@@ -246,20 +247,6 @@ function UploadSlot({ label, icon: Icon, onClick, accent }: { label: string; ico
   )
 }
 
-// ─── 模板态快照（undo toast 用）──────────────────────────────────────────────
-
-interface Snapshot {
-  text: string
-  references: Reference[]
-  template: Template | null
-  hook: SlotOption | null
-  scene: SlotOption | null
-  videoResolution: string
-  videoRatio: string
-  videoDuration: number
-  model: string
-}
-
 // ─── Main Component ──────────────────────────────────────────────────────────
 
 interface GenerateModeProps {
@@ -303,19 +290,21 @@ export function GenerateMode({ initialPrompt, onSubmit, submitting }: GenerateMo
   const [imageRatio, setImageRatio] = useState("Auto")
 
   // Model
-  const [model, setModel] = useState(videoModels[0])
+  const [model, setModel] = useState<string>(videoModels[0])
 
   // Count
   const [count, setCount] = useState(1)
 
-  // ── 模板态 ──
-  const [template, setTemplate] = useState<Template | null>(null)
+  // ── 打法 / Hook / 场景 选型 ──
+  const [playbook, setPlaybook] = useState<Template | null>(null)
   const [hook, setHook] = useState<SlotOption | null>(null)
   const [scene, setScene] = useState<SlotOption | null>(null)
   const [flash, setFlash] = useState<{ text: string; nonce: number } | null>(null)
-  const [glowKey, setGlowKey] = useState(0)
   const [galleryOpen, setGalleryOpen] = useState(false)
-  const [toast, setToast] = useState<{ message: string; snapshot: Snapshot } | null>(null)
+  const [stripTab, setStripTab] = useState<StripTab>("playbook")
+
+  // ── 投放目标（mock）──
+  const [targeting, setTargeting] = useState<Targeting>({ platform: "TikTok", region: "美国", language: "English" })
 
   // ── 引用与商品（视频生成专用）──
   const [references, setReferences] = useState<Reference[]>([])
@@ -343,13 +332,6 @@ export function GenerateMode({ initialPrompt, onSubmit, submitting }: GenerateMo
     return () => document.removeEventListener("mousedown", onOutside)
   }, [activePopup])
 
-  // Toast 自动消失
-  useEffect(() => {
-    if (!toast) return
-    const t = window.setTimeout(() => setToast(null), 5000)
-    return () => window.clearTimeout(t)
-  }, [toast])
-
   const toggle = (popup: ActivePopup) => setActivePopup((prev) => (prev === popup ? null : popup))
 
   const handleGenTypeChange = (v: GenType) => {
@@ -360,26 +342,12 @@ export function GenerateMode({ initialPrompt, onSubmit, submitting }: GenerateMo
     setModel(opts[0])
   }
 
-  // ── 模板机制 ──
+  // ── 创意打法：一键填入结构化提示词 + 参考 + 推荐配置（自动带商品主图）──
 
-  function takeSnapshot(): Snapshot {
-    return { text, references, template, hook, scene, videoResolution, videoRatio, videoDuration, model }
-  }
-
-  function restoreSnapshot(s: Snapshot) {
-    setText(s.text); setReferences(s.references)
-    setTemplate(s.template); setHook(s.hook); setScene(s.scene)
-    setVideoResolution(s.videoResolution); setVideoRatio(s.videoRatio); setVideoDuration(s.videoDuration)
-    setModel(s.model)
-    setFlash(null)
-    setToast(null)
-  }
-
-  function handleApplyTemplate(t: Template) {
-    const snapshot = takeSnapshot()
+  function handleApplyPlaybook(t: Template) {
     const kept = references.filter((r) => r.source === "product" && r.kind === "image")
     const app = applyTemplate(t, kept, products[0] ?? null)
-    setTemplate(t)
+    setPlaybook(t)
     setHook(app.hook)
     setScene(app.scene)
     setText(app.text)
@@ -389,33 +357,37 @@ export function GenerateMode({ initialPrompt, onSubmit, submitting }: GenerateMo
     setVideoDuration(t.settings.duration)
     setModel(t.settings.model)
     setFlash(null)
-    setGlowKey((k) => k + 1)
-    setToast({ message: `已应用「${t.name}」模板`, snapshot })
   }
 
-  function handleClearTemplate() {
-    const snapshot = takeSnapshot()
-    setTemplate(null)
+  function handleClearPlaybook() {
+    setPlaybook(null)
     setHook(null)
     setScene(null)
     setText("")
-    // 商品图是用户资产，清模板时保留并重新编号
+    // 商品图是用户资产，清打法时保留并重新编号
     setReferences(renumber(references.filter((r) => r.source === "product")))
     setFlash(null)
-    setToast({ message: "已清除模板", snapshot })
   }
 
+  // 转自由文本：去掉结构化【标签】，选型保留（后续切换降级为追加）
+  function handleFreeText() {
+    setText((prev) => prev.replace(/【(创意模板|Hook|场景|产品展示|卖点证明|节奏与风格|CTA)】/g, ""))
+    setPlaybook(null)
+  }
+
+  // ── Hook / 场景 点选：已选则替换旧句段，未选则追加句子到提示词 ──
+
   function handleSelectHook(opt: SlotOption) {
-    if (!hook || opt.id === hook.id) return
-    const { text: nextText } = replaceSegment(text, hook.sentence, opt.sentence)
+    if (opt.id === hook?.id) return
+    const { text: nextText } = replaceSegment(text, hook?.sentence ?? "", opt.sentence)
     setText(nextText)
     setHook(opt)
     setFlash({ text: opt.sentence, nonce: Date.now() })
   }
 
   function handleSelectScene(opt: SlotOption) {
-    if (!scene || opt.id === scene.id) return
-    const { text: nextText } = replaceSegment(text, scene.sentence, opt.sentence)
+    if (opt.id === scene?.id) return
+    const { text: nextText } = replaceSegment(text, scene?.sentence ?? "", opt.sentence)
     setText(nextText)
     setScene(opt)
     setFlash({ text: opt.sentence, nonce: Date.now() })
@@ -466,10 +438,14 @@ export function GenerateMode({ initialPrompt, onSubmit, submitting }: GenerateMo
   const models = genType === "image" ? imageModels : genType === "reverse" ? reverseModels : videoModels
   const maxLen = genType === "video" ? 8000 : 2000
   const countUnit = genType === "image" ? "张" : "条"
-  const settingsLabel = genType === "image" ? `${imageResolution} · ${imageRatio}` : `${videoResolution} · ${videoRatio} · ${videoDuration}s`
+  const settingsLabel = genType === "image" ? `${imageResolution} · ${imageRatio}` : isVideo ? `成片 · ${videoRatio} · ${videoDuration}s` : `${videoResolution} · ${videoRatio} · ${videoDuration}s`
+
+  // 结构化标签存在时可一键转自由文本；【产品展示】段缺商品引用时提示
+  const hasStructuredLabels = isVideo && /【(创意模板|Hook|场景|产品展示|卖点证明|节奏与风格|CTA)】/.test(text)
+  const missingProduct = isVideo && text.includes("【产品展示】") && !references.some((r) => r.source === "product")
 
   const placeholders: Record<GenType, string> = {
-    video: "描述视频画面内容和动态过程，或从下方选择模板一键开始",
+    video: "描述视频画面内容和动态过程，或从下方选择创意模板一键开始",
     image: "描述你想生成的图片内容、构图、风格与商品信息",
     remix: "粘贴爆款素材链接，或描述想复刻的画面结构、卖点与节奏",
     reverse: "贴入视频链接，或上传图片 / 视频，反推出可复用提示词",
@@ -479,33 +455,6 @@ export function GenerateMode({ initialPrompt, onSubmit, submitting }: GenerateMo
 
   return (
     <div className="flex flex-col gap-3.5">
-      {/* Undo toast */}
-      <AnimatePresence>
-        {toast && (
-          <motion.div
-            initial={{ opacity: 0, y: -8, height: 0 }}
-            animate={{ opacity: 1, y: 0, height: "auto" }}
-            exit={{ opacity: 0, y: -8, height: 0 }}
-            className="overflow-hidden"
-          >
-            <div className="flex items-center justify-between h-9 px-3.5 rounded-[10px] bg-[#18181b] text-white">
-              <span className="text-[12.5px] font-semibold flex items-center gap-1.5">
-                <Sparkles size={13} className="text-[var(--lime)]" />
-                {toast.message}
-              </span>
-              <button
-                type="button"
-                onClick={() => restoreSnapshot(toast.snapshot)}
-                className="flex items-center gap-1 text-[12px] font-bold text-[var(--lime)] hover:brightness-110 cursor-pointer"
-              >
-                <Undo2 size={12} strokeWidth={2.4} />
-                撤销
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       {/* Video mode tabs */}
       {isVideo && (
         <div className="flex items-center gap-[3px] border border-[var(--line)] rounded-full bg-[var(--soft)] p-[3px] w-max">
@@ -519,64 +468,52 @@ export function GenerateMode({ initialPrompt, onSubmit, submitting }: GenerateMo
         </div>
       )}
 
-      {/* Hook / 场景（仅模板态）*/}
-      <AnimatePresence initial={false}>
-        {isVideo && template && hook && scene && (
-          <HookSceneBar
-            key={template.id}
-            hooks={template.hooks}
-            scenes={template.scenes}
-            selectedHookId={hook.id}
-            selectedSceneId={scene.id}
-            onSelectHook={handleSelectHook}
-            onSelectScene={handleSelectScene}
-          />
-        )}
-      </AnimatePresence>
-
-      {/* Upload slots + input area */}
-      <div className="flex items-start gap-3.5 min-h-[52px]">
-        {/* Upload slots */}
-        <div className="flex items-center gap-2 shrink-0 pt-0.5">
-          {isVideo && videoMode === "reference" && (
-            <>
-              <UploadSlot label="商品" icon={Package} accent onClick={() => setProductModalOpen(true)} />
-              <UploadSlot label="图片" icon={Image} onClick={() => setImageModalOpen(true)} />
+      {/* 视频生成：全宽提示词编辑器，槽位与引用同行在下 */}
+      {isVideo ? (
+        <PromptEditor
+          value={text}
+          onChange={setText}
+          references={references}
+          onRemoveReference={handleRemoveReference}
+          placeholder={placeholders.video}
+          maxLength={maxLen}
+          textareaRef={textareaRef}
+          flash={flash}
+          onLabelClick={setStripTab}
+          leadingSlots={
+            <div className="flex items-center gap-2 shrink-0">
+              {videoMode === "reference" ? (
+                <>
+                  <UploadSlot label="商品" icon={Package} accent onClick={() => setProductModalOpen(true)} />
+                  <UploadSlot label="图片" icon={Image} onClick={() => setImageModalOpen(true)} />
+                  <UploadSlot label="视频" icon={Video} onClick={() => setVideoModalOpen(true)} />
+                  <UploadSlot label="数字人" icon={Plus} onClick={() => setDhModalOpen(true)} />
+                </>
+              ) : (
+                <>
+                  <UploadSlot label="首帧" icon={Plus} onClick={() => setImageModalOpen(true)} />
+                  <UploadSlot label="尾帧" icon={Plus} onClick={() => setImageModalOpen(true)} />
+                </>
+              )}
+            </div>
+          }
+          extraChips={digitalHuman && (
+            <MediaThumb
+              src={digitalHuman.thumb} type="dh" label={digitalHuman.name}
+              onRemove={() => setDigitalHuman(null)}
+            />
+          )}
+        />
+      ) : (
+        /* 非视频类型沿用：左槽位列 + 右输入区 */
+        <div className="flex items-start gap-3.5 min-h-[52px]">
+          <div className="flex items-center gap-2 shrink-0 pt-0.5">
+            {genType === "image" && <UploadSlot label="图片" icon={Image} onClick={() => setImageModalOpen(true)} />}
+            {(genType === "remix" || genType === "reverse") && (
               <UploadSlot label="视频" icon={Video} onClick={() => setVideoModalOpen(true)} />
-              <UploadSlot label="数字人" icon={Plus} onClick={() => setDhModalOpen(true)} />
-            </>
-          )}
-          {isVideo && videoMode === "frames" && (
-            <>
-              <UploadSlot label="首帧" icon={Plus} onClick={() => setImageModalOpen(true)} />
-              <UploadSlot label="尾帧" icon={Plus} onClick={() => setImageModalOpen(true)} />
-            </>
-          )}
-          {genType === "image" && <UploadSlot label="图片" icon={Image} onClick={() => setImageModalOpen(true)} />}
-          {(genType === "remix" || genType === "reverse") && (
-            <UploadSlot label="视频" icon={Video} onClick={() => setVideoModalOpen(true)} />
-          )}
-        </div>
-
-        {/* 视频生成：带高亮叠层与参考区的编辑器 */}
-        {isVideo ? (
-          <PromptEditor
-            value={text}
-            onChange={setText}
-            references={references}
-            onRemoveReference={handleRemoveReference}
-            placeholder={placeholders.video}
-            maxLength={maxLen}
-            textareaRef={textareaRef}
-            flash={flash}
-            extraChips={digitalHuman && (
-              <MediaThumb
-                src={digitalHuman.thumb} type="dh" label={digitalHuman.name}
-                onRemove={() => setDigitalHuman(null)}
-              />
             )}
-          />
-        ) : (
+          </div>
+
           <div className="flex-1 flex flex-col gap-2">
             {hasLegacyMedia && (
               <div className="flex flex-wrap gap-2">
@@ -610,43 +547,24 @@ export function GenerateMode({ initialPrompt, onSubmit, submitting }: GenerateMo
               rows={2}
             />
           </div>
-        )}
-      </div>
+        </div>
+      )}
+
+      {/* chips 行：模板 / 转自由文本 / 投放目标（仅视频）*/}
+      {isVideo && (
+        <ContextChips
+          playbook={playbook}
+          onClearPlaybook={handleClearPlaybook}
+          showFreeTextButton={hasStructuredLabels}
+          onFreeText={handleFreeText}
+          targeting={targeting}
+          onTargetingChange={setTargeting}
+        />
+      )}
 
       {/* Config row */}
       <div ref={configRef} className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2 flex-wrap">
-
-          {/* 模板 chip（模板态）*/}
-          <AnimatePresence>
-            {isVideo && template && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.85, x: -6 }}
-                animate={{ opacity: 1, scale: 1, x: 0 }}
-                exit={{ opacity: 0, scale: 0.85, x: -6 }}
-                transition={{ type: "spring", stiffness: 480, damping: 30 }}
-                className="flex items-center h-[34px] rounded-full bg-[var(--lime-soft)] border border-[#d4e89a] pl-[9px] pr-1"
-              >
-                <button
-                  type="button"
-                  onClick={() => setGalleryOpen(true)}
-                  title="切换模板"
-                  className="flex items-center gap-1.5 text-[13px] font-[650] text-[#3a4a10] cursor-pointer"
-                >
-                  <Sparkles size={13} strokeWidth={2.2} />
-                  {template.name}
-                </button>
-                <button
-                  type="button"
-                  onClick={handleClearTemplate}
-                  aria-label="清除模板"
-                  className="ml-1 w-6 h-6 rounded-full flex items-center justify-center text-[#5a6b1a] hover:bg-[#dff0a8] cursor-pointer"
-                >
-                  <X size={12} strokeWidth={2.4} />
-                </button>
-              </motion.div>
-            )}
-          </AnimatePresence>
 
           {/* Gen type */}
           <div className="relative">
@@ -659,7 +577,7 @@ export function GenerateMode({ initialPrompt, onSubmit, submitting }: GenerateMo
 
           {/* Model */}
           <div className="relative">
-            <button key={`model-${glowKey}`} type="button" onClick={() => toggle("model")} className={cn(pickerBtn, glowKey > 0 && "picker-glow")}>
+            <button type="button" onClick={() => toggle("model")} className={pickerBtn}>
               <span className="w-4 h-4 rounded bg-[var(--soft)] text-[9px] font-black flex items-center justify-center shrink-0">{model.slice(0, 2)}</span>
               <span className="font-medium">{model}</span>
               <ChevronDown size={12} className={cn("text-[var(--muted)] -ml-0.5 transition-transform", activePopup === "model" && "rotate-180")} />
@@ -672,7 +590,7 @@ export function GenerateMode({ initialPrompt, onSubmit, submitting }: GenerateMo
           {/* Settings */}
           {genType !== "reverse" && (
             <div className="relative">
-              <button key={`settings-${glowKey}`} type="button" onClick={() => toggle("settings")} className={cn(pickerBtn, glowKey > 0 && "picker-glow")}>
+              <button type="button" onClick={() => toggle("settings")} className={pickerBtn}>
                 <SlidersHorizontal size={15} strokeWidth={2} />
                 <span>{settingsLabel}</span>
                 {genType !== "image" && videoResolution === "720P" && videoRatio === "9:16" && videoDuration === 30 && (
@@ -697,12 +615,15 @@ export function GenerateMode({ initialPrompt, onSubmit, submitting }: GenerateMo
 
           {/* Count */}
           {genType !== "reverse" && (
-            <div className="relative">
+            <div className="relative flex items-center gap-2">
               <button type="button" onClick={() => toggle("count")} className={pickerBtn}>
                 <Hash size={15} strokeWidth={2} />
                 <span>生成 {count} {countUnit}</span>
                 <ChevronDown size={12} className={cn("text-[var(--muted)] -ml-0.5 transition-transform", activePopup === "count" && "rotate-180")} />
               </button>
+              {isVideo && count > 1 && (
+                <span className="text-[12px] text-[var(--muted)] whitespace-nowrap">{count} 个 Hook 变体</span>
+              )}
               {activePopup === "count" && (
                 <CountPopup count={count} setCount={(n) => { setCount(n); setActivePopup(null) }} unit={countUnit} />
               )}
@@ -712,16 +633,32 @@ export function GenerateMode({ initialPrompt, onSubmit, submitting }: GenerateMo
         </div>
 
         <div className="flex items-center gap-2">
+          {missingProduct && (
+            <button
+              type="button"
+              onClick={() => setProductModalOpen(true)}
+              className="h-[28px] px-2.5 rounded-full bg-amber-50 border border-amber-200 text-amber-700 text-[11.5px] font-bold flex items-center gap-1 cursor-pointer hover:bg-amber-100 transition-colors whitespace-nowrap"
+            >
+              <TriangleAlert size={12} strokeWidth={2.4} />
+              缺商品图
+            </button>
+          )}
           <span className="text-[13px] text-[#8a8d94] whitespace-nowrap">{text.length}/{maxLen}</span>
           <SendButton disabled={!text.trim()} loading={submitting} onClick={handleSend} />
         </div>
       </div>
 
-      {/* 模板卡片流（仅视频生成）*/}
+      {/* 创意打法 / Hooks / 场景 卡片流（仅视频生成）*/}
       {isVideo && (
         <TemplateStrip
-          activeTemplateId={template?.id ?? null}
-          onApply={handleApplyTemplate}
+          tab={stripTab}
+          onTabChange={setStripTab}
+          playbook={playbook}
+          hook={hook}
+          scene={scene}
+          onApplyPlaybook={handleApplyPlaybook}
+          onSelectHook={handleSelectHook}
+          onSelectScene={handleSelectScene}
           onOpenGallery={() => setGalleryOpen(true)}
         />
       )}
@@ -763,8 +700,12 @@ export function GenerateMode({ initialPrompt, onSubmit, submitting }: GenerateMo
       <TemplateGalleryModal
         open={galleryOpen}
         onOpenChange={setGalleryOpen}
-        activeTemplateId={template?.id ?? null}
-        onApply={handleApplyTemplate}
+        playbook={playbook}
+        hook={hook}
+        scene={scene}
+        onApplyPlaybook={handleApplyPlaybook}
+        onSelectHook={handleSelectHook}
+        onSelectScene={handleSelectScene}
       />
       <ProductModal
         open={productModalOpen}

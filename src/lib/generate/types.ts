@@ -28,6 +28,8 @@ export interface SlotOption {
   label: string
   /** 选中后写入提示词的句子 */
   sentence: string
+  /** 底部 tab 卡片封面图 */
+  cover: string
 }
 
 /** 模板推荐的生成配置 */
@@ -38,7 +40,14 @@ export interface TemplateSettings {
   resolution: string
 }
 
-/** 视频生成模板：分段提示词 + 参考媒体 + Hook/场景预设 + 推荐配置 */
+/** 投放目标（平台 / 地区 / 语言），影响生成语境 */
+export interface Targeting {
+  platform: string
+  region: string
+  language: string
+}
+
+/** 创意打法（Playbook）：结构化提示词 + 参考媒体 + Hook/场景预设 + 推荐配置 */
 export interface Template {
   id: string
   name: string

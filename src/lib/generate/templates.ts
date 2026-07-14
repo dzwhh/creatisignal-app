@@ -1,125 +1,138 @@
 import type { Template, SlotOption, Reference, Product } from "./types"
 import { tokenOf, renumber } from "./references"
 
-// ─── Mock 视频生成模板 ────────────────────────────────────────────────────────
-// 提示词占位符：{hook} {scene} 为可替换句段；{product} 指向商品图引用；
-// {video1}/{image1} 指向模板自带的第 n 个参考视频/参考图。
+// ─── Mock 创意模板（Playbook）─────────────────────────────────────────────────
+// 结构化提示词七段式：【创意模板】【Hook】【场景】【产品展示】【卖点证明】【节奏与风格】【CTA】。
+// 【Hook】【场景】行的 {hook}/{scene} 为可替换句段（标签保留，切换时整行句子替换）；
+// {product} 指向商品图引用；{video1}/{image1} 指向模板自带参考。
 
 const HOOKS = {
-  pain: { id: "hook-pain", label: "痛点开场", sentence: "开头 3 秒直击痛点：昏暗车底找不到螺丝的抓狂瞬间" },
-  price: { id: "hook-price", label: "价格先出", sentence: "开头 3 秒价格冲击：字幕砸出「不到一顿外卖钱」" },
-  conflict: { id: "hook-conflict", label: "冲突反转", sentence: "开头 3 秒制造冲突：同事的灯突然没电，主角淡定掏出备用" },
-  result: { id: "hook-result", label: "结果前置", sentence: "开头 3 秒先给结果：漆黑机舱被瞬间照亮的前后对比" },
-  question: { id: "hook-question", label: "提问开场", sentence: "开头 3 秒抛出问题：「你还在用嘴咬着手电干活吗？」" },
+  pain: { id: "hook-pain", label: "痛点开场", sentence: "开头 3 秒直击痛点：昏暗车底找不到螺丝，用户焦急摸索", cover: "https://picsum.photos/seed/hook-pain/300/380" },
+  price: { id: "hook-price", label: "价格先出", sentence: "开头 3 秒价格冲击：字幕砸出「不到一顿外卖钱」", cover: "https://picsum.photos/seed/hook-price/300/380" },
+  conflict: { id: "hook-conflict", label: "冲突反转", sentence: "开头 3 秒制造冲突：同事的灯突然没电，主角淡定掏出备用", cover: "https://picsum.photos/seed/hook-conflict/300/380" },
+  result: { id: "hook-result", label: "结果前置", sentence: "开头 3 秒先给结果：漆黑机舱被瞬间照亮的前后对比", cover: "https://picsum.photos/seed/hook-result/300/380" },
+  question: { id: "hook-question", label: "提问开场", sentence: "开头 3 秒抛出问题：「你还在用嘴咬着手电干活吗？」", cover: "https://picsum.photos/seed/hook-question/300/380" },
 } satisfies Record<string, SlotOption>
 
 const SCENES = {
-  repair: { id: "scene-repair", label: "维修间", sentence: "场景设定在维修间：戴手套的双手在发动机舱内操作" },
-  home: { id: "scene-home", label: "居家夜修", sentence: "场景设定在深夜居家：橱柜底下检修水管的狭小空间" },
-  outdoor: { id: "scene-outdoor", label: "户外露营", sentence: "场景设定在户外露营地：夜间帐篷旁的挂灯与手持照明" },
-  unbox: { id: "scene-unbox", label: "开箱桌面", sentence: "场景设定在开箱桌面：牛皮纸箱、气泡膜与商品特写" },
-  street: { id: "scene-street", label: "街头实测", sentence: "场景设定在夜晚街头：路边应急换胎的真实实测" },
+  repair: { id: "scene-repair", label: "维修间", sentence: "场景设定在昏暗维修间：用户戴手套在发动机舱内操作，突出光线不足和双手被占用", cover: "https://picsum.photos/seed/scene-repair/300/380" },
+  home: { id: "scene-home", label: "居家夜修", sentence: "场景设定在深夜居家：橱柜底下检修水管的狭小空间", cover: "https://picsum.photos/seed/scene-home/300/380" },
+  outdoor: { id: "scene-outdoor", label: "户外露营", sentence: "场景设定在户外露营地：夜间帐篷旁的挂灯与手持照明", cover: "https://picsum.photos/seed/scene-outdoor/300/380" },
+  unbox: { id: "scene-unbox", label: "开箱桌面", sentence: "场景设定在开箱桌面：牛皮纸箱、气泡膜与商品特写", cover: "https://picsum.photos/seed/scene-unbox/300/380" },
+  street: { id: "scene-street", label: "街头实测", sentence: "场景设定在夜晚街头：路边应急换胎的真实实测", cover: "https://picsum.photos/seed/scene-street/300/380" },
 } satisfies Record<string, SlotOption>
+
+// 全量选项（底部 Hooks/场景 tab 与画廊弹窗直接消费，不依赖模板）
+export const HOOK_OPTIONS: SlotOption[] = Object.values(HOOKS)
+export const SCENE_OPTIONS: SlotOption[] = Object.values(SCENES)
 
 export const TEMPLATES: Template[] = [
   {
-    id: "tpl-talking-seed",
-    name: "达人口播种草",
-    tag: "口播种草",
-    cover: "https://picsum.photos/seed/tpl-talk/480/600",
-    description: "数字人/达人出镜口播，痛点引入 + 商品演示 + 行动号召",
+    id: "pb-pain-test",
+    name: "痛点实测",
+    tag: "痛点实测",
+    cover: "https://picsum.photos/seed/pb-pain/480/600",
+    description: "痛点引入 + 实测演示 + 限时优惠，转化型打法首选",
     prompt:
-      "{hook}。{scene}。达人手持 {product} 中的商品出镜口播，边说边演示核心功能，" +
-      "参考 {video1} 的运镜节奏，中景与商品特写交替。结尾达人指向屏幕下方，" +
-      "字幕弹出「点击下方链接立省 30%」。",
-    hooks: [HOOKS.pain, HOOKS.price, HOOKS.question, HOOKS.conflict],
-    scenes: [SCENES.repair, SCENES.home, SCENES.outdoor],
+      "创作一条适合 TikTok 投放的 9:16 竖版短视频广告，推广 {product} 中的商品，围绕用户核心痛点展开，并突出产品带来的直接收益。\n" +
+      "【创意模板】采用「痛点实测」打法：先呈现真实痛点，再展示产品解决过程，最后用实测效果增强说服力。\n" +
+      "【Hook】{hook}。\n" +
+      "【场景】{scene}。\n" +
+      "【产品展示】使用 {product} 中的商品演示核心功能，展示磁吸固定、折叠调节、点亮瞬间和解放双手。\n" +
+      "【卖点证明】通过特写或实测对比展示亮度强、磁吸稳固、防水耐用等卖点，并参考 {video1} 的节奏。\n" +
+      "【节奏与风格】节奏紧凑，痛点与解决前后对比鲜明；实拍质感，关键卖点用字幕强调。\n" +
+      "【CTA】结尾加入简短明确的购买引导；如有优惠信息，突出限时优惠。",
+    hooks: [HOOKS.pain, HOOKS.conflict, HOOKS.question, HOOKS.price],
+    scenes: [SCENES.repair, SCENES.home, SCENES.street],
     references: [
-      { id: "tplref-talk-v1", kind: "video", thumb: "https://picsum.photos/seed/tplv1/300/200", name: "口播节奏参考", source: "template" },
+      { id: "pbref-pain-v1", kind: "video", thumb: "https://picsum.photos/seed/pbv1/300/200", name: "维修场景实拍", source: "template" },
     ],
     settings: { ratio: "9:16", duration: 30, model: "Seedance 2", resolution: "720P" },
   },
   {
-    id: "tpl-unboxing",
-    name: "沉浸式开箱",
-    tag: "开箱测评",
-    cover: "https://picsum.photos/seed/tpl-unbox/480/600",
-    description: "第一视角开箱，ASMR 质感音效 + 细节特写 + 上手体验",
+    id: "pb-ugc-review",
+    name: "UGC 测评",
+    tag: "UGC",
+    cover: "https://picsum.photos/seed/pb-ugc/480/600",
+    description: "素人视角真实反馈，弱广告感强信任感",
     prompt:
-      "{hook}。{scene}。第一视角拆开包装，指尖划过 {product} 中商品的金属表面，" +
-      "微距镜头扫过接口与开关细节，安静环境音突出撕膜与咔哒声，整体布光参考 {image1}。" +
-      "最后一镜上手点亮，光束打在墙面形成光斑。",
+      "创作一条适合 TikTok 投放的 9:16 竖版 UGC 风格测评视频，推广 {product} 中的商品，用素人真实反馈建立信任。\n" +
+      "【创意模板】采用「UGC 测评」打法：素人视角边用边聊，弱化广告感，用真实细节增强可信度。\n" +
+      "【Hook】{hook}。\n" +
+      "【场景】{scene}。\n" +
+      "【产品展示】素人边用边聊 {product} 中的商品，保留自然口误与环境噪音。\n" +
+      "【卖点证明】穿插两段使用一周后的真实画面，引用一句好评「亮度够强，磁吸很稳！」。\n" +
+      "【节奏与风格】手机手持拍摄质感，口语化生活流节奏，避免精修画面。\n" +
+      "【CTA】结尾给出「买前必看的 1 个缺点」增强可信度，引导点击购物车。",
+    hooks: [HOOKS.question, HOOKS.pain, HOOKS.result],
+    scenes: [SCENES.home, SCENES.repair, SCENES.street],
+    references: [],
+    settings: { ratio: "9:16", duration: 30, model: "Seedance 1 Pro", resolution: "720P" },
+  },
+  {
+    id: "pb-compare",
+    name: "对比演示",
+    tag: "对比",
+    cover: "https://picsum.photos/seed/pb-compare/480/600",
+    description: "BEFORE / AFTER 分屏对比，用结果差距说服",
+    prompt:
+      "创作一条适合 TikTok 投放的 9:16 竖版对比演示广告，推广 {product} 中的商品，用结果差距完成说服。\n" +
+      "【创意模板】采用「对比演示」打法：BEFORE / AFTER 分屏结构，让新旧方案的差距肉眼可见。\n" +
+      "【Hook】{hook}。\n" +
+      "【场景】{scene}。\n" +
+      "【产品展示】左侧普通手电照明范围小、频繁没电；右侧 {product} 中的商品广角泛光 + 磁吸固定。\n" +
+      "【卖点证明】中段插入亮度实测数据字幕，参考 {video1} 的对比剪辑节奏。\n" +
+      "【节奏与风格】分屏切换干脆利落，数据字幕醒目；整体冷静客观，让画面说话。\n" +
+      "【CTA】字幕砸出「换掉你的旧手电」，引导评论区置顶链接。",
+    hooks: [HOOKS.conflict, HOOKS.pain, HOOKS.result],
+    scenes: [SCENES.repair, SCENES.street, SCENES.outdoor],
+    references: [
+      { id: "pbref-compare-v1", kind: "video", thumb: "https://picsum.photos/seed/pbv2/300/200", name: "对比节奏参考", source: "template" },
+    ],
+    settings: { ratio: "9:16", duration: 30, model: "Seedance 2", resolution: "720P" },
+  },
+  {
+    id: "pb-unboxing",
+    name: "开箱种草",
+    tag: "开箱",
+    cover: "https://picsum.photos/seed/pb-unbox/480/600",
+    description: "第一视角沉浸开箱，ASMR 质感 + 细节特写",
+    prompt:
+      "创作一条适合 TikTok 投放的 9:16 竖版第一视角开箱种草视频，推广 {product} 中的商品，用细节质感完成种草。\n" +
+      "【创意模板】采用「开箱种草」打法：第一视角沉浸开箱，用细节特写与声音质感激发购买欲。\n" +
+      "【Hook】{hook}。\n" +
+      "【场景】{scene}。\n" +
+      "【产品展示】指尖划过 {product} 中商品的金属表面，微距扫过接口与开关细节。\n" +
+      "【卖点证明】安静环境音突出撕膜与咔哒声，最后一镜上手点亮，光束在墙面形成光斑。\n" +
+      "【节奏与风格】慢节奏微距运镜，ASMR 收音；参考 {video1} 的运镜与 {image1} 的布光。\n" +
+      "【CTA】字幕弹出「点击下方链接立省 30%」。",
     hooks: [HOOKS.result, HOOKS.question, HOOKS.price],
     scenes: [SCENES.unbox, SCENES.home],
     references: [
-      { id: "tplref-unbox-v1", kind: "video", thumb: "https://picsum.photos/seed/tplv2/300/200", name: "开箱运镜参考", source: "template" },
-      { id: "tplref-unbox-i1", kind: "image", thumb: "https://picsum.photos/seed/tpli1/300/300", name: "布光参考", source: "template" },
+      { id: "pbref-unbox-v1", kind: "video", thumb: "https://picsum.photos/seed/pbv3/300/200", name: "开箱运镜参考", source: "template" },
+      { id: "pbref-unbox-i1", kind: "image", thumb: "https://picsum.photos/seed/pbi1/300/300", name: "布光参考", source: "template" },
     ],
     settings: { ratio: "9:16", duration: 20, model: "Seedance 2", resolution: "720P" },
   },
   {
-    id: "tpl-compare",
-    name: "痛点对比实测",
-    tag: "对比实测",
-    cover: "https://picsum.photos/seed/tpl-comp/480/600",
-    description: "旧方案 vs 新方案分屏对比，用结果差距说服",
+    id: "pb-scene-rescue",
+    name: "场景救场",
+    tag: "剧情",
+    cover: "https://picsum.photos/seed/pb-rescue/480/600",
+    description: "生活化小剧情，商品关键时刻救场，先共情后种草",
     prompt:
-      "{hook}。{scene}。左右分屏对比：左侧普通手电照明范围小、频繁没电；" +
-      "右侧 {product} 中的商品广角泛光 + 磁吸固定解放双手。" +
-      "中段插入亮度实测数据字幕，参考 {video1} 的对比剪辑节奏收尾。",
-    hooks: [HOOKS.conflict, HOOKS.pain, HOOKS.result],
-    scenes: [SCENES.repair, SCENES.street, SCENES.outdoor],
-    references: [
-      { id: "tplref-comp-v1", kind: "video", thumb: "https://picsum.photos/seed/tplv3/300/200", name: "对比节奏参考", source: "template" },
-    ],
-    settings: { ratio: "9:16", duration: 30, model: "Seedance 2", resolution: "720P" },
-  },
-  {
-    id: "tpl-scene-story",
-    name: "场景剧情带货",
-    tag: "剧情种草",
-    cover: "https://picsum.photos/seed/tpl-story/480/600",
-    description: "生活化小剧情植入商品，先共情后种草",
-    prompt:
-      "{hook}。{scene}。剧情推进中自然带出 {product} 中的商品救场，" +
-      "人物表情从抓狂到松弛，商品使用过程给足 3 秒特写。" +
-      "结尾定格商品 + 价格贴纸，画外音一句「早买早享受」。",
+      "创作一条适合 TikTok 投放的 9:16 竖版剧情式带货视频，推广 {product} 中的商品，先共情后种草。\n" +
+      "【创意模板】采用「场景救场」打法：生活化小剧情制造冲突，商品在关键时刻救场。\n" +
+      "【Hook】{hook}。\n" +
+      "【场景】{scene}。\n" +
+      "【产品展示】剧情推进中自然带出 {product} 中的商品救场，人物表情从抓狂到松弛。\n" +
+      "【卖点证明】商品使用过程给足 3 秒特写，环境从昏暗到通亮的前后反差。\n" +
+      "【节奏与风格】剧情节奏先抑后扬，前段代入感强，后段轻松明快；台词自然口语化。\n" +
+      "【CTA】结尾定格商品 + 价格贴纸，画外音一句「早买早享受」。",
     hooks: [HOOKS.conflict, HOOKS.question, HOOKS.pain],
     scenes: [SCENES.home, SCENES.street, SCENES.repair],
     references: [],
-    settings: { ratio: "9:16", duration: 45, model: "Veo 3", resolution: "720P" },
-  },
-  {
-    id: "tpl-fast-cut",
-    name: "卖点快剪",
-    tag: "快节奏",
-    cover: "https://picsum.photos/seed/tpl-cut/480/600",
-    description: "3 秒一个卖点的高密度快剪，适合信息流强曝光",
-    prompt:
-      "{hook}。{scene}。以 {product} 中的商品为主体做高密度快剪：" +
-      "每 3 秒切一个卖点（亮度 / 磁吸 / 续航 / 防水），" +
-      "每个卖点配大号动态字幕与音效重音，参考 {video1} 的卡点节奏。",
-    hooks: [HOOKS.price, HOOKS.result, HOOKS.question],
-    scenes: [SCENES.repair, SCENES.outdoor, SCENES.unbox],
-    references: [
-      { id: "tplref-cut-v1", kind: "video", thumb: "https://picsum.photos/seed/tplv4/300/200", name: "卡点节奏参考", source: "template" },
-    ],
-    settings: { ratio: "9:16", duration: 15, model: "Kling 2.1", resolution: "720P" },
-  },
-  {
-    id: "tpl-creator-review",
-    name: "素人真实测评",
-    tag: "信任背书",
-    cover: "https://picsum.photos/seed/tpl-review/480/600",
-    description: "素人视角的真实使用反馈，弱广告感强信任感",
-    prompt:
-      "{hook}。{scene}。手机手持拍摄质感，素人边用边聊 {product} 中的商品，" +
-      "保留自然口误和环境噪音，穿插两段使用一周后的真实画面，" +
-      "结尾给出「买前必看的 1 个缺点」增强可信度。",
-    hooks: [HOOKS.question, HOOKS.pain, HOOKS.result],
-    scenes: [SCENES.home, SCENES.repair, SCENES.street],
-    references: [],
-    settings: { ratio: "9:16", duration: 40, model: "Seedance 1 Pro", resolution: "720P" },
+    settings: { ratio: "9:16", duration: 30, model: "Veo 3", resolution: "720P" },
   },
 ]
 
