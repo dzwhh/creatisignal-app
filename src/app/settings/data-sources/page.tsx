@@ -1,10 +1,12 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { Suspense, useMemo, useState } from "react"
+import { useSearchParams } from "next/navigation"
 import {
   Activity,
   CheckCircle2,
   Cog,
+  Coins,
   Plug,
   RefreshCw,
   Zap,
@@ -72,7 +74,29 @@ const STATUS_META: Record<Status, { label: string; dot: string; bg: string; text
 }
 
 export default function DataSourcesPage() {
-  const [states, setStates] = useState<ConnectorState[]>(INITIAL_STATES)
+  return (
+    <Suspense>
+      <DataSourcesContent />
+    </Suspense>
+  )
+}
+
+function DataSourcesContent() {
+  // ?connect=tiktok：从企业认证引导跳转而来，目标平台重置为未连接并高亮，引导授权领积分
+  const searchParams = useSearchParams()
+  const connectParam = searchParams.get("connect")
+  const connectTarget = CONNECTORS.some((c) => c.id === connectParam)
+    ? (connectParam as ConnectorMeta["id"])
+    : null
+
+  const [states, setStates] = useState<ConnectorState[]>(() =>
+    connectTarget
+      ? INITIAL_STATES.map((s) =>
+          s.id === connectTarget ? { ...s, status: "disconnected" as Status, accounts: 0, rowsToday: undefined } : s
+        )
+      : INITIAL_STATES
+  )
+  const [highlightId, setHighlightId] = useState<ConnectorMeta["id"] | null>(connectTarget)
 
   const summary = useMemo(() => {
     const connected = states.filter((s) => s.status === "connected").length
@@ -88,6 +112,7 @@ export default function DataSourcesPage() {
 
   function connect(id: ConnectorState["id"]) {
     patch(id, { status: "connected", accounts: id === "google" ? 4 : 5, rowsToday: 0 })
+    if (highlightId === id) setHighlightId(null)
   }
   function reauth(id: ConnectorState["id"]) {
     patch(id, { status: "connected" })
@@ -141,6 +166,7 @@ export default function DataSourcesPage() {
                   key={meta.id}
                   meta={meta}
                   state={state}
+                  highlighted={highlightId === meta.id}
                   onConnect={() => connect(meta.id)}
                   onReauth={() => reauth(meta.id)}
                   onSync={() => sync(meta.id)}
@@ -181,12 +207,14 @@ export default function DataSourcesPage() {
 function ConnectorCard({
   meta,
   state,
+  highlighted,
   onConnect,
   onReauth,
   onSync,
 }: {
   meta: ConnectorMeta
   state: ConnectorState
+  highlighted?: boolean
   onConnect: () => void
   onReauth: () => void
   onSync: () => void
@@ -194,7 +222,14 @@ function ConnectorCard({
   const reauthNeeded = state.status === "needs_reauth"
 
   return (
-    <article className="rounded-2xl border border-[var(--line)] bg-white p-5 flex flex-col">
+    <article
+      className={cn(
+        "rounded-2xl border bg-white p-5 flex flex-col",
+        highlighted
+          ? "border-[#c8dd7f] ring-2 ring-[var(--lime)] shadow-[0_10px_32px_rgba(201,255,41,0.35)]"
+          : "border-[var(--line)]"
+      )}
+    >
       {/* Brand header */}
       <div className="flex items-start justify-between gap-2 mb-3">
         <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -215,6 +250,14 @@ function ConnectorCard({
       </div>
 
       <p className="text-[12px] text-[var(--muted)] leading-relaxed mb-4 line-clamp-3">{meta.description}</p>
+
+      {/* 积分引导（从企业认证流程跳转而来） */}
+      {highlighted && state.status === "disconnected" && (
+        <div className="mb-4 rounded-xl bg-[var(--lime-soft)] border border-[#d4e89a] px-3 py-2 flex items-center gap-1.5 text-[12px] font-bold text-[#3a4a10]">
+          <Coins size={13} strokeWidth={2.2} className="shrink-0" />
+          完成授权立得 1000 积分
+        </div>
+      )}
 
       {/* Actions */}
       <div className="flex items-center gap-2 mt-auto min-w-0">

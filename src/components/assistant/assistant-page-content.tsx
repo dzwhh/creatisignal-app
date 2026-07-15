@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { AnimatePresence } from "framer-motion"
 import { ArrowLeft } from "lucide-react"
 import { useOnboardingState, type TaskKind } from "@/lib/onboarding/state"
 import { AssistantChat, type ChatPrefill, type ModeId } from "./assistant-chat"
@@ -9,6 +10,8 @@ import { ExamplePrompts, type ExamplePick } from "./example-prompts"
 import { SpotlightTour } from "./spotlight-tour"
 import { SubmitArrowTip } from "./submit-arrow-tip"
 import { TaskResultModal } from "./task-result-modal"
+import { CertBanner } from "./cert-banner"
+import { CertModal } from "./cert-modal"
 import { TaskResultSection } from "@/components/dashboard/task-result-section"
 import { DiscoveryHub } from "@/components/assistant/discovery/discovery-hub"
 
@@ -71,6 +74,10 @@ export function AssistantPageContent() {
 
   // 控制 SubmitArrowTip 当前是否激活（首次进入 chat box 后显示）
   const [arrowTipActive, setArrowTipActive] = useState(false)
+
+  // 权益 banner + 企业认证弹窗
+  const [certBannerVisible, setCertBannerVisible] = useState(true)
+  const [certOpen, setCertOpen] = useState(false)
 
   // 点 hero 卡：切 mode + 预填 + 揭示 chat box；首次触发箭头
   function handlePickPath(pick: PathPick) {
@@ -162,6 +169,16 @@ export function AssistantPageContent() {
 
   return (
     <>
+      {/* 权益 banner：引导企业认证 + 账户授权 */}
+      <AnimatePresence initial={false}>
+        {certBannerVisible && (
+          <CertBanner
+            onCertify={() => setCertOpen(true)}
+            onDismiss={() => setCertBannerVisible(false)}
+          />
+        )}
+      </AnimatePresence>
+
       {showOnboarding ? (
         // ─── New-user view ─────────────────────────────────────────────────
         <>
@@ -259,6 +276,9 @@ export function AssistantPageContent() {
 
       {/* 结果详情 modal */}
       <TaskResultModal kind={spotlightKind} open={resultModalOpen} onClose={handleResultModalClose} />
+
+      {/* 企业认证弹窗：提交后撒花 + 引导账户授权 */}
+      <CertModal open={certOpen} onOpenChange={setCertOpen} onSubmitted={() => setCertBannerVisible(false)} />
 
       {/* Step 1: 高亮「查看全部」按钮 */}
       {spotlightStep === 1 && spotlightKind && !showOnboarding && (

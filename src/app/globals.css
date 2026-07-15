@@ -109,6 +109,15 @@ body {
   animation: picker-glow 1.2s ease-out both;
 }
 
+/* 企业认证成功的撒花纸屑（cert-modal）：--cf-x 水平漂移，--cf-r 旋转角 */
+@keyframes cs-confetti {
+  0%   { transform: translate3d(0, -20px, 0) rotateZ(0deg) scale(1); opacity: 1; }
+  100% { transform: translate3d(var(--cf-x, 0px), 360px, 0) rotateZ(var(--cf-r, 360deg)) scale(0.9); opacity: 0; }
+}
+.cs-confetti {
+  animation: cs-confetti var(--cf-d, 1.8s) cubic-bezier(0.25, 0.4, 0.45, 1) var(--cf-delay, 0s) both;
+}
+
 @keyframes rainbow {
   0%   { background-position: 0% 50%; }
   100% { background-position: 200% 50%; }
