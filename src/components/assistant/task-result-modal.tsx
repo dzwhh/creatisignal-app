@@ -9,6 +9,7 @@ import {
   Boxes,
   CheckCircle2,
   ChevronLeft,
+  Download,
   ExternalLink,
   FileText,
   Globe2,
@@ -19,6 +20,7 @@ import {
   type LucideIcon,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { DownloadScenarioModal } from "@/components/modals/download-scenario-modal"
 import type { TaskKind } from "@/lib/onboarding/state"
 
 interface Props {
@@ -179,6 +181,7 @@ function Pills({ items }: { items: string[] }) {
 
 export function TaskResultModal({ kind, open, onClose }: Props) {
   const [openAsset, setOpenAsset] = useState<AssetKey | null>(null)
+  const [downloadOpen, setDownloadOpen] = useState(false)
 
   if (!kind) return null
   const c = CONFIG[kind]
@@ -240,14 +243,26 @@ export function TaskResultModal({ kind, open, onClose }: Props) {
                 <CheckCircle2 size={12} strokeWidth={2.4} />
                 结果已保存到「我的任务」
               </span>
-              <button
-                type="button"
-                onClick={onClose}
-                className="h-9 px-4 rounded-full bg-[var(--near-black)] text-white text-[12.5px] font-bold flex items-center gap-1.5 cursor-pointer hover:opacity-90"
-              >
-                我知道了
-                <ArrowRight size={12} strokeWidth={2.4} />
-              </button>
+              <div className="flex items-center gap-2">
+                {kind === "video" && (
+                  <button
+                    type="button"
+                    onClick={() => setDownloadOpen(true)}
+                    className="h-9 px-4 rounded-full border border-[var(--line)] text-[12.5px] font-bold text-[var(--text)] flex items-center gap-1.5 cursor-pointer hover:bg-[var(--soft-2)]"
+                  >
+                    <Download size={12} strokeWidth={2.4} />
+                    下载
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="h-9 px-4 rounded-full bg-[var(--near-black)] text-white text-[12.5px] font-bold flex items-center gap-1.5 cursor-pointer hover:opacity-90"
+                >
+                  我知道了
+                  <ArrowRight size={12} strokeWidth={2.4} />
+                </button>
+              </div>
             </div>
           </Dialog.Content>
         </Dialog.Portal>
@@ -258,6 +273,12 @@ export function TaskResultModal({ kind, open, onClose }: Props) {
         asset={openAsset ? REFERENCE_ASSETS[openAsset] : null}
         open={openAsset !== null}
         onClose={() => setOpenAsset(null)}
+      />
+
+      {/* 嵌套：下载前选择使用场景 */}
+      <DownloadScenarioModal
+        open={downloadOpen}
+        onOpenChange={setDownloadOpen}
       />
     </>
   )

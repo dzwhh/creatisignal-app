@@ -7,6 +7,7 @@ import { SendButton } from "../send-button"
 import { ImageSelectModal, type ImageItem } from "@/components/modals/image-select-modal"
 import { VideoSelectModal, type VideoItem } from "@/components/modals/video-select-modal"
 import { DigitalHumanModal, type DHItem } from "@/components/modals/digital-human-modal"
+import { CreditPurchaseModal } from "@/components/modals/credit-purchase-modal"
 import { PromptEditor } from "../generate/prompt-editor"
 import { TemplateStrip, type StripTab } from "../generate/template-strip"
 import { TemplateGalleryModal } from "../generate/template-gallery-modal"
@@ -277,6 +278,21 @@ export function GenerateMode({ initialPrompt, onSubmit, submitting }: GenerateMo
 
   function handleSend() {
     if (!text.trim()) return
+    // 提示词命中「短剧」→ 高级能力，先弹加量包积分购买
+    if (text.includes("短剧") && !dramaUnlocked) {
+      setCreditModalOpen(true)
+      return
+    }
+    onSubmit?.()
+  }
+
+  // ── 短剧付费（mock）──
+  const [creditModalOpen, setCreditModalOpen] = useState(false)
+  const [dramaUnlocked, setDramaUnlocked] = useState(false)
+
+  function handlePurchased() {
+    setDramaUnlocked(true)
+    setCreditModalOpen(false)
     onSubmit?.()
   }
 
@@ -713,6 +729,11 @@ export function GenerateMode({ initialPrompt, onSubmit, submitting }: GenerateMo
         products={products}
         onAddProduct={(p) => setProducts((prev) => [p, ...prev])}
         onInsert={handleInsertProduct}
+      />
+      <CreditPurchaseModal
+        open={creditModalOpen}
+        onOpenChange={setCreditModalOpen}
+        onPurchased={handlePurchased}
       />
     </div>
   )

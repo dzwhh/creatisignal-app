@@ -15,6 +15,7 @@ import {
   type LucideIcon,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { DownloadScenarioModal } from "@/components/modals/download-scenario-modal"
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -78,6 +79,8 @@ export function ReportsContent({ initialTab = "report", highlightFirst = false }
   const [query, setQuery] = useState("")
   const firstCardRef = useRef<HTMLAnchorElement | null>(null)
   const [highlightActive, setHighlightActive] = useState(highlightFirst)
+  // 下载生成结果前需选择使用场景
+  const [downloadItem, setDownloadItem] = useState<Item | null>(null)
 
   // tab 同步 URL（轻量，不动 history）
   useEffect(() => {
@@ -171,6 +174,7 @@ export function ReportsContent({ initialTab = "report", highlightFirst = false }
               ref={i === 0 ? firstCardRef : undefined}
               highlighted={i === 0 && highlightActive}
               onActivate={i === 0 && highlightActive ? () => setHighlightActive(false) : undefined}
+              onDownload={() => setDownloadItem(it)}
             />
           ))}
         </div>
@@ -188,6 +192,12 @@ export function ReportsContent({ initialTab = "report", highlightFirst = false }
           ))}
         </div>
       )}
+
+      {/* 下载生成结果前需选择使用场景，选中后才点亮下载 */}
+      <DownloadScenarioModal
+        open={downloadItem !== null}
+        onOpenChange={(v) => { if (!v) setDownloadItem(null) }}
+      />
     </div>
   )
 }
@@ -196,8 +206,8 @@ export function ReportsContent({ initialTab = "report", highlightFirst = false }
 
 const HIGHLIGHT = "ring-2 ring-[var(--lime)] ring-offset-2 shadow-[0_0_0_4px_rgba(201,255,41,0.18),0_12px_32px_rgba(9,9,11,0.10)]"
 
-const VideoCard = forwardRef<HTMLAnchorElement, { item: Item; highlighted?: boolean; onActivate?: () => void }>(
-  function VideoCard({ item, highlighted, onActivate }, ref) {
+const VideoCard = forwardRef<HTMLAnchorElement, { item: Item; highlighted?: boolean; onActivate?: () => void; onDownload?: () => void }>(
+  function VideoCard({ item, highlighted, onActivate, onDownload }, ref) {
     return (
       <Link
         ref={ref}
@@ -213,6 +223,16 @@ const VideoCard = forwardRef<HTMLAnchorElement, { item: Item; highlighted?: bool
             <Sparkles size={9} strokeWidth={2.6} />
             刚刚生成
           </span>
+        )}
+        {onDownload && (
+          <button
+            type="button"
+            aria-label="下载"
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDownload() }}
+            className="absolute top-2.5 right-2.5 z-10 w-7 h-7 rounded-full bg-white/95 text-[var(--text)] shadow-sm flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-white transition-opacity cursor-pointer"
+          >
+            <Download size={13} strokeWidth={2.4} />
+          </button>
         )}
         <div className="aspect-[9/14] bg-[var(--soft)] relative overflow-hidden">
           {item.thumb && <img src={item.thumb} alt={item.title} className="w-full h-full object-cover" />}
