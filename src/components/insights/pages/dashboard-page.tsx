@@ -22,6 +22,12 @@ import * as Popover from "@radix-ui/react-popover"
 import { cn } from "@/lib/utils"
 import { MATERIALS } from "@/lib/insights/mock"
 import { type DateRange } from "@/lib/insights/types"
+import { ActivityLogDrawer } from "@/components/insights/activity-log-drawer"
+import {
+  ACTIVITY_KIND_META,
+  SEED_ACTIVITY_LOGS,
+  type ActivityLog,
+} from "@/lib/insights/activity-log"
 
 // ─── Metrics ────────────────────────────────────────────────────────────────
 
@@ -155,6 +161,25 @@ export function DashboardPage(_: Props) {
   const [distMetric, setDistMetric] = useState<MetricKey>("spend")
   const [dimKind, setDimKind] = useState<DimensionKind>("industry")
 
+  // 广告操作日志
+  const [logs, setLogs] = useState<ActivityLog[]>(SEED_ACTIVITY_LOGS)
+  const [logDrawerOpen, setLogDrawerOpen] = useState(false)
+  const [logDayIndex, setLogDayIndex] = useState<number | null>(null)
+
+  function openLogDrawer(dayIndex: number) {
+    setLogDayIndex(dayIndex)
+    setLogDrawerOpen(true)
+  }
+  function addLog(log: Omit<ActivityLog, "id">) {
+    setLogs((prev) => [{ ...log, id: `u${prev.length}-${log.dayIndex}-${log.title}` }, ...prev])
+  }
+  function updateLog(id: string, patch: Partial<ActivityLog>) {
+    setLogs((prev) => prev.map((l) => (l.id === id ? { ...l, ...patch } : l)))
+  }
+  function deleteLog(id: string) {
+    setLogs((prev) => prev.filter((l) => l.id !== id))
+  }
+
   function toggleMetric(k: MetricKey) {
     setSelectedMetrics((prev) => {
       const next = new Set(prev)
@@ -253,7 +278,7 @@ export function DashboardPage(_: Props) {
         <header className="px-5 py-4 flex items-start justify-between gap-3">
           <div>
             <h2 className="text-base font-semibold text-[var(--text)]">指标趋势</h2>
-            <p className="text-xs text-[var(--muted)] mt-1">点击上方指标牌切换，多选叠加趋势线</p>
+            <p className="text-xs text-[var(--muted)] mt-1">点击上方指标牌切换 · 点击图表下方事件标记查看当日操作日志</p>
           </div>
           <div className="flex items-center gap-1.5 flex-wrap justify-end">
             {METRIC_ORDER.filter((k) => selectedMetrics.has(k)).map((k) => {
@@ -271,9 +296,24 @@ export function DashboardPage(_: Props) {
           </div>
         </header>
         <div className="px-5 pb-5">
-          <AreaChart selectedMetrics={Array.from(selectedMetrics)} />
+          <AreaChart
+            selectedMetrics={Array.from(selectedMetrics)}
+            logs={logs}
+            onOpenLog={openLogDrawer}
+          />
         </div>
       </section>
+
+      <ActivityLogDrawer
+        open={logDrawerOpen}
+        onOpenChange={setLogDrawerOpen}
+        dayIndex={logDayIndex}
+        dayLabel={logDayIndex !== null ? DAY_LABELS[logDayIndex] : ""}
+        logs={logs}
+        onAdd={addLog}
+        onUpdate={updateLog}
+        onDelete={deleteLog}
+      />
 
       {/* 投放分布 — 行业 / 视频元素 tabs */}
       <section className="rounded-lg border border-[var(--line)] bg-white overflow-hidden">
@@ -551,7 +591,15 @@ function smoothPath(points: Array<{ x: number; y: number }>, tension = 0.5): str
   return d
 }
 
-function AreaChart({ selectedMetrics }: { selectedMetrics: MetricKey[] }) {
+function AreaChart({
+  selectedMetrics,
+  logs,
+  onOpenLog,
+}: {
+  selectedMetrics: MetricKey[]
+  logs: ActivityLog[]
+  onOpenLog: (dayIndex: number) => void
+}) {
   const W = 1080
   const H = 280
   const PAD = { l: 56, r: 16, t: 24, b: 36 }
@@ -605,6 +653,17 @@ function AreaChart({ selectedMetrics }: { selectedMetrics: MetricKey[] }) {
   const hoverX = hoverIdx !== null ? PAD.l + hoverIdx * (innerW / (TREND_LEN - 1)) : null
   const tooltipLeftPct = hoverX !== null ? (hoverX / W) * 100 : 0
   const tooltipAnchorRight = tooltipLeftPct > 70
+
+  // 每天的日志数量
+  const logCountByDay = useMemo(() => {
+    const counts = new Array<number>(TREND_LEN).fill(0)
+    for (const l of logs) {
+      if (l.dayIndex >= 0 && l.dayIndex < TREND_LEN) counts[l.dayIndex]++
+    }
+    return counts
+  }, [logs])
+
+  const hoverLogs = hoverIdx !== null ? logs.filter((l) => l.dayIndex === hoverIdx) : []
 
   return (
     <div className="relative">
@@ -701,8 +760,62 @@ function AreaChart({ selectedMetrics }: { selectedMetrics: MetricKey[] }) {
               </li>
             ))}
           </ul>
+          {hoverLogs.length > 0 && (
+            <div className="mt-2 pt-2 border-t border-[var(--line)]">
+              <p className="text-[var(--muted)] mb-1">当日操作 {hoverLogs.length} 条</p>
+              <ul className="space-y-0.5">
+                {hoverLogs.slice(0, 3).map((l) => (
+                  <li key={l.id} className="flex items-center gap-1.5">
+                    <span
+                      className="w-1.5 h-1.5 rounded-full shrink-0"
+                      style={{ backgroundColor: ACTIVITY_KIND_META[l.kind].color }}
+                    />
+                    <span className="text-[var(--text)] truncate">{l.title}</span>
+                  </li>
+                ))}
+                {hoverLogs.length > 3 && (
+                  <li className="text-[var(--muted-2)]">还有 {hoverLogs.length - 3} 条…</li>
+                )}
+              </ul>
+            </div>
+          )}
         </div>
       )}
+
+      {/* 事件日志轴 —— 与 SVG 同宽，按 viewBox 百分比定位 */}
+      <div className="relative h-9 mt-0.5">
+        <span
+          className="absolute top-1/2 -translate-y-1/2 text-[11px] text-[var(--muted-2)] font-medium"
+          style={{ left: 0, width: `${((PAD.l - 8) / W) * 100}%`, textAlign: "right" }}
+        >
+          事件
+        </span>
+        {logCountByDay.map((count, i) => {
+          if (count === 0) return null
+          const leftPct = ((PAD.l + i * (innerW / (TREND_LEN - 1))) / W) * 100
+          const dayLogs = logs.filter((l) => l.dayIndex === i)
+          const meta = ACTIVITY_KIND_META[dayLogs[0].kind]
+          return (
+            <button
+              key={i}
+              type="button"
+              onClick={() => onOpenLog(i)}
+              onMouseEnter={() => setHoverIdx(i)}
+              title={`${DAY_LABELS[i]} · ${count} 条操作日志`}
+              className={cn(
+                "absolute top-1/2 -translate-y-1/2 -translate-x-1/2 h-6 px-2 rounded-md border bg-white flex items-center gap-1.5 text-[11px] font-medium transition cursor-pointer tabular-nums",
+                hoverIdx === i
+                  ? "border-[var(--line-strong)] shadow-[0_1px_2px_rgba(9,9,11,0.08)]"
+                  : "border-[var(--line)] hover:border-[var(--line-strong)]"
+              )}
+              style={{ left: `${leftPct}%` }}
+            >
+              <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: meta.color }} />
+              <span className="text-[var(--text)]">{count}</span>
+            </button>
+          )
+        })}
+      </div>
     </div>
   )
 }
