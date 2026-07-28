@@ -1,16 +1,18 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import Image from "next/image"
 import Link from "next/link"
-import { FileText, BarChart2, BookOpen, Sparkles, type LucideIcon } from "lucide-react"
+import { FileText, BarChart2, BookOpen, Clapperboard, type LucideIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { ReportTab } from "@/components/reports/reports-content"
+import { GenerateResultModal, type GenerateResult } from "@/components/dashboard/generate-result-modal"
 
 // tab 标签，与「创意助手」上方四模式保持一致
 const TAB_LABELS = ["创意 report", "创意分析", "创意 brief", "创意生成"]
 const TAB_KEYS: ReportTab[] = ["report", "analysis", "brief", "generate"]
 
-type TaskCard = { icon: LucideIcon; title: string; desc: string; date: string }
+type TaskCard = { icon: LucideIcon; title: string; desc: string; date: string; thumbnail?: string; videoSrc?: string }
 
 const TASKS_BY_TAB: TaskCard[][] = [
   // 创意 report
@@ -36,10 +38,10 @@ const TASKS_BY_TAB: TaskCard[][] = [
   ],
   // 创意生成
   [
-    { icon: Sparkles, title: "UGC 脚本生成",    desc: "生成 8 个可直接拍摄的视频脚本",         date: "今天" },
-    { icon: Sparkles, title: "30s 演示视频",     desc: "Seedance 2 · 9:16 · 720p",            date: "昨天" },
-    { icon: Sparkles, title: "图文海报 3 套",    desc: "Nano Banana Pro · 1:1 / 4:3 / 9:16",   date: "06/18" },
-    { icon: Sparkles, title: "口播配音",          desc: "TTS · 男声 / 女声 / 双语版",           date: "06/15" },
+    { icon: Clapperboard, title: "UGC 脚本生成",    desc: "生成 8 个可直接拍摄的视频脚本",         date: "今天",  thumbnail: "/creative-assets/wedding-dress-cover.png", videoSrc: "/creative-assets/wedding-dress-ad.mp4" },
+    { icon: Clapperboard, title: "30s 演示视频",     desc: "Seedance 2 · 9:16 · 720p",            date: "昨天",  thumbnail: "/creative-assets/wedding-dress-cover.png", videoSrc: "/creative-assets/wedding-dress-ad.mp4" },
+    { icon: Clapperboard, title: "图文海报 3 套",    desc: "Nano Banana Pro · 1:1 / 4:3 / 9:16",   date: "06/18", thumbnail: "/creative-assets/wedding-dress-cover.png", videoSrc: "/creative-assets/wedding-dress-ad.mp4" },
+    { icon: Clapperboard, title: "口播配音",          desc: "TTS · 男声 / 女声 / 双语版",           date: "06/15", thumbnail: "/creative-assets/wedding-dress-cover.png", videoSrc: "/creative-assets/wedding-dress-ad.mp4" },
   ],
 ]
 
@@ -56,11 +58,27 @@ interface Props {
 
 export function TaskResultSection({ highlightTaskIndex, onHighlightedClick, highlightViewAll, onViewAllClick }: Props = {}) {
   const [activeTab, setActiveTab] = useState(0)
+  const [modalOpen, setModalOpen] = useState(false)
+  const [modalIndex, setModalIndex] = useState(0)
+
+  const generateResults: GenerateResult[] = TASKS_BY_TAB[3].map(t => ({
+    title: t.title,
+    desc: t.desc,
+    date: t.date,
+    thumbnail: t.thumbnail!,
+    videoSrc: t.videoSrc!,
+  }))
 
   // 外部要求高亮时，自动切到对应 tab
   useEffect(() => {
     if (typeof highlightTaskIndex === "number") setActiveTab(highlightTaskIndex)
   }, [highlightTaskIndex])
+
+  function openGenerateModal(idx: number, e: React.MouseEvent) {
+    e.preventDefault()
+    setModalIndex(idx)
+    setModalOpen(true)
+  }
 
   const tasks = TASKS_BY_TAB[activeTab]
   // 引导高亮：仅当 active tab === highlightTaskIndex 时把该 tab 的第 0 张卡作为高亮卡
@@ -109,6 +127,7 @@ export function TaskResultSection({ highlightTaskIndex, onHighlightedClick, high
       <div className="grid grid-cols-4 gap-3">
         {tasks.map((task, idx) => {
           const highlighted = highlightCardIdx === idx
+          const isGenerate = activeTab === 3
           const cardClasses = cn(
             "min-h-[118px] border rounded-xl bg-white p-[14px] flex flex-col justify-between text-left transition-all cursor-pointer hover:shadow-[0_4px_12px_rgba(9,9,11,0.06)] hover:border-[var(--line-strong)]",
             highlighted ? "border-[var(--line-strong)]" : "border-[var(--line)]"
@@ -116,8 +135,19 @@ export function TaskResultSection({ highlightTaskIndex, onHighlightedClick, high
           const inner = (
             <>
               <div>
-                <div className="w-[34px] h-[34px] rounded-[9px] flex items-center justify-center bg-[#f4f1ff] text-[#6d5dfc] mb-[10px]">
-                  <task.icon size={16} strokeWidth={2} />
+                <div className="flex items-start justify-between mb-[10px]">
+                  <div className="w-[34px] h-[34px] rounded-[9px] flex items-center justify-center bg-[var(--soft)] text-[var(--text)]">
+                    <task.icon size={16} strokeWidth={2} />
+                  </div>
+                  {isGenerate && task.thumbnail && (
+                    <Image
+                      src={task.thumbnail}
+                      alt=""
+                      width={36}
+                      height={36}
+                      className="w-9 h-9 rounded-[7px] object-cover border border-[var(--line)]"
+                    />
+                  )}
                 </div>
                 <h3 className="text-sm font-extrabold text-[#282b32] leading-snug">{task.title}</h3>
                 <p className="mt-2 text-[12px] text-[#8a8e96] leading-[1.45]">{task.desc}</p>
@@ -145,6 +175,19 @@ export function TaskResultSection({ highlightTaskIndex, onHighlightedClick, high
               </button>
             )
           }
+          // 创意生成 tab：点击打开视频弹窗
+          if (isGenerate) {
+            return (
+              <button
+                key={`${activeTab}-${task.title}`}
+                type="button"
+                onClick={(e) => openGenerateModal(idx, e)}
+                className={cardClasses}
+              >
+                {inner}
+              </button>
+            )
+          }
           // 非高亮卡：创意分析 tab 第 1 张跳分析详情页；其余跳 /reports
           const href = activeTab === 1 && idx === 0
             ? `/assistant/analysis/demo?title=${encodeURIComponent(task.title)}`
@@ -156,6 +199,13 @@ export function TaskResultSection({ highlightTaskIndex, onHighlightedClick, high
           )
         })}
       </div>
+
+      <GenerateResultModal
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        results={generateResults}
+        initialIndex={modalIndex}
+      />
     </section>
   )
 }
