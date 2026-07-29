@@ -10,6 +10,7 @@ import {
   Lightbulb,
   Plug,
   Receipt,
+  Rocket,
   Settings,
   ShieldCheck,
   Sparkles,
@@ -74,6 +75,15 @@ export const navSections: NavSection[] = [
     subMenu: [
       { label: "爆款复刻", href: "/replicate" },
       { label: "创意画布", href: "/create/canvas" },
+    ],
+  },
+  {
+    id: "launch",
+    icon: Rocket,
+    label: "投放",
+    defaultHref: "/ads/gmv-max",
+    subMenu: [
+      { label: "TikTok GMV Max", href: "/ads/gmv-max" },
     ],
   },
   {
