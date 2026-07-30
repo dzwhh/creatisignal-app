@@ -5,30 +5,9 @@ import * as Dialog from "@radix-ui/react-dialog"
 import { motion, AnimatePresence } from "framer-motion"
 import { X, Link2, ArrowRight, ArrowLeft, Check, Upload, Package } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { ProgressRing } from "@/components/ui/progress-ring"
 import { buildAnalyzedProduct } from "@/lib/generate/products"
 import type { Product, AnalyzingProduct } from "@/lib/generate/types"
-
-// ─── 解析进度环 ──────────────────────────────────────────────────────────────
-
-function ProgressRing({ progress }: { progress: number }) {
-  const R = 16
-  const C = 2 * Math.PI * R
-  return (
-    <div className="relative w-11 h-11">
-      <svg viewBox="0 0 40 40" className="w-11 h-11 -rotate-90">
-        <circle cx="20" cy="20" r={R} fill="none" stroke="var(--line)" strokeWidth="3" />
-        <circle
-          cx="20" cy="20" r={R} fill="none" stroke="var(--near-black)" strokeWidth="3"
-          strokeLinecap="round" strokeDasharray={C} strokeDashoffset={C * (1 - progress / 100)}
-          className="transition-[stroke-dashoffset] duration-200"
-        />
-      </svg>
-      <span className="absolute inset-0 flex items-center justify-center text-[10px] font-black text-[var(--text)]">
-        {Math.round(progress)}%
-      </span>
-    </div>
-  )
-}
 
 // ─── 商品卡 ──────────────────────────────────────────────────────────────────
 

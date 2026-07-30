@@ -80,7 +80,7 @@ export function CompetitorHotSection() {
           <GatedEmptyState
             icon={<Crosshair size={22} strokeWidth={2.2} />}
             headline="添加要追踪的竞品品牌，跟进它们的爆量素材"
-            subline="添加后系统每日抓取该品牌正在投放的素材，按 live ads 数排序。"
+            subline="添加后立即开始采集：先抓取在投素材，再回溯近 180 天历史，完成后每小时增量更新。"
             ctaLabel="添加追踪品牌"
             onCta={() => setOpen(true)}
           />

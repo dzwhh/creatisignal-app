@@ -57,6 +57,7 @@ export function AreaLine({
   gradientId,
   showGrid = false,
   showPeak = false,
+  coveredRatio,
 }: {
   data: number[]
   width?: number
@@ -65,8 +66,18 @@ export function AreaLine({
   gradientId: string
   showGrid?: boolean
   showPeak?: boolean
+  /** 0..1 —— 已采集比例。传入后未采集区间画斜线底纹而非留白 */
+  coveredRatio?: number
 }) {
-  const max = Math.max(...data, 1)
+  const partial = typeof coveredRatio === "number" && coveredRatio < 0.999
+  const covered = partial ? Math.max(0, Math.min(1, coveredRatio)) : 1
+  const splitX = width * covered
+  const clipId = `${gradientId}-clip`
+  const hatchId = `${gradientId}-hatch`
+
+  // 峰值只在已采集区间内找 —— 否则会指向还没数据的地方
+  const scan = partial ? data.slice(0, Math.max(2, Math.round(data.length * covered))) : data
+  const max = Math.max(...scan, 1)
   const step = width / (data.length - 1)
   const padTop = showPeak ? 18 : 6
   const padBottom = 4
@@ -74,7 +85,7 @@ export function AreaLine({
   const pts: Pt[] = data.map((v, i) => ({ x: i * step, y: y(v) }))
   const line = smoothPath(pts)
   const area = `${line} L${width},${height} L0,${height} Z`
-  const peakIdx = data.indexOf(max)
+  const peakIdx = scan.indexOf(max)
   const peakX = peakIdx * step
   const peakOnRight = peakIdx > data.length * 0.72
 
@@ -85,6 +96,16 @@ export function AreaLine({
           <stop offset="0%" stopColor={color} stopOpacity={0.32} />
           <stop offset="100%" stopColor={color} stopOpacity={0.02} />
         </linearGradient>
+        {partial && (
+          <>
+            <clipPath id={clipId}>
+              <rect x={0} y={0} width={splitX} height={height} />
+            </clipPath>
+            <pattern id={hatchId} width={7} height={7} patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+              <line x1={0} y1={0} x2={0} y2={7} stroke="#e4e4e7" strokeWidth={1.4} />
+            </pattern>
+          </>
+        )}
       </defs>
       {showGrid &&
         [0.25, 0.5, 0.75].map((f) => (
@@ -100,8 +121,23 @@ export function AreaLine({
             vectorEffect="non-scaling-stroke"
           />
         ))}
-      <path d={area} fill={`url(#${gradientId})`} />
-      <path d={line} fill="none" stroke={color} strokeWidth={1.8} strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+
+      {/* 未采集区间:斜线底纹 + 虚线边界 + 说明,而不是留白 */}
+      {partial && (
+        <g>
+          <rect x={splitX} y={0} width={width - splitX} height={height} fill={`url(#${hatchId})`} opacity={0.55} />
+          <line
+            x1={splitX} x2={splitX} y1={0} y2={height}
+            stroke="#a1a1aa" strokeWidth={1} strokeDasharray="3 3" vectorEffect="non-scaling-stroke"
+          />
+        </g>
+      )}
+
+      <g clipPath={partial ? `url(#${clipId})` : undefined}>
+        <path d={area} fill={`url(#${gradientId})`} />
+        <path d={line} fill="none" stroke={color} strokeWidth={1.8} strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+      </g>
+
       {showPeak && (
         <g>
           <line

@@ -115,22 +115,22 @@ export function useDiscoveryState() {
     }))
   }, [])
 
-  const addBrand = useCallback((b: Omit<TrackedBrand, "id" | "addedAt" | "liveAdsCount" | "stoppedCount">) => {
-    set((s) => {
-      const seed = b.name.toLowerCase().replace(/\s+/g, "_") + "_" + Date.now().toString(36)
-      const hashSeed = b.name.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0)
-      const liveAdsCount = 120 + (hashSeed * 7) % 240
-      const stoppedCount = (hashSeed * 3) % 30
-      const newBrand: TrackedBrand = {
-        ...b,
-        id: seed,
-        addedAt: new Date().toISOString(),
-        liveAdsCount,
-        stoppedCount,
-      }
-      if (s.trackedBrands.some((x) => x.name.toLowerCase() === b.name.toLowerCase())) return s
-      return { ...s, trackedBrands: [...s.trackedBrands, newBrand] }
-    })
+  /** 返回新建的品牌；重名时返回 null（调用方据此决定是否启动采集） */
+  const addBrand = useCallback((b: Omit<TrackedBrand, "id" | "addedAt" | "liveAdsCount" | "stoppedCount">): TrackedBrand | null => {
+    const prev = read()
+    if (prev.trackedBrands.some((x) => x.name.toLowerCase() === b.name.toLowerCase())) return null
+
+    const seed = b.name.toLowerCase().replace(/\s+/g, "_") + "_" + Date.now().toString(36)
+    const hashSeed = b.name.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0)
+    const newBrand: TrackedBrand = {
+      ...b,
+      id: seed,
+      addedAt: new Date().toISOString(),
+      liveAdsCount: 120 + (hashSeed * 7) % 240,
+      stoppedCount: (hashSeed * 3) % 30,
+    }
+    set((s) => ({ ...s, trackedBrands: [...s.trackedBrands, newBrand] }))
+    return newBrand
   }, [])
 
   const removeBrand = useCallback((id: string) => {

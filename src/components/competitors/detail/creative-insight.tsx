@@ -13,7 +13,9 @@ const FACETS = [
   { key: "palette", label: "配色" },
 ] as const
 
-export function CreativeInsightCard({ insight, types }: { insight: CreativeInsight; types: CreativeType[] }) {
+export function CreativeInsightCard({
+  insight, types, sampleNote,
+}: { insight: CreativeInsight; types: CreativeType[]; sampleNote?: string }) {
   const maxPct = Math.max(...types.map((t) => t.pct), 1)
   return (
     <div className="h-full rounded-2xl border border-[var(--line)] bg-white p-5 flex flex-col transition-colors hover:border-[var(--line-strong)]">
@@ -24,6 +26,13 @@ export function CreativeInsightCard({ insight, types }: { insight: CreativeInsig
           AI 基于 Top 素材浓缩分析
         </span>
       </div>
+
+      {/* 采集中:说明当前结论基于部分样本,而不是隐藏整块 */}
+      {sampleNote && (
+        <p className="mt-2.5 rounded-lg bg-[var(--soft-2)] border border-[var(--line)] px-2.5 py-1.5 text-[11px] text-[var(--muted)]">
+          {sampleNote}
+        </p>
+      )}
 
       {/* Hook → Middle → Ending 三段公式 */}
       <div className="mt-4 flex items-stretch gap-1.5">

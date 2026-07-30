@@ -118,6 +118,16 @@ body {
   animation: cs-confetti var(--cf-d, 1.8s) cubic-bezier(0.25, 0.4, 0.45, 1) var(--cf-delay, 0s) both;
 }
 
+/* 品牌采集进度条上横向掠过的微光（collection-pill / collection-strip）
+   注意：dh-scan 动的是 top（竖向），进度条需要横向，故单开一个 */
+@keyframes cs-sweep {
+  0%   { transform: translateX(-120%); }
+  100% { transform: translateX(420%); }
+}
+.cs-sweep {
+  animation: cs-sweep 1.6s linear infinite;
+}
+
 @keyframes rainbow {
   0%   { background-position: 0% 50%; }
   100% { background-position: 200% 50%; }

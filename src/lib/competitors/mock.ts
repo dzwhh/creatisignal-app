@@ -52,7 +52,7 @@ export const LIST_STATS = [
   { key: "brands",  label: "活跃投放品牌",  value: "5",     delta: 0,     hint: "近 7 天有上新" },
 ] as const
 
-export const BRAND_LIMIT = 5
+export const BRAND_LIMIT = 8
 
 // ─── 品牌数据 ────────────────────────────────────────────────────────────────
 
@@ -127,8 +127,7 @@ export function formatScore(n: number): string {
 
 // ─── 详情页数据(seed 稳定生成) ─────────────────────────────────────────────
 
-function hashSeed(s: string): number {
-  let h = 0
+function hashSeed(s: string): number {  let h = 0
   for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0
   return h
 }
@@ -176,7 +175,13 @@ const DEFAULT_INSIGHT: CreativeInsight = {
 export function getBrandDetail(id: string): BrandDetailData | null {
   const profile = BRANDS.find((b) => b.id === id)
   if (!profile) return null
+  return buildDetail(profile)
+}
+
+/** 从任意 profile 推导详情数据 —— session 新增品牌也能走这条路 */
+export function buildDetail(profile: BrandProfile): BrandDetailData {
   const seed = hashSeed(profile.id)
+  const safeCount = Math.max(profile.materialCount, 1)
 
   const video = 60 + (seed % 30)
   const image = Math.max(1, (seed % 9))
@@ -185,15 +190,15 @@ export function getBrandDetail(id: string): BrandDetailData | null {
 
   const countries = Array.from({ length: 10 }, (_, i) => ({
     name: COUNTRY_POOL[(seed + i * 5) % COUNTRY_POOL.length],
-    value: Math.max(2, Math.round(profile.materialCount * (0.62 / (i + 1)))),
+    value: Math.max(2, Math.round(safeCount * (0.62 / (i + 1)))),
   }))
 
   const typeLabels = [profile.category, "口播测评", "场景演示", "开箱展示"]
-  const counts = typeLabels.map((_, i) => Math.max(1, Math.round(profile.materialCount * [0.284, 0.18, 0.12, 0.05][i])))
+  const counts = typeLabels.map((_, i) => Math.max(1, Math.round(safeCount * [0.284, 0.18, 0.12, 0.05][i])))
   const creativeTypes = typeLabels.map((label, i) => ({
     label,
     count: counts[i],
-    pct: Math.round((counts[i] / profile.materialCount) * 1000) / 10,
+    pct: Math.round((counts[i] / safeCount) * 1000) / 10,
   }))
 
   return {
@@ -206,7 +211,7 @@ export function getBrandDetail(id: string): BrandDetailData | null {
     recent30: {
       newMaterials: profile.weeklyTrend.reduce((a, b) => a + b, 0) % 9 || 2,
       recentEngagement: 4 + (seed % 40),
-      avgScore: profile.active ? Math.round(profile.engagementScore / Math.max(profile.materialCount, 1)) : 0,
+      avgScore: profile.active ? Math.round(profile.engagementScore / safeCount) : 0,
     },
     formatDist: [
       { label: "视频", value: video, color: "#84cc16" },
@@ -216,7 +221,7 @@ export function getBrandDetail(id: string): BrandDetailData | null {
     ],
     dailyTimeline: genTimeline(seed),
     countryTop: countries,
-    creativeInsight: INSIGHTS[id] ?? DEFAULT_INSIGHT,
+    creativeInsight: INSIGHTS[profile.id] ?? DEFAULT_INSIGHT,
     creativeTypes,
   }
 }

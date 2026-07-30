@@ -5,7 +5,9 @@ import { Plus, Search } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useDiscoveryState } from "@/lib/discovery/state"
 import { AddBrandDialog } from "@/components/assistant/discovery/add-brand-dialog"
-import { BRANDS, BRAND_LIMIT } from "@/lib/competitors/mock"
+import { BRAND_LIMIT } from "@/lib/competitors/mock"
+import { useTrackedBrands } from "@/lib/competitors/tracked"
+import { startCollection, useCollectionMap } from "@/lib/competitors/collection"
 import { BrandStatCards } from "./brand-stat-cards"
 import { BrandCard } from "./brand-card"
 
@@ -21,22 +23,41 @@ export function BrandsOverview() {
   const [sortBy, setSortBy] = useState<SortKey>("score")
   const [search, setSearch] = useState("")
   const [addOpen, setAddOpen] = useState(false)
+  const [justAddedId, setJustAddedId] = useState<string | null>(null)
   const { addBrand } = useDiscoveryState()
+  const allBrands = useTrackedBrands()
+  const colMap = useCollectionMap()
 
-  const trackedCount = BRANDS.length
+  const trackedCount = allBrands.length
   const atLimit = trackedCount >= BRAND_LIMIT
+  const collectingCount = allBrands.filter((b) => {
+    const p = colMap[b.id]?.phase
+    return p !== undefined && p !== "live"
+  }).length
 
   const brands = useMemo(() => {
     const q = search.trim().toLowerCase()
     const filtered = q
-      ? BRANDS.filter((b) => b.name.toLowerCase().includes(q) || b.category.includes(q))
-      : BRANDS
+      ? allBrands.filter((b) => b.name.toLowerCase().includes(q) || b.category.includes(q))
+      : allBrands
     return [...filtered].sort((a, b) => {
+      // 采集中的品牌置顶 —— 用户刚添加的品牌不用滚动就能看到
+      const aCollecting = colMap[a.id] && colMap[a.id].phase !== "live" ? 1 : 0
+      const bCollecting = colMap[b.id] && colMap[b.id].phase !== "live" ? 1 : 0
+      if (aCollecting !== bCollecting) return bCollecting - aCollecting
       if (sortBy === "score") return b.engagementScore - a.engagementScore
       if (sortBy === "materials") return b.materialCount - a.materialCount
       return b.lastAdDate.localeCompare(a.lastAdDate)
     })
-  }, [search, sortBy])
+  }, [search, sortBy, allBrands, colMap])
+
+  function handleAdd(b: { name: string; homepage: string; avatar?: string }) {
+    const created = addBrand(b)
+    if (created) {
+      startCollection(created.id)
+      setJustAddedId(created.id)
+    }
+  }
 
   return (
     <>
@@ -44,7 +65,15 @@ export function BrandsOverview() {
       <div className="flex items-start justify-between gap-4 mb-6">
         <div>
           <h1 className="text-[24px] font-[850] leading-snug text-[var(--text)]">品牌追踪</h1>
-          <p className="mt-1.5 text-[14px] text-[var(--muted)]">追踪竞品品牌的素材动态、投放节奏与创意打法</p>
+          <p className="mt-1.5 text-[14px] text-[var(--muted)]">
+            追踪竞品品牌的素材动态、投放节奏与创意打法
+            {collectingCount > 0 && (
+              <span className="ml-2 inline-flex items-center gap-1.5 text-[13px] font-bold text-[#5a7821]">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#84cc16] animate-pulse" />
+                {collectingCount} 个采集中
+              </span>
+            )}
+          </p>
         </div>
         <div className="flex items-center gap-2.5 shrink-0">
           <span className="text-[12px] font-bold text-[var(--muted-2)] tabular-nums">
@@ -110,7 +139,7 @@ export function BrandsOverview() {
       {brands.length > 0 ? (
         <div className="grid grid-cols-3 gap-4">
           {brands.map((b) => (
-            <BrandCard key={b.id} brand={b} />
+            <BrandCard key={b.id} brand={b} isNew={b.id === justAddedId} />
           ))}
         </div>
       ) : (
@@ -119,7 +148,7 @@ export function BrandsOverview() {
         </div>
       )}
 
-      <AddBrandDialog open={addOpen} onOpenChange={setAddOpen} onAdd={(b) => addBrand(b)} />
+      <AddBrandDialog open={addOpen} onOpenChange={setAddOpen} onAdd={handleAdd} />
     </>
   )
 }

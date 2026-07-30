@@ -62,7 +62,7 @@ export function AddBrandDialog({ open, onOpenChange, onAdd }: Props) {
                 添加追踪品牌
               </Dialog.Title>
               <Dialog.Description className="text-[12px] text-[var(--muted)] mt-1 leading-relaxed">
-                添加竞品品牌，系统每日抓取其正在投放的素材，按 live ads 数排序。
+                添加后立即开始采集：先抓取在投素材，再回溯近 180 天历史，完成后每小时增量更新。
               </Dialog.Description>
             </div>
             <Dialog.Close className="w-7 h-7 rounded-full flex items-center justify-center text-[var(--muted)] hover:bg-[var(--soft)] cursor-pointer">
