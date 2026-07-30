@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { ChevronLeft, CalendarDays, Clock3 } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { PLATFORM_META, BRAND_LIMIT, BRANDS, formatScore, type BrandDetailData } from "@/lib/competitors/mock"
+import { BRAND_LIMIT, BRANDS, formatScore, type BrandDetailData } from "@/lib/competitors/mock"
 import { useCollection, formatEta, CADENCE_SHORT } from "@/lib/competitors/collection"
 import { scaleDetail } from "@/lib/competitors/tracked"
 import { Sparkline } from "./charts"
@@ -15,6 +15,7 @@ import { FormatDonut } from "./detail/format-donut"
 import { CountryBars } from "./detail/country-bars"
 import { CreativeInsightCard } from "./detail/creative-insight"
 import { TopMaterials } from "./detail/top-materials"
+import { MaterialLibrary } from "./detail/material-library"
 
 export function BrandDetail({ detail: raw }: { detail: BrandDetailData }) {
   const col = useCollection(raw.profile.id)
@@ -63,14 +64,6 @@ export function BrandDetail({ detail: raw }: { detail: BrandDetailData }) {
                 <span className="h-[19px] px-2 rounded-full bg-white/[0.08] text-[10.5px] font-bold text-white/60 flex items-center">
                   {profile.category}
                 </span>
-                {profile.platforms.map((p) => (
-                  <span
-                    key={p}
-                    className="h-[19px] px-2 rounded-full border border-white/[0.14] text-[10.5px] font-bold text-white/60 flex items-center"
-                  >
-                    {PLATFORM_META[p].label}
-                  </span>
-                ))}
                 <CollectionPill col={col} active={profile.active} variant="dark" />
                 {collecting && (
                   <span className="h-[19px] px-2 rounded-full text-[10.5px] font-extrabold flex items-center gap-1 bg-[var(--lime)] text-[#20251a]">
@@ -155,8 +148,9 @@ export function BrandDetail({ detail: raw }: { detail: BrandDetailData }) {
         )}
       </section>
 
-      {/* 采集实况:仅采集中出现,转 live 后整个消失,页面还给图表 */}
-      {collecting && <CollectionFeed col={col} />}
+      {/* 追踪实况:两个 phase 都在。采集中默认展开;稳态默认折叠,展开可看每轮更新过程 */}
+      <CollectionFeed col={col} />
+
 
       {/* ─── 图表 Bento:左 8 列(叙事)+ 右 4 列(结构) ──────────────── */}
       <section className="grid grid-cols-12 gap-4 items-stretch">
@@ -185,6 +179,9 @@ export function BrandDetail({ detail: raw }: { detail: BrandDetailData }) {
       </section>
 
       <TopMaterials brandId={profile.id} collecting={collecting} />
+
+      {/* 追踪到的其余素材 —— 格式 / 平台 / 状态 三维筛选 */}
+      <MaterialLibrary brandId={profile.id} collecting={collecting} />
     </div>
   )
 }

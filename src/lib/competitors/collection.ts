@@ -15,6 +15,11 @@ export type CollectionEvent = {
   kind: CollectionEventKind
   text: string
   count?: number            // 本次入库素材数
+  /**
+   * live 稳态下所属的更新轮次：0 = 最近一次，1 = 上一次…
+   * 用整数而非时间字符串，避免 SSR/CSR hydration mismatch。
+   */
+  cycleIdx?: number
 }
 
 export type CollectionState = {
@@ -42,7 +47,25 @@ export const COLLECTION_PLAN = {
   refreshIntervalHours: 1,   // 对外：完成后每小时增量更新
   demoDurationMs: 150_000,   // 演示：150 秒跑完全程
   tickMs: 1_200,
-  feedCap: 14,
+  feedCap: 24,               // 要装下 live 的多轮更新，比采集期更宽
+  /** 演示：live 稳态每 40 秒模拟一次增量更新（对外口径仍是每小时） */
+  liveRefreshMs: 40_000,
+  /** live 时保留最近几轮更新 */
+  liveCyclesKept: 4,
+}
+
+/** 一轮增量更新的过程步骤 —— live 状态下也能看到「每一次更新的过程」 */
+function refreshCycle(seed: number, cycleIdx: number, atMs: number, accounts: number): CollectionEvent[] {
+  const k = (n: number) => (seed + cycleIdx * 13 + n) % 100
+  const found = 3 + (k(1) % 14)
+  const tag = `c${cycleIdx}-${atMs}`
+  return [
+    { id: `${tag}-4`, atMs: atMs,          kind: "refresh", text: "增量更新完成",                        count: found, cycleIdx },
+    { id: `${tag}-3`, atMs: atMs - 1_200,  kind: "parse",   text: "解析创意结构（Hook / 场景 / CTA）",                  cycleIdx },
+    { id: `${tag}-2`, atMs: atMs - 2_400,  kind: "dedupe",  text: "去重与指纹比对完成",                                cycleIdx },
+    { id: `${tag}-1`, atMs: atMs - 3_600,  kind: "page",    text: `发现新增在投素材 ${found} 条`,                       cycleIdx },
+    { id: `${tag}-0`, atMs: atMs - 4_800,  kind: "connect", text: `检查在投素材 · 命中 ${accounts} 个投放账户`,          cycleIdx },
+  ]
 }
 
 export const PHASE_META: Record<CollectionPhase | "paused", {
@@ -132,7 +155,7 @@ function eventAt(seed: number, phase: CollectionPhase, step: number, days: numbe
 
 // ─── Store（module-level 单例；扛住客户端导航） ──────────────────────────────
 
-type Runtime = { startedAtMs: number | null }
+type Runtime = { startedAtMs: number | null; lastLiveRefreshMs?: number }
 
 let cached: Record<string, CollectionState> | null = null
 const runtimes = new Map<string, Runtime>()
@@ -142,6 +165,12 @@ let ticker: ReturnType<typeof setInterval> | null = null
 function seedLive(brandId: string, lastSyncMinAgo: number): CollectionState {
   const seed = hashSeed(brandId)
   const items = 400 + (seed % 1600)
+  const accounts = 3 + (seed % 6)
+  // 预置最近 3 轮更新的完整过程，进页面就能看到「每次更新做了什么」
+  const feed: CollectionEvent[] = []
+  for (let c = 0; c < 3; c++) {
+    feed.push(...refreshCycle(seed, c, -c * 6_000, accounts))
+  }
   return {
     brandId,
     phase: "live",
@@ -150,12 +179,30 @@ function seedLive(brandId: string, lastSyncMinAgo: number): CollectionState {
     daysTarget: COLLECTION_PLAN.daysTarget,
     itemsCollected: items,
     itemsEstimated: items,
-    accountsFound: 3 + (seed % 6),
+    accountsFound: accounts,
     etaMinutes: 0,
     elapsedMinutes: COLLECTION_PLAN.nominalTotalMin,
     lastSyncMinAgo,
     nextSyncMinutes: Math.max(1, 60 - lastSyncMinAgo),
-    feed: [{ id: "refresh-0", atMs: 0, kind: "refresh", text: "增量更新完成", count: 4 + (seed % 12) }],
+    feed: feed.slice(0, COLLECTION_PLAN.feedCap),
+  }
+}
+
+/** 追加一轮新的增量更新：已有事件轮次 +1，新轮次插到最前 */
+function appendRefresh(prev: CollectionState, nowRelMs: number): CollectionState {
+  const seed = hashSeed(prev.brandId)
+  const aged = prev.feed
+    .map((e) => ({ ...e, cycleIdx: (e.cycleIdx ?? 0) + 1 }))
+    .filter((e) => (e.cycleIdx ?? 0) < COLLECTION_PLAN.liveCyclesKept)
+  const fresh = refreshCycle(seed, 0, nowRelMs, prev.accountsFound)
+  const added = fresh[0].count ?? 0
+  return {
+    ...prev,
+    itemsCollected: prev.itemsCollected + added,
+    itemsEstimated: prev.itemsEstimated + added,
+    lastSyncMinAgo: 0,
+    nextSyncMinutes: 60,
+    feed: [...fresh, ...aged].slice(0, COLLECTION_PLAN.feedCap),
   }
 }
 
@@ -212,7 +259,11 @@ function emit() { listeners.forEach((l) => l()) }
 
 function subscribe(cb: () => void) {
   listeners.add(cb)
-  return () => { listeners.delete(cb) }
+  ensureTicker()
+  return () => {
+    listeners.delete(cb)
+    maybeStopTicker()
+  }
 }
 
 // ─── 推进逻辑 ────────────────────────────────────────────────────────────────
@@ -274,23 +325,43 @@ function tick() {
 
   for (const [id, st] of Object.entries(states)) {
     const rt = runtimes.get(id)
-    if (!rt?.startedAtMs || st.phase === "live") continue
+
+    if (st.phase === "live") {
+      // 稳态：按 liveRefreshMs 节奏模拟增量更新，让「每次更新的过程」持续可见
+      const last = rt?.lastLiveRefreshMs
+      if (last === undefined) {
+        runtimes.set(id, { ...(rt ?? { startedAtMs: null }), lastLiveRefreshMs: now })
+        continue
+      }
+      if (now - last >= COLLECTION_PLAN.liveRefreshMs) {
+        next[id] = appendRefresh(st, now)
+        runtimes.set(id, { ...(rt ?? { startedAtMs: null }), lastLiveRefreshMs: now })
+        changed = true
+      }
+      continue
+    }
+
+    if (!rt?.startedAtMs) continue
     const advanced = advance(st, now - rt.startedAtMs)
-    if (advanced !== st) { next[id] = advanced; changed = true }
+    if (advanced !== st) {
+      next[id] = advanced
+      // 刚转 live 的品牌，把稳态计时器对齐到现在
+      if (advanced.phase === "live") runtimes.set(id, { ...rt, lastLiveRefreshMs: now })
+      changed = true
+    }
   }
 
   if (changed) { cached = next; emit() }
-
-  // 全部到达 live 后停表
-  const anyRunning = Object.entries(next).some(
-    ([id, s]) => s.phase !== "live" && runtimes.get(id)?.startedAtMs
-  )
-  if (!anyRunning && ticker) { clearInterval(ticker); ticker = null }
 }
 
+/** 只在有订阅者时走表；最后一个订阅者离开即停 */
 function ensureTicker() {
   if (ticker || typeof window === "undefined") return
   ticker = setInterval(tick, COLLECTION_PLAN.tickMs)
+}
+
+function maybeStopTicker() {
+  if (ticker && listeners.size === 0) { clearInterval(ticker); ticker = null }
 }
 
 /** 为新添加的品牌启动采集 */
