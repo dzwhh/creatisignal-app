@@ -1,8 +1,9 @@
 "use client"
 
-import { useCallback, useRef, useState } from "react"
+import { useState } from "react"
 import * as Dialog from "@radix-ui/react-dialog"
 import { Clapperboard, Info, Sparkles, X } from "lucide-react"
+import { CreditGauge } from "@/components/credits/credit-gauge"
 
 // ─── 购买加量包积分：短剧等高级生成能力的付费弹窗 ────────────────────────────
 // 定价：1000 积分 = ¥129（¥0.129/积分）；短剧默认 15 秒消耗 210 积分
@@ -15,99 +16,6 @@ const DRAMA_15S_COST = 210
 
 function fmt(n: number) {
   return n.toLocaleString("en-US")
-}
-
-// ─── 半圆积分表盘（可拖动）──────────────────────────────────────────────────
-
-const CX = 160
-const CY = 150
-const R = 118
-
-function pt(angle: number) {
-  const rad = (angle * Math.PI) / 180
-  return { x: CX + R * Math.cos(rad), y: CY - R * Math.sin(rad) }
-}
-
-function arcPath(from: number, to: number) {
-  const a = pt(from)
-  const b = pt(to)
-  return `M ${a.x.toFixed(2)} ${a.y.toFixed(2)} A ${R} ${R} 0 0 1 ${b.x.toFixed(2)} ${b.y.toFixed(2)}`
-}
-
-function CreditGauge({ value, onChange }: { value: number; onChange: (v: number) => void }) {
-  const svgRef = useRef<SVGSVGElement>(null)
-  const draggingRef = useRef(false)
-
-  const applyPointer = useCallback(
-    (clientX: number, clientY: number) => {
-      const svg = svgRef.current
-      if (!svg) return
-      const rect = svg.getBoundingClientRect()
-      const scale = 320 / rect.width
-      const x = (clientX - rect.left) * scale
-      const y = (clientY - rect.top) * scale
-      let angle = (Math.atan2(CY - y, x - CX) * 180) / Math.PI
-      if (angle < 0) angle = angle < -90 ? 180 : 0
-      const t = (180 - angle) / 180
-      const raw = MIN_CREDITS + t * (MAX_CREDITS - MIN_CREDITS)
-      onChange(Math.min(MAX_CREDITS, Math.max(MIN_CREDITS, Math.round(raw / STEP) * STEP)))
-    },
-    [onChange]
-  )
-
-  const t = (value - MIN_CREDITS) / (MAX_CREDITS - MIN_CREDITS)
-  const knobAngle = 180 - t * 180
-  // 最低档也保留一小段进度，视觉上可感知起点
-  const progressEnd = 180 - Math.max(0.035, t) * 180
-  const knob = pt(knobAngle)
-
-  return (
-    <div className="relative w-[320px] select-none">
-      <svg
-        ref={svgRef}
-        viewBox="0 0 320 170"
-        className="w-full touch-none cursor-pointer"
-        onPointerDown={(e) => {
-          draggingRef.current = true
-          e.currentTarget.setPointerCapture(e.pointerId)
-          applyPointer(e.clientX, e.clientY)
-        }}
-        onPointerMove={(e) => {
-          if (draggingRef.current) applyPointer(e.clientX, e.clientY)
-        }}
-        onPointerUp={() => {
-          draggingRef.current = false
-        }}
-        onPointerCancel={() => {
-          draggingRef.current = false
-        }}
-      >
-        <path d={arcPath(180, 0)} stroke="#272b20" strokeWidth={14} strokeLinecap="round" fill="none" />
-        {Array.from({ length: 9 }, (_, i) => {
-          const p = pt(162 - i * 18)
-          return <circle key={i} cx={p.x} cy={p.y} r={2.5} fill="#454a3a" />
-        })}
-        <path d={arcPath(180, progressEnd)} stroke="var(--lime)" strokeWidth={14} strokeLinecap="round" fill="none" />
-        <g transform={`translate(${knob.x} ${knob.y}) rotate(${-knobAngle})`}>
-          <rect x={-14} y={-9} width={28} height={18} rx={9} fill="#ffffff" />
-        </g>
-      </svg>
-
-      {/* 中心数值 */}
-      <div className="absolute inset-x-0 top-[72px] text-center pointer-events-none">
-        <p className="text-[42px] leading-none font-extrabold text-[var(--lime)] tabular-nums">{fmt(value)}</p>
-        <p className="mt-1.5 text-[12px] font-bold text-[#8b8e85]">积分</p>
-      </div>
-
-      {/* 两端刻度 */}
-      <span className="absolute left-[20px] bottom-0 text-[11.5px] font-semibold text-[#8b8e85] tabular-nums">
-        {fmt(MIN_CREDITS)}
-      </span>
-      <span className="absolute right-[8px] bottom-0 text-[11.5px] font-semibold text-[#8b8e85] tabular-nums">
-        {fmt(MAX_CREDITS)}
-      </span>
-    </div>
-  )
 }
 
 // ─── 主组件 ──────────────────────────────────────────────────────────────────
@@ -147,7 +55,7 @@ export function CreditPurchaseModal({ open, onOpenChange, onPurchased }: {
           {/* 主体：左表盘 + 右价格权益 */}
           <div className="px-7 py-6 flex items-center gap-8">
             <div className="flex-1 flex flex-col items-center gap-3">
-              <CreditGauge value={credits} onChange={setCredits} />
+              <CreditGauge value={credits} onChange={setCredits} min={MIN_CREDITS} max={MAX_CREDITS} step={STEP} />
               <span className="inline-flex items-center gap-1.5 h-[28px] px-3 rounded-full bg-[#1a2010] border border-[#c9ff29]/35 text-[var(--lime)] text-[12px] font-bold">
                 <Sparkles size={11} strokeWidth={2.4} />
                 ¥{PRICE_PER_CREDIT}/积分

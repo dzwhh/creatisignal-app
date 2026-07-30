@@ -1,196 +1,146 @@
 "use client"
 
 import { useState } from "react"
-import { Calendar, Check, Coins, Gift, ScrollText, ShoppingBag, Sparkles, TrendingUp } from "lucide-react"
-import { Topbar } from "@/components/layout/topbar"
-import { SettingsShell } from "@/components/settings/settings-shell"
-import { SettingsCard } from "@/components/settings/settings-card"
+import Link from "next/link"
+import { Sparkles, Wallet, Info } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { Topbar } from "@/components/layout/topbar"
+import {
+  CREDIT_BALANCE,
+  CREDIT_LEDGER,
+  CREDIT_TOTAL,
+  fmt,
+  type CreditTx,
+} from "@/lib/credits/data"
 
-type DailyTask = {
-  id: string
-  label: string
-  reward: number
-  done: boolean
-}
+type LedgerFilter = "all" | "spend" | "earn"
 
-const INITIAL_DAILY: DailyTask[] = [
-  { id: "sign", label: "每日签到",          reward: 20, done: true },
-  { id: "task", label: "完成 1 个 AI 任务", reward: 30, done: true },
-  { id: "invite", label: "邀请 1 位新好友",  reward: 100, done: false },
-  { id: "replicate", label: "完成首次爆款复刻", reward: 50, done: false },
-]
-
-type ShopItem = {
-  id: string
-  title: string
-  desc: string
-  cost: number
-  badge?: string
-}
-
-const SHOP: ShopItem[] = [
-  { id: "pro_trial",  title: "Pro 1 天试用",   desc: "解锁全部高级模型 24h", cost: 100, badge: "热门" },
-  { id: "tmpl_pro",   title: "高级模板 ×1",     desc: "解锁 1 个 Pro 模板",  cost: 50 },
-  { id: "lottery",    title: "抽奖券 ×1",       desc: "周末大转盘抽奖",      cost: 20 },
-  { id: "model_seed", title: "Seedance Pro 单次", desc: "高级视频模型试用",   cost: 80 },
-  { id: "rush",       title: "优先生成队列",     desc: "下次任务 ≤ 30s 出结果", cost: 60 },
-  { id: "boost",      title: "今日 +50% 积分",   desc: "今日所有任务奖励 ×1.5", cost: 40, badge: "限时" },
-]
-
-type LedgerEntry = {
-  ts: string
-  type: "earn" | "spend"
-  source: string
-  delta: number
-}
-
-const LEDGER: LedgerEntry[] = [
-  { ts: "今天 10:24",   type: "earn",  source: "完成 AI 任务", delta: 30  },
-  { ts: "今天 09:18",   type: "earn",  source: "每日签到",     delta: 20  },
-  { ts: "昨天 22:01",   type: "spend", source: "兑换 高级模板", delta: -50 },
-  { ts: "昨天 17:42",   type: "spend", source: "Seedance Pro 单次", delta: -80 },
-  { ts: "昨天 12:09",   type: "earn",  source: "邀请好友 jane.t",  delta: 100 },
-  { ts: "06-17 19:30",  type: "earn",  source: "完成 AI 任务", delta: 30  },
-  { ts: "06-17 11:05",  type: "spend", source: "兑换 Pro 试用 1 天", delta: -100 },
-  { ts: "06-16 23:12",  type: "earn",  source: "活动奖励 月度任务",  delta: 200 },
-  { ts: "06-15 15:48",  type: "earn",  source: "完成 AI 任务", delta: 30  },
-  { ts: "06-15 09:00",  type: "earn",  source: "每日签到",     delta: 20  },
+const FILTERS: { id: LedgerFilter; label: string }[] = [
+  { id: "all",   label: "全部" },
+  { id: "spend", label: "消耗" },
+  { id: "earn",  label: "获得" },
 ]
 
 export default function CreditsPage() {
-  const [daily, setDaily] = useState(INITIAL_DAILY)
-  const claimableCount = daily.filter((d) => d.done).length
+  const [filter, setFilter] = useState<LedgerFilter>("all")
+
+  const rows = CREDIT_LEDGER.filter((t: CreditTx) =>
+    filter === "all" ? true : filter === "spend" ? t.delta < 0 : t.delta > 0
+  )
 
   return (
     <>
       <Topbar title="积分" />
-      <SettingsShell title="积分" subtitle="完成日常任务赚积分，用积分解锁高级模型 / 模板。">
-        {/* 余额大卡 */}
-        <SettingsCard icon={Coins} title="当前余额">
-          <div className="flex items-end justify-between flex-wrap gap-3">
-            <div>
-              <p className="text-[42px] font-extrabold text-[var(--text)] leading-none tabular-nums">
-                12,480
-                <span className="text-[14px] text-[var(--muted-2)] font-bold ml-2">积分</span>
-              </p>
-              <p className="text-[11.5px] text-[var(--muted)] mt-2 flex items-center gap-1.5">
-                <TrendingUp size={11} className="text-[#16a34a]" />
-                上月 <span className="font-extrabold text-[#16a34a]">+1,240 (+11%)</span> · 等效约 <span className="font-extrabold text-[var(--text)]">$12.5</span>
-              </p>
-            </div>
-            <div className="rounded-xl bg-[var(--lime-soft)] border border-[#cdf066] px-4 py-3 flex items-center gap-2.5 text-[#3a4b1f]">
-              <Sparkles size={14} className="text-[#5a7821]" />
-              <div>
-                <p className="text-[11px] font-bold">本周可领</p>
-                <p className="text-[15px] font-extrabold leading-none mt-0.5">+{claimableCount * 50} 积分</p>
-              </div>
-            </div>
+      <main className="flex-1 overflow-y-auto">
+        <div className="w-full max-w-[960px] mx-auto px-8 py-7 pb-16">
+          {/* 页头 */}
+          <div className="mb-6">
+            <h1 className="text-[24px] font-[850] leading-snug text-[var(--text)] flex items-center gap-2">
+              积分
+              <Info size={14} strokeWidth={2} className="text-[var(--muted-2)]" />
+            </h1>
+            <p className="mt-1.5 text-[14px] text-[var(--muted)]">
+              查看积分余额、购买充值积分与最近的积分明细。
+            </p>
           </div>
-        </SettingsCard>
 
-        {/* 每日任务 */}
-        <SettingsCard icon={Calendar} title="每日任务" description="每日 0:00 重置，完成即可领取积分。">
-          <ul className="divide-y divide-[var(--line)]">
-            {daily.map((t) => (
-              <li key={t.id} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
+          {/* 积分余额 */}
+          <section className="rounded-2xl border border-[var(--line)] bg-white p-5 mb-5">
+            <div className="flex items-center justify-between gap-3 mb-6">
+              <h2 className="text-[14px] font-extrabold text-[var(--text)] flex items-center gap-2">
+                <Sparkles size={15} strokeWidth={2} className="text-[var(--muted)]" />
+                积分余额
+              </h2>
+              <Link
+                href="/settings/credits/purchase"
+                className="h-[34px] rounded-full bg-[var(--lime)] text-[#20251a] px-[18px] text-[13px] font-extrabold flex items-center gap-1.5 hover:opacity-90 transition-opacity cursor-pointer shrink-0"
+              >
+                <Sparkles size={13} strokeWidth={2.4} />
+                加量包
+              </Link>
+            </div>
+
+            {/* 剩余 = 赠送 + 充值 */}
+            <div className="flex items-center justify-center gap-8 pb-2">
+              <BalanceCol label="剩余积分" value={CREDIT_TOTAL} />
+              <Operator>=</Operator>
+              <BalanceCol label="赠送积分" value={CREDIT_BALANCE.gift} />
+              <Operator>+</Operator>
+              <BalanceCol label="充值积分" value={CREDIT_BALANCE.paid} />
+            </div>
+          </section>
+
+          {/* 积分流水 */}
+          <section className="rounded-2xl border border-[var(--line)] bg-white p-5">
+            <h2 className="text-[14px] font-extrabold text-[var(--text)] flex items-center gap-2 mb-4">
+              <Wallet size={15} strokeWidth={2} className="text-[var(--muted)]" />
+              积分流水
+            </h2>
+
+            {/* 筛选 */}
+            <div className="flex items-center gap-1 rounded-lg bg-[var(--soft)] p-1 mb-1">
+              {FILTERS.map((f) => (
                 <button
+                  key={f.id}
                   type="button"
-                  onClick={() => setDaily((prev) => prev.map((x) => x.id === t.id ? { ...x, done: !x.done } : x))}
+                  onClick={() => setFilter(f.id)}
+                  data-state={filter === f.id ? "active" : "inactive"}
                   className={cn(
-                    "w-5 h-5 rounded-md shrink-0 flex items-center justify-center cursor-pointer transition-colors",
-                    t.done ? "bg-[var(--text)] text-white" : "border border-[var(--line-strong)] bg-white hover:border-[var(--text)]"
+                    "h-8 px-4 rounded-md text-[13px] font-bold transition cursor-pointer",
+                    filter === f.id
+                      ? "bg-white text-[var(--text)] shadow-[0_1px_2px_rgba(9,9,11,0.08)]"
+                      : "text-[var(--muted)] hover:text-[var(--text)]"
                   )}
-                  aria-label="切换完成状态"
                 >
-                  {t.done && <Check size={12} strokeWidth={3} />}
+                  {f.label}
                 </button>
-                <p className={cn("flex-1 text-[12.5px] font-bold", t.done ? "text-[var(--muted)] line-through" : "text-[var(--text)]")}>
-                  {t.label}
-                </p>
-                <span className={cn(
-                  "inline-flex items-center gap-1 h-5 px-1.5 rounded-md text-[10.5px] font-extrabold",
-                  t.done ? "bg-[#dcfce7] text-[#15803d]" : "bg-[var(--soft)] text-[var(--muted)]"
-                )}>
-                  +{t.reward} 积分
-                </span>
-              </li>
-            ))}
-          </ul>
-        </SettingsCard>
+              ))}
+            </div>
 
-        {/* 兑换商城 */}
-        <SettingsCard icon={ShoppingBag} title="兑换商城" description="用积分兑换模板、模型与权益。">
-          <div className="grid grid-cols-3 gap-3">
-            {SHOP.map((s) => (
-              <article key={s.id} className="rounded-xl border border-[var(--line)] bg-white p-3 flex flex-col gap-2 relative">
-                {s.badge && (
-                  <span className="absolute -top-2 left-3 inline-flex h-5 px-1.5 rounded-md bg-[#fff7ed] text-[#9a3412] text-[10px] font-extrabold border border-[#fed7aa]">
-                    {s.badge}
-                  </span>
-                )}
-                <div className="w-9 h-9 rounded-lg bg-[var(--lime-soft)] text-[#5a7821] flex items-center justify-center">
-                  <Gift size={14} strokeWidth={2.4} />
-                </div>
-                <div className="flex-1">
-                  <p className="text-[12.5px] font-extrabold text-[var(--text)] leading-tight">{s.title}</p>
-                  <p className="text-[10.5px] text-[var(--muted)] mt-1 leading-relaxed">{s.desc}</p>
-                </div>
-                <div className="flex items-center justify-between pt-1.5 border-t border-dashed border-[var(--line)]">
-                  <span className="text-[11.5px] font-extrabold text-[var(--text)] flex items-center gap-1">
-                    <Coins size={11} className="text-[#facc15]" />
-                    {s.cost}
-                  </span>
-                  <button
-                    type="button"
-                    className="h-7 px-2.5 rounded-md bg-[#18181b] text-white text-[11px] font-extrabold cursor-pointer hover:opacity-90"
-                  >
-                    兑换
-                  </button>
-                </div>
-              </article>
-            ))}
-          </div>
-        </SettingsCard>
-
-        {/* 明细 */}
-        <SettingsCard icon={ScrollText} title="积分明细" noPad>
-          <div className="overflow-x-auto">
-            <table className="w-full text-[12.5px]">
-              <thead>
-                <tr className="border-b border-[var(--line)] text-[var(--muted)] text-[11px] font-extrabold uppercase tracking-wide">
-                  <th className="text-left px-5 py-2.5">时间</th>
-                  <th className="text-left px-5 py-2.5">来源</th>
-                  <th className="text-center px-5 py-2.5">类型</th>
-                  <th className="text-right px-5 py-2.5">变动</th>
-                </tr>
-              </thead>
-              <tbody>
-                {LEDGER.map((l, i) => (
-                  <tr key={i} className={i > 0 ? "border-t border-[var(--line)]" : ""}>
-                    <td className="px-5 py-2.5 text-[var(--muted)]">{l.ts}</td>
-                    <td className="px-5 py-2.5 text-[var(--text)] font-bold">{l.source}</td>
-                    <td className="px-5 py-2.5 text-center">
-                      <span className={cn(
-                        "inline-flex items-center h-5 px-1.5 rounded-md text-[10.5px] font-extrabold",
-                        l.type === "earn" ? "bg-[#dcfce7] text-[#15803d]" : "bg-[#fee2e2] text-[#b91c1c]"
-                      )}>
-                        {l.type === "earn" ? "收入" : "支出"}
-                      </span>
-                    </td>
-                    <td className={cn(
-                      "px-5 py-2.5 text-right tabular-nums font-extrabold",
-                      l.delta > 0 ? "text-[#15803d]" : "text-[#b91c1c]"
-                    )}>
-                      {l.delta > 0 ? "+" : ""}{l.delta}
-                    </td>
-                  </tr>
+            {rows.length > 0 ? (
+              <ul className="divide-y divide-[var(--line)]">
+                {rows.map((t) => (
+                  <li key={t.id} className="flex items-center justify-between gap-4 py-4">
+                    <div className="min-w-0">
+                      <p className="text-[13.5px] font-bold text-[var(--text)]">{t.title}</p>
+                      <p className="mt-1 text-[12px] text-[var(--muted-2)] tabular-nums">{t.ts}</p>
+                    </div>
+                    <span
+                      className={cn(
+                        "text-[15px] font-extrabold tabular-nums shrink-0",
+                        t.delta > 0 ? "text-[#2563eb]" : "text-[var(--text)]"
+                      )}
+                    >
+                      {t.delta > 0 ? "+" : "-"}{fmt(Math.abs(t.delta))}
+                    </span>
+                  </li>
                 ))}
-              </tbody>
-            </table>
-          </div>
-        </SettingsCard>
-      </SettingsShell>
+              </ul>
+            ) : (
+              <div className="py-14 text-center text-[13px] text-[var(--muted-2)]">
+                暂无{filter === "spend" ? "消耗" : "获得"}记录
+              </div>
+            )}
+          </section>
+        </div>
+      </main>
     </>
+  )
+}
+
+function BalanceCol({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="text-center">
+      <p className="text-[12.5px] text-[var(--muted)]">{label}</p>
+      <p className="mt-2 text-[34px] font-[850] leading-none text-[var(--text)] tabular-nums tracking-tight">
+        {fmt(value)}
+      </p>
+    </div>
+  )
+}
+
+function Operator({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="text-[22px] font-bold text-[var(--muted-2)] pt-6 select-none">{children}</span>
   )
 }
