@@ -45,29 +45,36 @@ export type CreditPack = {
   from?: boolean
 }
 
-/** 最多 4 个。档位越高，单价越低、赠送比例越高（见 credits 单测口径） */
+/**
+ * 固定档加量包 —— 前 3 档，允许小额起步。
+ * 第 4 档是弹性档（见 FLEX），不在这个数组里。
+ * 口径：档位越高，单价越低、赠送比例越高。
+ */
 export const CREDIT_PACKS: CreditPack[] = [
-  { id: "starter", name: "尝鲜体验包", price:     69, base:     750, bonus:     15, desc: "适合首次体验与单条视频测试" },
-  { id: "basic",   name: "初级试验包", price:  4_999, base:  55_000, bonus:  1_850, desc: "适合小规模内容验证与素材测试" },
-  { id: "monthly", name: "月度制作包", price: 19_999, base: 225_000, bonus:  7_900, desc: "适合稳定月度创作与持续投放", recommended: true },
-  { id: "scale",   name: "稳定量产包", price: 49_999, base: 573_000, bonus: 22_500, desc: "适合团队批量生产与多项目交付" },
+  { id: "starter", name: "尝鲜包", price:  69, base:    750, bonus:  15, desc: "适合首次体验与单条视频测试" },
+  { id: "regular", name: "常用包", price: 299, base:  3_350, bonus: 110, desc: "适合日常创作与小批量素材产出", recommended: true },
+  { id: "pro",     name: "进阶包", price: 999, base: 11_300, bonus: 520, desc: "适合稳定产出与多项目并行" },
 ]
 
-// ─── 按需自选（弹性）─────────────────────────────────────────────────────────
+// ─── 第 4 档：弹性加量包（大额用户自选）──────────────────────────────────────
 
 export const FLEX = {
-  min: 200,
-  max: 10_000,
-  step: 100,
+  id: "flex",
+  name: "弹性包",
+  desc: "适合大额采购与团队规模化生产",
+  min: 20_000,
+  max: 100_000,
+  step: 5_000,
   /**
    * 阶梯单价，按「超出部分」累进计价（类似阶梯电价）。
    * 必须累进而非整单套用某一档：整单套用会在跨档处出现
-   * 「买 1,100 比买 1,000 更便宜」的总价倒挂。
+   * 「买得多反而总价更低」的倒挂。
+   * 全部低于固定档最优单价（¥0.0845），量大才有让利意义。
    */
   tiers: [
-    { upTo:  1_000, unit: 0.245 },
-    { upTo:  4_000, unit: 0.198 },
-    { upTo: 10_000, unit: 0.165 },
+    { upTo:  40_000, unit: 0.082 },
+    { upTo:  70_000, unit: 0.076 },
+    { upTo: 100_000, unit: 0.070 },
   ],
 }
 

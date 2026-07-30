@@ -25,9 +25,9 @@ export function Topbar({ title, showActions = true, bordered = true }: TopbarPro
       <div>{title}</div>
       {showActions && (
         <div className="flex items-center gap-2.5">
-          {/* 升级 —— 高亮入口 */}
+          {/* 升级 —— 高亮入口，直达加量包购买页 */}
           <Link
-            href="/settings/billing"
+            href="/settings/credits/purchase"
             className="h-[28px] px-2.5 rounded-full flex items-center gap-1.5 text-[12.5px] font-extrabold text-[#c2410c] bg-[#fff7ed] border border-[#fed7aa] hover:bg-[#ffedd5] transition-colors cursor-pointer"
           >
             <Crown size={13} strokeWidth={2.4} />

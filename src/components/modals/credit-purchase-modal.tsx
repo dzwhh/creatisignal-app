@@ -93,7 +93,7 @@ export function CreditPurchaseModal({ open, onOpenChange, onPurchased }: {
           {/* 底部说明 */}
           <div className="px-7 py-3.5 border-t border-white/10 flex items-center justify-center gap-1.5 text-[11.5px] text-[#8b8e85]">
             <Info size={12} className="shrink-0" />
-            加量积分永不过期，但需在订阅有效期内才能使用；加量包购买后不支持退款。
+            加量积分永久有效，随时可用；加量包购买后不支持退款。
           </div>
         </Dialog.Content>
       </Dialog.Portal>
