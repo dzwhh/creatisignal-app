@@ -48,12 +48,12 @@ export type CreditPack = {
 /**
  * 固定档加量包 —— 前 3 档，允许小额起步。
  * 第 4 档是弹性档（见 FLEX），不在这个数组里。
- * 口径：档位越高，单价越低、赠送比例越高。
+ * 数据来源：官方定价表（实付 / 赠送金额 / 购买积分 / 赠送积分）。
  */
 export const CREDIT_PACKS: CreditPack[] = [
-  { id: "starter", name: "尝鲜包", price:  69, base:    750, bonus:  15, desc: "适合首次体验与单条视频测试" },
-  { id: "regular", name: "常用包", price: 299, base:  3_350, bonus: 110, desc: "适合日常创作与小批量素材产出", recommended: true },
-  { id: "pro",     name: "进阶包", price: 999, base: 11_300, bonus: 520, desc: "适合稳定产出与多项目并行" },
+  { id: "starter", name: "尝鲜包", price:  69, base:    760, bonus:  20, desc: "适合首次体验与单条视频测试" },
+  { id: "regular", name: "常用包", price: 299, base:  3_310, bonus: 110, desc: "适合日常创作与小批量素材产出", recommended: true },
+  { id: "pro",     name: "进阶包", price: 999, base: 11_030, bonus: 550, desc: "适合稳定产出与多项目并行" },
 ]
 
 // ─── 第 4 档：弹性加量包（大额用户自选）──────────────────────────────────────
@@ -66,47 +66,35 @@ export const FLEX = {
   max: 100_000,
   step: 5_000,
   /**
-   * 阶梯单价，按「超出部分」累进计价（类似阶梯电价）。
-   * 必须累进而非整单套用某一档：整单套用会在跨档处出现
-   * 「买得多反而总价更低」的倒挂。
-   * 全部低于固定档最优单价（¥0.0845），量大才有让利意义。
+   * 官方定价表口径：**整单套用所在档的单价**（不是累进）。
+   * 单价 = 表中「每秒单价」÷ 10，对应 87 / 86 折两档。
+   *
+   * 整单套档在档位边界理论上可能出现「多买反而更便宜」，
+   * 但在本区间（2 万–10 万、步长 5,000）唯一的边界是 5 万，
+   * 跨档增量 5,000×0.08858 = ¥442.9 远大于折让损失
+   * 50,000×0.00103 = ¥51.5，故不会倒挂。若日后放宽上限
+   * 到 60 万以上，需改回累进计价。
    */
   tiers: [
-    { upTo:  40_000, unit: 0.082 },
-    { upTo:  70_000, unit: 0.076 },
-    { upTo: 100_000, unit: 0.070 },
+    { upTo:  50_000, unit: 0.08961 },   // 87 折
+    { upTo: 100_000, unit: 0.08858 },   // 86 折
   ],
 }
 
-/** 累进计价（未取整），供均价展示使用 */
-function flexPriceRaw(credits: number): number {
-  let total = 0
-  let prev = 0
-  for (const t of FLEX.tiers) {
-    if (credits <= prev) break
-    total += (Math.min(credits, t.upTo) - prev) * t.unit
-    prev = t.upTo
-  }
-  return total
-}
-
-/** 累进计价：各档只对落在本档区间内的部分计价 */
-export function flexPrice(credits: number): number {
-  return Math.round(flexPriceRaw(credits))
-}
-
-/**
- * 展示用的「平均单价」——累进计价下，边际单价会让用户算不平账。
- * 用未取整的总价计算：否则整元取整会让均价在同一档位内小幅回升
- * （如 300×0.245=¥73.5→¥74，均价显示 0.247 而非 0.245）。
- */
+/** 所在档的单价（整单套用，与官方定价表一致） */
 export function flexUnitPrice(credits: number): number {
-  return Math.round((flexPriceRaw(credits) / credits) * 1000) / 1000
+  const tier = FLEX.tiers.find((t) => credits <= t.upTo) ?? FLEX.tiers[FLEX.tiers.length - 1]
+  return tier.unit
 }
 
-/** 下一档的边际单价，用于「再买多少可享更低单价」提示 */
+/** 整单套档计价：积分 × 所在档单价 */
+export function flexPrice(credits: number): number {
+  return Math.round(credits * flexUnitPrice(credits))
+}
+
+/** 下一档，用于「再买多少可享更低单价」提示 */
 export function flexNextTier(credits: number): { upTo: number; unit: number } | undefined {
-  return FLEX.tiers.find((t) => credits < t.upTo)
+  return FLEX.tiers.find((t) => credits < t.upTo && t.unit < flexUnitPrice(credits))
 }
 
 // ─── 消耗换算（用于「约可生成」）─────────────────────────────────────────────

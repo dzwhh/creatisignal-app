@@ -16,8 +16,7 @@ import {
 
 const FLEX_TICKS = [
   { at:  20_000, label: "2万" },
-  { at:  40_000, label: "4万" },
-  { at:  70_000, label: "7万" },
+  { at:  50_000, label: "5万" },
   { at: 100_000, label: "10万" },
 ]
 
@@ -34,7 +33,8 @@ export default function PurchaseCreditsPage() {
   const amount = isFlex ? flexPrice(flexCredits) : pack!.price
   const credits = isFlex ? flexCredits : pack!.base + pack!.bonus
   const bonus = isFlex ? 0 : pack!.bonus
-  const unit = Math.round((amount / credits) * 1000) / 1000
+  // 单价小到 0.0886，必须保留 4 位小数，取 3 位会显示成 ¥0.089
+  const unit = (amount / credits).toFixed(4)
 
   return (
     <>
@@ -145,7 +145,7 @@ export default function PurchaseCreditsPage() {
                 点击后在下方拖动选择
               </p>
               <span className="mt-2 inline-flex h-[20px] px-2 rounded-full bg-[var(--lime-soft)] text-[#3f6212] text-[10.5px] font-extrabold items-center tabular-nums">
-                低至 ¥{FLEX.tiers[FLEX.tiers.length - 1].unit}/积分
+                低至 ¥{FLEX.tiers[FLEX.tiers.length - 1].unit.toFixed(4)}/积分
               </span>
 
               <p className="mt-3.5 text-[11.5px] text-[var(--muted-2)] leading-relaxed">{FLEX.desc}</p>
@@ -219,11 +219,7 @@ export default function PurchaseCreditsPage() {
 
               <ul className="space-y-2.5">
                 <ConfirmRow label="到账积分" value={fmt(credits)} />
-                {isFlex ? (
-                  <ConfirmRow label="平均单价" value={`¥${unit}/积分`} />
-                ) : (
-                  <ConfirmRow label="其中赠送" value={`+${fmt(bonus)}`} lime />
-                )}
+                {!isFlex && <ConfirmRow label="其中赠送" value={`+${fmt(bonus)}`} lime />}
                 <ConfirmRow label="有效期" value="永久有效" />
               </ul>
 

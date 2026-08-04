@@ -5,6 +5,7 @@ import Link from "next/link"
 import {
   ArrowLeft,
   ArrowRight,
+  Bot,
   Check,
   FileText,
   FlaskConical,
@@ -13,8 +14,10 @@ import {
   RefreshCw,
   ShieldCheck,
   Sparkles,
+  UserCog,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import {
   type GenerationOutcome,
   type GenerationStage,
@@ -110,6 +113,7 @@ function Inner({ material, productSkuFromQuery, sourceFromQuery, initialStep, pr
     try {
       const handoff = JSON.parse(raw) as Partial<ProductBrief>
       // 合并：用户配置过的字段覆盖默认 brief，其余保留默认
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- 一次性接收跨页 handoff，须挂载后读 sessionStorage，否则 SSR/hydration 不一致
       setProductBrief((prev) => ({ ...prev, ...handoff }))
     } catch {
       /* ignore malformed handoff */
@@ -344,13 +348,16 @@ function Inner({ material, productSkuFromQuery, sourceFromQuery, initialStep, pr
 
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-[var(--soft-2)]">
-      {/* 项目标题 + 时间（替代原 ContextBar） */}
+      {/* 项目标题 + 自动化模式 + 时间（替代原 ContextBar） */}
       <div className="px-8 py-2.5 bg-white flex items-center justify-between gap-3">
         <h2 className="text-[14px] font-extrabold text-[var(--text)] truncate">{resolvedTitle}</h2>
-        <span className="inline-flex items-center gap-1 text-[11.5px] font-semibold text-[var(--muted)] shrink-0">
-          <Clock3 size={11} strokeWidth={2.2} className="text-[var(--muted-2)]" />
-          刚刚更新
-        </span>
+        <div className="flex items-center gap-3 shrink-0">
+          <span className="inline-flex items-center gap-1 text-[11.5px] font-semibold text-[var(--muted)]">
+            <Clock3 size={11} strokeWidth={2.2} className="text-[var(--muted-2)]" />
+            刚刚更新
+          </span>
+          <AutomationModePicker />
+        </div>
       </div>
 
       <Stepper step={step} setStep={(s) => setStep(s)} />
@@ -406,6 +413,79 @@ function Inner({ material, productSkuFromQuery, sourceFromQuery, initialStep, pr
         onReselect={handleReselect}
       />
     </div>
+  )
+}
+
+// ─── Automation Mode Picker ─────────────────────────────────────────────────
+
+type AutomationMode = "full" | "semi" | "manual"
+
+const AUTOMATION_MODES: {
+  id: AutomationMode
+  label: string
+  desc: string
+  icon: typeof Sparkles
+}[] = [
+  { id: "full",   label: "全自动", desc: "数字员工自动执行每一步，仅在遇到阻塞时通知你", icon: Sparkles },
+  { id: "semi",   label: "半自动", desc: "员工自动推进，关键节点需要你确认后继续", icon: Bot },
+  { id: "manual", label: "手动",   desc: "员工只准备产物，每一步都由你来推进", icon: UserCog },
+]
+
+function AutomationModePicker() {
+  const [mode, setMode] = useState<AutomationMode>("full")
+  const [open, setOpen] = useState(false)
+  const active = AUTOMATION_MODES.find((m) => m.id === mode)!
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          className={cn(
+            "inline-flex items-center gap-1.5 h-7 px-3 rounded-full border text-[12px] font-semibold transition-colors duration-150",
+            "border-[var(--line-strong)] text-[var(--text)] bg-white hover:bg-[var(--soft-2)]",
+            open && "bg-[var(--soft-2)]"
+          )}
+        >
+          <span className="w-2 h-2 rounded-full bg-[var(--lime)] border border-[#a8c400]" aria-hidden />
+          {active.label}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-80 p-2">
+        <p className="px-2.5 pt-1.5 pb-2 text-[10.5px] font-bold tracking-wider text-[var(--muted-2)]">
+          自动化模式
+        </p>
+        {AUTOMATION_MODES.map((m) => {
+          const selected = m.id === mode
+          const Icon = m.icon
+          return (
+            <button
+              key={m.id}
+              onClick={() => {
+                setMode(m.id)
+                setOpen(false)
+              }}
+              className="w-full flex items-start gap-3 rounded-lg px-2.5 py-2.5 text-left hover:bg-[var(--soft-2)] transition-colors duration-150"
+            >
+              <span
+                className={cn(
+                  "w-9 h-9 rounded-lg flex items-center justify-center shrink-0",
+                  selected ? "bg-[var(--lime-soft)] text-[#5c7a00]" : "bg-[var(--soft)] text-[var(--muted)]"
+                )}
+              >
+                <Icon size={16} strokeWidth={2} />
+              </span>
+              <span className="flex-1 min-w-0">
+                <span className="flex items-center gap-1.5 text-[13px] font-semibold text-[var(--text)]">
+                  {m.label}
+                  {selected && <Check size={14} strokeWidth={2.5} className="text-[#5c7a00]" />}
+                </span>
+                <span className="block mt-0.5 text-xs leading-relaxed text-[var(--muted)]">{m.desc}</span>
+              </span>
+            </button>
+          )
+        })}
+      </PopoverContent>
+    </Popover>
   )
 }
 
