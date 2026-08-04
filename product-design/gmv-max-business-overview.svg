@@ -29,7 +29,7 @@
   <g transform="translate(1588 24)"><rect width="132" height="46" rx="12" fill="#fff" stroke="#e1e4dd"/><text x="20" y="29" class="button">全部账户 15</text></g>
   <g transform="translate(1734 24)"><rect width="146" height="46" rx="12" fill="#fff" stroke="#e1e4dd"/><text x="20" y="29" class="button">近 7 天</text><path d="M120 20l5 5 5-5" fill="none" stroke="#6e7469" stroke-width="1.8"/></g>
 
-  <g transform="translate(40 112)"><text x="0" y="24" class="h3">经营总览</text><rect x="0" y="43" width="65" height="3" rx="2" fill="#b5f22b"/><text x="112" y="24" class="body" fill="#7a7f75">素材决策</text><text x="229" y="24" class="body" fill="#7a7f75">任务记录</text></g>
+  <g transform="translate(40 112)"><text x="0" y="24" class="h3">经营总览</text><rect x="0" y="43" width="65" height="3" rx="2" fill="#b5f22b"/><text x="112" y="24" class="body" fill="#7a7f75">素材诊断</text><text x="229" y="24" class="body" fill="#7a7f75">任务记录</text></g>
   <line x1="0" y1="171" x2="1920" y2="171" stroke="#e9ebe6"/>
 
   <!-- KPI cards -->
@@ -138,8 +138,8 @@
       <g transform="translate(14 86)"><rect width="44" height="50" rx="8" fill="url(#p2)"/><text x="58" y="19" class="button">素材 751796...</text><text x="58" y="40" class="tiny">CTR ↓19% · CVR 正常</text><rect x="362" y="10" width="82" height="27" rx="13" fill="#fff0bd"/><text x="383" y="28" class="button" fill="#806000">需迭代</text></g>
       <text x="14" y="163" class="tiny">另有 2 条需迭代 · 1 条待观察</text>
     </g>
-    <text x="28" y="816" class="h3">进入素材决策后自动带入</text>
+    <text x="28" y="816" class="h3">进入素材诊断后自动带入</text>
     <g transform="translate(28 834)"><rect width="484" height="54" rx="13" fill="#f7f8f5"/><text x="14" y="22" class="tiny">商品：胶原蛋白面膜　国家：US　账户：全部 15</text><text x="14" y="42" class="tiny">日期：近 7 天　状态：需迭代 + 待观察</text></g>
-    <g transform="translate(28 906)"><rect width="484" height="58" rx="15" fill="#b5f22b"/><text x="157" y="36" class="h3">查看 5 条素材决策</text><path d="M382 24h22M397 17l7 7-7 7" fill="none" stroke="#171915" stroke-width="2"/></g>
+    <g transform="translate(28 906)"><rect width="484" height="58" rx="15" fill="#b5f22b"/><text x="157" y="36" class="h3">查看 5 条素材诊断</text><path d="M382 24h22M397 17l7 7-7 7" fill="none" stroke="#171915" stroke-width="2"/></g>
   </g>
 </svg>

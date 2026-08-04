@@ -1,11 +1,11 @@
-<title>GMV Max 素材决策闭环 Sprint PRD v1.0</title>
+<title>GMV Max 素材诊断闭环 Sprint PRD v1.1</title>
 <callout emoji="🎯" background-color="light-green" border-color="green">
   <p><b>产品目标：</b>将经营数据、素材诊断、创意生成、GMV Max 投放和结果回流串成一个 AO 可执行的决策闭环。第一版不追求复杂分析自由度，只回答四个问题：哪条素材要处理、为什么、现在做什么、执行后是否有效。</p>
 </callout>
 <p><b>文档版本：</b>v1.0　<b>产品阶段：</b>MVP / Sprint 方案　<b>目标用户：</b>TikTok Shop GMV Max 投放 AO、投放负责人、素材制作团队　<b>更新时间：</b>2026-08-04</p>
 <h1>1. 产品整体定位与范围</h1>
 <h1>2. 产品整体菜单架构</h1>
-<h1>3. 素材决策页能力地图</h1>
+<h1>3. 素材诊断页能力地图</h1>
 <h1>4. 六类诊断规则引擎</h1>
 <h1>5. 素材生成、投放与结果回流</h1>
 <h1>6. 数据口径、对象模型与研发约束</h1>

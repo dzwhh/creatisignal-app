@@ -1,7 +1,7 @@
 "use client"
 
 /**
- * 投放中心 —— 素材决策的执行层。
+ * 投放中心 —— 素材诊断的执行层。
  *
  * 只回答三件事：哪些素材准备投、用什么约束投、投后现在该调整什么。
  * 所有建议都展示触发条件、实时证据与 Before/After，并由 AO 确认后才执行。
@@ -42,7 +42,6 @@ import {
   CreativeThumb,
   DecisionBadge,
   DecisionDrawer,
-  DrawerStepper,
   EmptyState,
   EvidenceCard,
   KpiTile,
@@ -113,7 +112,7 @@ export function DeliveryCenter({
         <div className="mb-4 flex items-center gap-2 rounded-xl border border-[var(--line)] bg-white px-4 py-2.5 text-[11.5px]">
           <Badge className="border-0 bg-[var(--lime-soft)] text-[#5c7a00]">来自经营总览</Badge>
           <span className="text-[var(--muted)]">
-            商品 <strong className="text-[var(--text)]">{focusProduct.name}</strong> 判定为非素材问题，请优先复核目标 ROI 与商品 Offer
+            商品 <strong className="text-[var(--text)]">{focusProduct.name}</strong> 判定为非素材问题，请优先复核目标 ROAS 与商品 Offer
           </span>
         </div>
       ) : null}
@@ -157,11 +156,11 @@ export function DeliveryCenter({
           drafts.length === 0 ? (
             <EmptyState
               title="暂无待发布方案"
-              description="回到素材决策，从「可放量」「需迭代」「需换新」的素材生成变体后，方案会自动写回这里。"
+              description="回到素材诊断，从「可放量」「需迭代」「需换新」的素材生成变体后，方案会自动写回这里。"
               action={
                 <Button variant="outline" onClick={() => onOpenCreative("all")}>
                   <Sparkles size={14} />
-                  返回素材决策
+                  返回素材诊断
                 </Button>
               }
             />
@@ -209,7 +208,7 @@ function DraftList({ drafts, onSelect }: { drafts: DeliveryIntent[]; onSelect: (
       >
         <span>方案</span>
         <span>商品</span>
-        <span>目标 ROI</span>
+        <span>目标 ROAS</span>
         <span>日预算</span>
         <span>素材</span>
         <span>状态</span>
@@ -239,7 +238,7 @@ function DraftList({ drafts, onSelect }: { drafts: DeliveryIntent[]; onSelect: (
             </span>
             <span className="truncate text-[11.5px] font-semibold text-[var(--text)]">{product.shortName}</span>
             <span>
-              <small className="block text-[9.5px] text-[var(--muted)]">目标 ROI</small>
+              <small className="block text-[9.5px] text-[var(--muted)]">目标 ROAS</small>
               <b className="text-[12px] tabular-nums">{draft.targetRoi.toFixed(2)}</b>
             </span>
             <span>
@@ -463,8 +462,6 @@ function DeliveryDraftDrawer({
         </div>
       }
     >
-      <DrawerStepper steps={["素材诊断", "生成素材", "配置投放", "结果回收"]} current={2} />
-
       <div className="mb-5 flex items-center gap-3 rounded-2xl bg-[var(--soft-2)] p-4">
         <ProductThumb accent={product.accent} label={product.name} className="size-12" />
         <div className="min-w-0 flex-1">
@@ -476,9 +473,9 @@ function DeliveryDraftDrawer({
         <DecisionBadge status={value.sourceStatus} />
       </div>
 
-      <SectionTitle>目标与预算</SectionTitle>
+      <SectionTitle>GMV Max 出价与预算</SectionTitle>
       <div className="mb-5 grid grid-cols-2 gap-3">
-        <NumberField label="目标 ROI" value={value.targetRoi} step={0.05} invalid={value.targetRoi <= 0} onChange={(targetRoi) => update({ targetRoi })} />
+        <NumberField label="目标 ROAS（Target ROI）" value={value.targetRoi} step={0.05} invalid={value.targetRoi <= 0} onChange={(targetRoi) => update({ targetRoi })} />
         <NumberField label="每日预算" value={value.dailyBudget} prefix="$" step={100} invalid={value.dailyBudget <= 0} onChange={(dailyBudget) => update({ dailyBudget })} />
       </div>
 
@@ -624,8 +621,6 @@ function LiveDeliveryDrawer({
           </div>
         }
       >
-        <DrawerStepper steps={["监控结果", "生成建议", "确认调整", "继续观察"]} current={done ? 3 : 1} />
-
         <ResultCallout
           tone={meta.tone === "danger" ? "danger" : meta.tone === "warn" ? "warn" : meta.tone === "good" ? "good" : "info"}
           badge={<Badge className={cn("border-0", meta.className)}>{meta.label}</Badge>}
@@ -678,7 +673,7 @@ function LiveDeliveryDrawer({
 
         {isSupply ? (
           <p className="mt-3 rounded-xl border border-amber-100 bg-amber-50/70 px-3.5 py-3 text-[10.5px] leading-relaxed text-amber-800">
-            点击「去补充素材」会带着商品 <strong>{product.name}</strong> 的上下文跳转到素材决策；
+            点击「去补充素材」会带着商品 <strong>{product.name}</strong> 的上下文跳转到素材诊断；
             生成的方案会写回投放中心的待发布列表，变体发布前本计划保持原设置。
           </p>
         ) : null}

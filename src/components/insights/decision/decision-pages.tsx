@@ -1,4 +1,4 @@
-/** 素材决策闭环四个页面的统一出口 */
+/** 素材诊断闭环四个页面的统一出口 */
 
 export { BusinessOverview } from "./business-overview"
 export { CreativeDecision } from "./creative-decision"

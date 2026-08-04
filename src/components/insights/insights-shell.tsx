@@ -44,7 +44,7 @@ type Tab = "overview" | "creative" | "delivery" | "tasks"
 
 const tabs: { id: Tab; label: string; icon: React.ComponentType<{ size?: number; strokeWidth?: number }> }[] = [
   { id: "overview", label: "经营总览", icon: BarChart3 },
-  { id: "creative", label: "素材决策", icon: Sparkles },
+  { id: "creative", label: "素材诊断", icon: Sparkles },
   { id: "delivery", label: "投放中心", icon: Rocket },
   { id: "tasks", label: "任务记录", icon: ClipboardCheck },
 ]
@@ -61,13 +61,13 @@ export function InsightsShell({ initialTab = "overview" }: { initialTab?: Tab } 
   // Default = all active accounts (≠ paused); empty Set means "all"
   const [selectedAccounts, setSelectedAccounts] = useState<Set<string>>(() => new Set())
 
-  /** 带商品上下文进入素材决策；传 "all" 表示不带筛选 */
+  /** 带商品上下文进入素材诊断；传 "all" 表示不带筛选 */
   const openCreative = (productId: string) => {
     setCreativeProductId(productId === "all" ? null : productId)
     setTab("creative")
   }
 
-  /** 非素材问题走投放中心：只复核目标 ROI 与商品 Offer，不给素材动作 */
+  /** 非素材问题走投放中心：只复核目标 ROAS（TikTok Target ROI）与商品 Offer，不给素材动作 */
   const openDelivery = (productId: string) => {
     setDeliveryProductId(productId)
     setTab("delivery")
@@ -87,7 +87,7 @@ export function InsightsShell({ initialTab = "overview" }: { initialTab?: Tab } 
       updatedAt: "刚刚",
       timeline: [
         { time: "刚刚", label: "诊断命中并生成素材", detail: `来源素材 ${intent.sourceCreativeId}`, state: "done" },
-        { time: "刚刚", label: "写入待发布方案", detail: `目标 ROI ${intent.targetRoi.toFixed(2)} · 日预算 $${intent.dailyBudget}`, state: "done" },
+        { time: "刚刚", label: "写入待发布方案", detail: `目标 ROAS ${intent.targetRoi.toFixed(2)} · 日预算 $${intent.dailyBudget}`, state: "done" },
         { time: "—", label: "等待投放确认", detail: `首轮观察 ${intent.observationHours} 小时 · 判赢 ${intent.winOrders} 单`, state: "current" },
         { time: "—", label: "结果回流", detail: "同口径比较原素材与变体后更新诊断", state: "todo" },
       ],
@@ -122,7 +122,7 @@ export function InsightsShell({ initialTab = "overview" }: { initialTab?: Tab } 
         <div className="flex items-end justify-between gap-4 mb-4">
           <div>
             <h1 className="text-[22px] font-extrabold text-[var(--text)] tracking-tight leading-tight">
-              GMV Max 素材决策
+              GMV Max 素材诊断
             </h1>
             <p className="text-[12.5px] text-[var(--muted)] mt-1">
               从经营波动定位到素材动作，再完成投放与结果回收

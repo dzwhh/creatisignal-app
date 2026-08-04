@@ -1,5 +1,5 @@
 /**
- * GMV Max 素材决策闭环 · Mock 数据层
+ * GMV Max 素材诊断闭环 · Mock 数据层
  *
  * 对齐 Sprint PRD v1.0：
  * - 诊断最小单元固定为「商品 × 素材 × 国家 × 观察窗口」
@@ -22,7 +22,7 @@ export const DECISION_STATUS_META: Record<
     shortAction: string
     className: string
     dot: string
-    /** 是否需要人工决策（进入今日待处理） */
+    /** 是否需要人工确认（进入今日待处理） */
     actionable: boolean
   }
 > = {
@@ -34,7 +34,7 @@ export const DECISION_STATUS_META: Record<
   observe: { label: "待观察", action: "继续观察", shortAction: "等样本", className: "bg-blue-50 text-blue-700", dot: "#3b82f6", actionable: false },
 }
 
-/** 摘要卡与筛选 chip 的固定顺序：先需要决策的，再辅助数量 */
+/** 摘要卡与筛选 chip 的固定顺序：先需要确认的，再辅助数量 */
 export const DECISION_ACTIONABLE_ORDER: DecisionStatus[] = ["scale", "iterate", "refresh", "stop"]
 export const DECISION_PASSIVE_ORDER: DecisionStatus[] = ["stable", "observe"]
 export const DECISION_FILTER_ORDER: DecisionStatus[] = ["scale", "stable", "observe", "iterate", "refresh", "stop"]
@@ -293,6 +293,22 @@ export type CreativeDiagnosis = {
   nextPlan: { action: string; observation: string }
   /** 稳定投放的下次复查时间 */
   nextReviewAt?: string
+  /** 建议关停：该素材在其他商品下的在投情况（关停只影响当前商品） */
+  otherProductUsage?: Array<{ productId: string; roi: number; status: DecisionStatus }>
+  /** 建议关停：移出后该商品的可投素材供给变化 */
+  supplyAfterStop?: { before: number; after: number; min: number }
+  /** 建议关停：连续两个诊断窗口的指标快照 */
+  windows?: [MetricWindow, MetricWindow]
+}
+
+/** 单个诊断窗口的指标快照，用于「连续两个窗口低于止损线」的取证 */
+export type MetricWindow = {
+  label: string
+  roi: number
+  ctr: number
+  cvr: number
+  spend: number
+  orders: number
 }
 
 const ACCENTS = [
@@ -306,7 +322,7 @@ const ACCENTS = [
   "from-zinc-900 to-lime-300",
 ]
 
-/** 需要人工决策的 12 条素材，逐条手写以保证结论、证据和动作自洽 */
+/** 需要人工确认的 12 条素材，逐条手写以保证结论、证据和动作自洽 */
 const ACTIONABLE_CREATIVES: CreativeDiagnosis[] = [
   {
     id: "7626360624905601032",
@@ -801,10 +817,59 @@ function buildPassiveCreative(seed: (typeof PASSIVE_SEEDS)[number], index: numbe
   }
 }
 
-export const CREATIVES: CreativeDiagnosis[] = [
-  ...ACTIONABLE_CREATIVES,
-  ...PASSIVE_SEEDS.map(buildPassiveCreative),
-].sort((a, b) => b.impactScore - a.impactScore)
+/**
+ * 建议关停的取证上下文全部派生，不手写：
+ * 窗口 2 用当前实际值，窗口 1 用略好但同样低于止损线的值，证明「连续两个窗口未恢复」；
+ * 跨商品占用与供给变化按素材 id 稳定派生，避免每次渲染跳动。
+ */
+function withStopContext(creative: CreativeDiagnosis): CreativeDiagnosis {
+  if (creative.status !== "stop") return creative
+
+  const r = hashRatio(creative.id, 41)
+  const prevRoi = Number((creative.roi * (1.08 + r * 0.16)).toFixed(2))
+  const productCreatives = CREATIVE_COUNT_BY_PRODUCT.get(creative.productId) ?? 1
+  const otherProducts = PRODUCTS.filter((product) => product.id !== creative.productId)
+  const usageCount = r > 0.6 ? 2 : r > 0.3 ? 1 : 0
+
+  return {
+    ...creative,
+    windows: [
+      {
+        label: "窗口 1 · 前 3 日",
+        roi: prevRoi,
+        ctr: Number((creative.ctr * 1.06).toFixed(2)),
+        cvr: Number((creative.cvr * 1.05).toFixed(2)),
+        spend: Math.round(creative.spend * 0.72),
+        orders: Math.max(1, creative.orders - 1),
+      },
+      {
+        label: "窗口 2 · 近 3 日",
+        roi: creative.roi,
+        ctr: creative.ctr,
+        cvr: creative.cvr,
+        spend: creative.spend,
+        orders: creative.orders,
+      },
+    ],
+    supplyAfterStop: { before: productCreatives, after: productCreatives - 1, min: 6 },
+    otherProductUsage: otherProducts.slice(0, usageCount).map((product, index) => ({
+      productId: product.id,
+      roi: Number((product.targetRoi * (0.95 + hashRatio(creative.id + product.id, 53 + index) * 0.5)).toFixed(2)),
+      status: hashRatio(creative.id + product.id, 67) > 0.5 ? ("stable" as const) : ("observe" as const),
+    })),
+  }
+}
+
+const BASE_CREATIVES: CreativeDiagnosis[] = [...ACTIONABLE_CREATIVES, ...PASSIVE_SEEDS.map(buildPassiveCreative)]
+
+/** 商品维度的可投素材数，供关停的供给影响预警使用 */
+const CREATIVE_COUNT_BY_PRODUCT = new Map<string, number>(
+  PRODUCTS.map((product) => [product.id, BASE_CREATIVES.filter((item) => item.productId === product.id).length])
+)
+
+export const CREATIVES: CreativeDiagnosis[] = BASE_CREATIVES.map(withStopContext).sort(
+  (a, b) => b.impactScore - a.impactScore
+)
 
 export function creativesByProduct(productId: string) {
   return CREATIVES.filter((creative) => creative.productId === productId)
@@ -820,7 +885,253 @@ export function countByStatus(creatives: CreativeDiagnosis[]) {
   )
 }
 
-/** 今日决策摘要：待处理数量与预计可减少的无效消耗（Mock 预估） */
+// ─── 素材链路与迭代变量 ──────────────────────────────────────────────────────
+
+export type LinkStage = "hook" | "scene" | "proof" | "offer"
+
+/** 素材四环：点击前两环由 CTR 反映，点击后两环由 CVR 反映 */
+export const LINK_CHAIN: Array<{ key: LinkStage; label: string; question: string; metric: "ctr" | "cvr" }> = [
+  { key: "hook", label: "前 3 秒 Hook", question: "用户会不会停下来", metric: "ctr" },
+  { key: "scene", label: "场景 / 人物", question: "用户会不会继续看", metric: "ctr" },
+  { key: "proof", label: "卖点与证明", question: "用户信不信", metric: "cvr" },
+  { key: "offer", label: "Offer / CTA", question: "用户下不下单", metric: "cvr" },
+]
+
+export type IterationLevel = "primary" | "secondary" | "ok"
+
+/**
+ * 迭代优先级判定。
+ *
+ * CTR / CVR 只能定位到「点击前」或「点击后」，无法区分具体是哪一环，所以分主次而不是一律标红：
+ * CTR < 0.90 → Hook 主迭代（前 3 秒是点击率最强因子），场景 / 人物次迭代；
+ * CVR < 0.90 → 卖点与证明主迭代，Offer / CTA 次迭代。
+ */
+export function iterationLevels(creative: CreativeDiagnosis): Record<LinkStage, IterationLevel> {
+  const levels: Record<LinkStage, IterationLevel> = { hook: "ok", scene: "ok", proof: "ok", offer: "ok" }
+  if (ctrIndex(creative) < 0.9) {
+    levels.hook = "primary"
+    levels.scene = "secondary"
+  }
+  if (cvrIndex(creative) < 0.9) {
+    levels.proof = "primary"
+    levels.offer = "secondary"
+  }
+  return levels
+}
+
+/** 主迭代环，用于决定哪些迭代变量打「主迭代」标 */
+export function primaryIterationStages(creative: CreativeDiagnosis): LinkStage[] {
+  const levels = iterationLevels(creative)
+  return (Object.keys(levels) as LinkStage[]).filter((stage) => levels[stage] === "primary")
+}
+
+export type IterationVariable = {
+  key: string
+  label: string
+  desc: string
+  /** 改这个变量主要想拉回哪个指标 */
+  targetMetric: "ctr" | "cvr"
+  stage: LinkStage
+  /** 被锁定保留的部分，保证单变量验证 */
+  locked: string[]
+}
+
+/**
+ * 迭代变量：收敛到 5 个可独立 brief、可归因的杠杆。
+ *
+ * 不再把 Hook 拆成「文案 / 首帧 / 节奏」——一个 Hook 是一个完整概念，换开场话术必然带着
+ * 首帧画面和节奏一起换，拆开既没法给设计师下 brief，在 48h + 5 单的判赢门槛下也跑不出
+ * 区分度。同理，卖点顺序并入证明方式，Offer 呈现与 CTA 合成同一个结尾卡。
+ */
+export const ITERATION_VARIABLES: IterationVariable[] = [
+  {
+    key: "hook",
+    label: "换 Hook",
+    desc: "整体替换前 3 秒：开场话术、首帧画面与节奏一起换",
+    targetMetric: "ctr",
+    stage: "hook",
+    locked: ["正文", "卖点", "Offer", "CTA"],
+  },
+  {
+    key: "talent",
+    label: "换出镜达人",
+    desc: "换人不换脚本，验证达人与商品的匹配度",
+    targetMetric: "ctr",
+    stage: "scene",
+    locked: ["脚本结构", "卖点", "Offer"],
+  },
+  {
+    key: "scene",
+    label: "换场景",
+    desc: "换拍摄环境与画面氛围，人物与台词保持",
+    targetMetric: "ctr",
+    stage: "scene",
+    locked: ["人物", "台词", "Offer"],
+  },
+  {
+    key: "proof",
+    label: "换卖点与证明",
+    desc: "换主打卖点及其支撑证据的形态",
+    targetMetric: "cvr",
+    stage: "proof",
+    locked: ["Hook", "人物", "Offer"],
+  },
+  {
+    key: "cta",
+    label: "换 Offer 与 CTA 呈现",
+    desc: "换结尾卡的利益点表达与行动指令，不改优惠本身",
+    targetMetric: "cvr",
+    stage: "offer",
+    locked: ["Hook", "正文", "价格"],
+  },
+]
+
+/** 可放量的爆款衍生：PRD 限定一次只改 Hook、达人或场景中的一个 */
+export const DERIVATION_VARIABLE_KEYS = ["hook", "talent", "scene"]
+export const DERIVATION_VARIABLES = ITERATION_VARIABLES.filter((item) => DERIVATION_VARIABLE_KEYS.includes(item.key))
+
+export function variableByKey(key: string) {
+  return ITERATION_VARIABLES.find((item) => item.key === key)
+}
+
+// ─── 候选方案卡（带封面，hover 看完整脚本） ──────────────────────────────────
+
+export type OptionSource = "platform" | "market" | "competitor" | "own" | "upload" | "link"
+
+export const OPTION_SOURCE_META: Record<OptionSource, { label: string; className: string }> = {
+  platform: { label: "平台推荐", className: "bg-[var(--lime-soft)] text-[#5c7a00]" },
+  market: { label: "市场爆款", className: "bg-blue-50 text-blue-700" },
+  competitor: { label: "竞对爆款", className: "bg-amber-50 text-amber-800" },
+  own: { label: "自有爆款", className: "bg-emerald-50 text-emerald-700" },
+  upload: { label: "本地上传", className: "bg-zinc-100 text-zinc-700" },
+  link: { label: "视频链接", className: "bg-zinc-100 text-zinc-700" },
+}
+
+export type CreativeOption = {
+  key: string
+  /** 卡片左上角的套路分类 */
+  category: string
+  title: string
+  desc: string
+  /** hover 浮层里的完整脚本 */
+  script: string
+  cover: string
+  source: OptionSource
+  /** 平台按变量推荐时，标记这条方案属于哪个变量；引用进来的没有此字段 */
+  variableKey?: string
+}
+
+type OptionSeed = Pick<CreativeOption, "category" | "title" | "desc" | "script">
+
+/** 每个迭代变量对应的候选套路库 */
+const OPTION_POOL: Record<string, OptionSeed[]> = {
+  hook: [
+    { category: "结果先出", title: "7 天后的脸", desc: "开口就把使用结果摆出来，用疑问句留住人", script: "「用了 7 天后，毛孔真的小了吗？」——先给第 7 天的素颜特写，再倒回第 1 天，全程不提品牌名。" },
+    { category: "痛点冲突", title: "越控油越出油", desc: "用反直觉冲突制造停留，指向常见误区", script: "「越控油越出油，你可能一直做错了」——先展示一张油光特写，再切到正确护理动作，制造认知反差。" },
+    { category: "价格利益", title: "一杯咖啡的浓度", desc: "把单次成本换算成日常消费，降低决策门槛", script: "「不到一杯咖啡的钱，测一次 10% 烟酰胺」——用咖啡杯和产品同框对比，直接给出单次成本。" },
+    { category: "反常识", title: "别再早晚都用", desc: "否定一个流行做法，引出正确用法", script: "「别再早晚都用精华了」——先否定高频误区，再给出频次建议，把观点变成留人钩子。" },
+    { category: "转场揭晓", title: "响指揭晓", desc: "自信人物用充满表现力的动作亮出产品", script: "人物直视镜头打响指，画面瞬间转场，产品出现在手中，随后进入卖点介绍。节奏卡在音乐重拍上。" },
+    { category: "奇观吸睛", title: "极限场景推销", desc: "跳伞场景突然转为空中产品亮相", script: "跳伞镜头急速下坠，在半空中画面定格，产品在云层间亮相，用强反差制造记忆点。" },
+  ],
+  talent: [
+    { category: "素人自拍", title: "第一人称真实感", desc: "手持自拍、无脚本感的真实分享", script: "素人手持手机自拍，光线为家中自然光，语速偏快，全程无提词器感。脚本结构完全沿用原素材。" },
+    { category: "专业背书", title: "皮肤科视角", desc: "由专业人设讲解成分与机理", script: "白大褂人设出镜，先讲成分浓度与作用机理，再给使用建议，语速平稳。卖点顺序不变。" },
+    { category: "达人实测", title: "中腰部达人 7 天记录", desc: "由达人做连续记录式测评", script: "达人固定机位每天记录一次，最后拼成 7 天变化合集，标注日期水印。" },
+  ],
+  scene: [
+    { category: "浴室日常", title: "洗漱台护肤动线", desc: "还原真实的洗漱台使用场景", script: "镜头架在洗漱台镜前，跟随洗脸—擦干—上精华的完整动线，背景保留真实生活杂物。" },
+    { category: "通勤补妆", title: "车里的碎片时间", desc: "把使用场景放进通勤缝隙", script: "车内后视镜视角，人物利用等红灯的间隙快速补涂，强调便携与快速吸收。" },
+    { category: "户外自然光", title: "阳台真实光线", desc: "用自然光呈现肤质细节", script: "阳台侧逆光，镜头贴近拍摄肤质细节，不加滤镜，强调真实质感。" },
+  ],
+  proof: [
+    { category: "效果先行", title: "先结果再成分", desc: "把效果画面提到成分讲解之前", script: "前 5 秒只给结果对比画面，第 6 秒才引出 10% 烟酰胺的浓度说明，用结果换取继续观看。" },
+    { category: "实测对比", title: "同机位前后对比", desc: "固定机位消除拍摄差异带来的质疑", script: "三脚架固定机位，同光线同角度拍摄使用前后，画面并排展示并标注天数。" },
+    { category: "权威证书", title: "检测报告特写", desc: "用第三方报告承接信任", script: "镜头推近第三方检测报告的关键结论行，配合成分含量数字的动态高亮。" },
+    { category: "UGC 合集", title: "多人真实短评", desc: "用数量堆叠可信度", script: "拼接 5 位真实用户的 3 秒短评，保留原始画质与环境音，不做统一调色。" },
+  ],
+  cta: [
+    { category: "限时折扣", title: "倒计时叠加价格", desc: "把优惠和时间压力绑定在结尾卡", script: "画面右上角常驻倒计时，价格数字在结尾从原价滚动到活动价，口播「现在点左下角」。" },
+    { category: "买赠组合", title: "加赠小样展示", desc: "用赠品提升到手价值感", script: "把正装与赠品小样一起摆放入镜，逐件点数并口播到手总价值，最后落到购物车图标。" },
+    { category: "库存告急", title: "库存数字跳动", desc: "用稀缺感推动即时下单", script: "结尾叠加剩余库存数字并做轻微跳动动画，口播提醒可能售罄。" },
+    { category: "路径演示", title: "直接演示下单", desc: "把操作路径拍给用户看，消除犹豫", script: "录屏演示从视频页到购物车的完整点击路径，配合新客立减弹窗展示。" },
+  ],
+}
+
+/** 按变量取候选方案，封面用与仓内一致的确定性占位图 */
+export function getOptionsForVariable(variableKey: string, seedPrefix: string): CreativeOption[] {
+  const pool = OPTION_POOL[variableKey] ?? []
+  return pool.map((seed, index) => ({
+    ...seed,
+    key: `${variableKey}-${index}`,
+    cover: `https://picsum.photos/seed/${seedPrefix}_${variableKey}_${index}/360/640`,
+    source: "platform" as const,
+    variableKey,
+  }))
+}
+
+/** 需换新的方向卡：在既有 directions 上补封面与套路分类 */
+export function getDirectionOptions(creative: CreativeDiagnosis): CreativeOption[] {
+  const categoryByKey: Record<string, string> = { talent: "人设重做", scene: "场景重做", structure: "结构重做" }
+  return (creative.directions ?? []).map((direction, index) => ({
+    key: direction.key,
+    category: categoryByKey[direction.key] ?? "方向重做",
+    title: direction.label,
+    desc: direction.desc,
+    script: `${direction.desc}。只保留商品、品牌与合规约束，不继承原素材的 Hook、场景与表达结构。`,
+    cover: `https://picsum.photos/seed/${creative.id}_dir_${index}/360/640`,
+    source: "platform" as const,
+  }))
+}
+
+// ─── 稳定投放：复查与越界规则 ────────────────────────────────────────────────
+
+export const STABLE_REVIEW_WINDOWS = [24, 48, 72, 168]
+export const STABLE_REVIEW_DEFAULT = 72
+
+export const STABLE_BREACH_RULES: Array<{ key: string; label: string; threshold: string }> = [
+  { key: "roi", label: "ROI Index", threshold: "< 1.00" },
+  { key: "ctr", label: "CTR Index", threshold: "< 0.90" },
+  { key: "cvr", label: "CVR Index", threshold: "< 0.90" },
+  { key: "volatility", label: "近 3 日 ROI / CTR 波动", threshold: "> 15%" },
+]
+
+/** 把越界规则跟当前素材的实际值配上，做成只读对照表 */
+export function stableBreachStatus(creative: CreativeDiagnosis) {
+  const volatility = 4 + Math.round(hashRatio(creative.id, 83) * 9)
+  const values: Record<string, { current: string; ok: boolean }> = {
+    roi: { current: roiIndex(creative).toFixed(2), ok: roiIndex(creative) >= 1 },
+    ctr: { current: ctrIndex(creative).toFixed(2), ok: ctrIndex(creative) >= 0.9 },
+    cvr: { current: cvrIndex(creative).toFixed(2), ok: cvrIndex(creative) >= 0.9 },
+    volatility: { current: `${volatility}%`, ok: volatility <= 15 },
+  }
+  return STABLE_BREACH_RULES.map((rule) => ({ ...rule, ...values[rule.key] }))
+}
+
+// ─── 待观察：样本门槛与数据质量 ──────────────────────────────────────────────
+
+export const SAMPLE_MATURITY_RULE = "Active Time ≥ 24h 且 Orders ≥ 5，或 Spend ≥ 2 × Target CPA"
+
+export type DataQualityCheck = { key: string; label: string; desc: string; ok: boolean }
+
+/** 数据质量未通过时结果强制待观察，并禁止关停与生成 */
+export function dataQualityFor(creative: CreativeDiagnosis): DataQualityCheck[] {
+  const delayed = hashRatio(creative.id, 97) > 0.55
+  return [
+    { key: "auth", label: "账户授权", desc: "TikTok Ads 与 Shop 授权均有效", ok: true },
+    { key: "fields", label: "字段完整性", desc: "展现、点击、订单、GMV 字段无缺失", ok: true },
+    { key: "delay", label: "数据回传", desc: delayed ? "近 2 小时回传延迟，指标可能偏低" : "回传正常，最近一次同步 12 分钟前", ok: !delayed },
+    { key: "attribution", label: "订单归因", desc: "归因窗口内无未结算订单", ok: true },
+  ]
+}
+
+/** 待观察时被系统禁用的动作，页面必须说明原因 */
+export const OBSERVE_BLOCKED_ACTIONS = [
+  { label: "确认关停", reason: "样本不足时关停会误杀仍在学习期的素材" },
+  { label: "生成变体", reason: "尚未定位到弱环，改哪一环都缺少依据" },
+  { label: "生成新方向", reason: "还没有证据说明原方向失效" },
+]
+
+/** 今日诊断摘要：待处理数量与预计可减少的无效消耗（Mock 预估） */
 export const DECISION_SUMMARY = {
   riskSpendPerDay: 680,
   isEstimated: true,

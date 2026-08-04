@@ -43,7 +43,7 @@
 
   <!-- Top shell -->
   <rect x="0" y="0" width="1920" height="172" fill="#ffffff"/>
-  <text x="40" y="50" class="title">GMV Max 素材决策</text>
+  <text x="40" y="50" class="title">GMV Max 素材诊断</text>
   <circle cx="337" cy="42" r="5" fill="#25bd67"/>
   <text x="350" y="47" class="small">TikTok · GlowLab US</text>
   <text x="40" y="79" class="body" fill="#7b8075">从投放结果直接得到每条素材的下一步动作</text>
@@ -72,7 +72,7 @@
   <!-- Primary nav -->
   <g transform="translate(40 112)">
     <text x="0" y="24" class="body" fill="#7a7f75">经营总览</text>
-    <text x="112" y="24" class="h3">素材决策</text>
+    <text x="112" y="24" class="h3">素材诊断</text>
     <rect x="112" y="43" width="65" height="3" rx="2" fill="#b5f22b"/>
     <text x="229" y="24" class="body" fill="#7a7f75">任务记录</text>
   </g>

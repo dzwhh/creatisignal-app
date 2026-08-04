@@ -333,7 +333,7 @@ function ProductDiagnosisDrawer({
                 }}
               >
                 <Sparkles size={14} />
-                查看 {actionable.length} 条素材决策
+                查看 {actionable.length} 条素材诊断
                 <ArrowRight size={14} />
               </Button>
             ) : (
@@ -422,7 +422,7 @@ function ProductDiagnosisDrawer({
         ) : null}
       </div>
 
-      <SectionTitle>{isCreativeIssue ? "进入素材决策后自动带入" : "建议改为检查的对象"}</SectionTitle>
+      <SectionTitle>{isCreativeIssue ? "进入素材诊断后自动带入" : "建议改为检查的对象"}</SectionTitle>
       <ContextTable
         rows={
           isCreativeIssue

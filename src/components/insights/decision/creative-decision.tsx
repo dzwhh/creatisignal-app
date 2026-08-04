@@ -1,7 +1,7 @@
 "use client"
 
 /**
- * 素材决策 —— 唯一的素材操作入口。
+ * 素材诊断 —— 唯一的素材操作入口。
  *
  * 每条 Product × Creative 只有一个 active 诊断结果、一组证据和一个主动作，
  * 抽屉里按「结论 → 依据 → 建议 → 执行」四段推进，不跳出页面。
@@ -15,13 +15,7 @@ import {
   ChevronRight,
   Eye,
   Info,
-  Loader2,
-  Rocket,
-  ShieldCheck,
-  Sparkles,
   Target,
-  WandSparkles,
-  XCircle,
 } from "lucide-react"
 import * as Popover from "@radix-ui/react-popover"
 import { Badge } from "@/components/ui/badge"
@@ -41,29 +35,22 @@ import {
   cvrIndex,
   formatMoney,
   indexDelta,
-  productById,
   roiIndex,
   type CreativeDiagnosis,
   type DecisionStatus,
   type DeliveryIntent,
 } from "@/lib/insights/decision-mock"
 import {
-  ConfirmDialog,
-  ContextTable,
   CreativeThumb,
   DecisionBadge,
-  DecisionDrawer,
   Delta,
-  DrawerStepper,
   EmptyState,
-  EvidenceCard,
   FilterChip,
   PageHeader,
-  ResultCallout,
-  SampleProgress,
-  SectionTitle,
   Surface,
 } from "./decision-ui"
+import { CreativeDiagnosisDrawer } from "./creative-diagnosis-drawer"
+import { ProductPicker } from "./product-picker"
 
 const pageMotion = {
   initial: { opacity: 0, y: 8 },
@@ -75,24 +62,6 @@ const pageMotion = {
 const ROW_TEMPLATE = "minmax(260px,1.4fr) minmax(210px,1fr) minmax(250px,1.2fr) minmax(150px,.72fr)"
 
 type StatusFilter = "pending" | "all" | DecisionStatus
-
-const CALLOUT_TONE: Record<DecisionStatus, "good" | "warn" | "info" | "danger" | "neutral"> = {
-  scale: "good",
-  iterate: "warn",
-  refresh: "info",
-  stop: "danger",
-  stable: "neutral",
-  observe: "info",
-}
-
-const STEPS_BY_STATUS: Record<DecisionStatus, string[]> = {
-  scale: ["数据诊断", "爆款衍生", "GMV Max 放量", "结果回流"],
-  iterate: ["数据诊断", "素材生成", "GMV Max 投放", "结果回流"],
-  refresh: ["数据诊断", "方向重做", "GMV Max 投放", "结果回流"],
-  stop: ["数据诊断", "确认止损", "移出素材池", "结果回流"],
-  stable: ["数据诊断", "保持投放", "自动复查", "结果回流"],
-  observe: ["数据诊断", "样本积累", "重新诊断", "结果回流"],
-}
 
 export function CreativeDecision({
   productId,
@@ -128,29 +97,13 @@ export function CreativeDecision({
     )
   }, [rows])
 
-  const activeProduct = product === "all" ? null : productById(product)
-
   return (
     <motion.div {...pageMotion} className="mx-auto w-full max-w-[1480px] p-5 lg:p-6">
       <PageHeader
         eyebrow="Action first"
-        title="素材决策"
+        title="素材诊断"
         description="每条素材只有一个诊断结果、一个原因和一个可执行动作"
-        aside={
-          <>
-            {activeProduct ? (
-              <button
-                type="button"
-                onClick={() => setProduct("all")}
-                className="flex h-8 cursor-pointer items-center gap-1.5 rounded-full bg-[var(--lime-soft)] px-3 text-[11px] font-bold text-[#5c7a00]"
-              >
-                已带入：{activeProduct.shortName}
-                <XCircle size={12} />
-              </button>
-            ) : null}
-            <BenchmarkPill />
-          </>
-        }
+        aside={<BenchmarkPill />}
       />
 
       <DecisionSummary
@@ -161,27 +114,31 @@ export function CreativeDecision({
         onPick={setStatus}
       />
 
-      <div className="mb-3 mt-4 flex items-center gap-2 overflow-x-auto pb-0.5">
-        <FilterChip active={status === "pending"} label="全部待处理" count={pendingTotal} onClick={() => setStatus("pending")} />
-        <FilterChip active={status === "all"} label="全部" count={scoped.length} onClick={() => setStatus("all")} />
-        <span className="mx-1 h-5 w-px shrink-0 bg-[var(--line)]" />
-        {DECISION_FILTER_ORDER.map((key) => (
-          <FilterChip
-            key={key}
-            active={status === key}
-            label={DECISION_STATUS_META[key].label}
-            count={counts[key]}
-            tone={key === "scale" ? "lime" : "dark"}
-            onClick={() => setStatus(key)}
-          />
-        ))}
+      {/* 左侧状态 chip 可横向滚动，右侧商品选择器固定不滚走 */}
+      <div className="mb-3 mt-4 flex items-center gap-3">
+        <div className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto pb-0.5">
+          <FilterChip active={status === "pending"} label="全部待处理" count={pendingTotal} onClick={() => setStatus("pending")} />
+          <FilterChip active={status === "all"} label="全部" count={scoped.length} onClick={() => setStatus("all")} />
+          <span className="mx-1 h-5 w-px shrink-0 bg-[var(--line)]" />
+          {DECISION_FILTER_ORDER.map((key) => (
+            <FilterChip
+              key={key}
+              active={status === key}
+              label={DECISION_STATUS_META[key].label}
+              count={counts[key]}
+              tone={key === "scale" ? "lime" : "dark"}
+              onClick={() => setStatus(key)}
+            />
+          ))}
+        </div>
+        <ProductPicker value={product} onChange={setProduct} fromOverview={Boolean(productId) && product === productId} />
       </div>
 
       {grouped.length === 0 ? (
         <Surface>
           <EmptyState
             title="该状态下暂无素材"
-            description="换一个状态筛选，或回到「全部待处理」继续今天的决策队列。"
+            description="换一个状态筛选，或回到「全部待处理」继续今天的诊断队列。"
             action={
               <Button variant="outline" onClick={() => setStatus("pending")}>
                 回到全部待处理
@@ -248,7 +205,7 @@ export function CreativeDecision({
   )
 }
 
-// ─── 今日决策摘要 ────────────────────────────────────────────────────────────
+// ─── 今日诊断摘要 ────────────────────────────────────────────────────────────
 
 function DecisionSummary({
   counts,
@@ -504,369 +461,5 @@ function CreativeRow({
         <ChevronRight size={14} className="text-[var(--muted-2)] transition-transform group-hover:translate-x-0.5" />
       </span>
     </motion.button>
-  )
-}
-
-// ─── 诊断详情抽屉 ────────────────────────────────────────────────────────────
-
-type DrawerPhase = "diagnose" | "generated" | "done"
-
-function CreativeDiagnosisDrawer({
-  creative,
-  onClose,
-  onCreateDelivery,
-  onMarkHandled,
-  onOpenDelivery,
-}: {
-  creative: CreativeDiagnosis | null
-  onClose: () => void
-  onCreateDelivery: (intent: DeliveryIntent) => void
-  onMarkHandled: (creativeId: string, label: string) => void
-  onOpenDelivery: (productId: string) => void
-}) {
-  const [phase, setPhase] = useState<DrawerPhase>("diagnose")
-  const [generating, setGenerating] = useState(false)
-  const [directions, setDirections] = useState<string[]>([])
-  const [confirmStop, setConfirmStop] = useState(false)
-
-  if (!creative) return null
-
-  const product = productById(creative.productId)
-  const steps = STEPS_BY_STATUS[creative.status]
-  const ctrDelta = indexDelta(ctrIndex(creative))
-  const cvrDelta = indexDelta(cvrIndex(creative))
-  const roiDelta = indexDelta(roiIndex(creative))
-  const isGenerative = creative.status === "scale" || creative.status === "iterate" || creative.status === "refresh"
-  const currentStep = phase === "diagnose" ? 1 : phase === "generated" ? 2 : 3
-
-  const startGenerate = () => {
-    setGenerating(true)
-    window.setTimeout(() => {
-      setGenerating(false)
-      setPhase("generated")
-    }, 700)
-  }
-
-  const createIntent = () => {
-    const labels =
-      creative.status === "refresh"
-        ? (creative.directions ?? []).filter((item) => directions.includes(item.key)).map((item) => item.label)
-        : (creative.variants ?? []).map((item) => item.label)
-    onCreateDelivery({
-      id: `draft-${creative.id}`,
-      title: `${product.shortName}｜${creative.status === "scale" ? "爆款衍生放量" : creative.status === "refresh" ? "新方向测试" : "Hook 变体测试"}`,
-      productId: product.id,
-      sourceCreativeId: creative.id,
-      sourceStatus: creative.status,
-      creatives: [
-        { id: creative.id, label: "原素材", kind: "origin", selected: creative.status !== "stop" },
-        ...labels.map((label, index) => ({
-          id: `V-${String.fromCharCode(65 + index)}`,
-          label,
-          kind: "variant" as const,
-          selected: true,
-        })),
-      ],
-      targetRoi: product.targetRoi,
-      dailyBudget: creative.status === "scale" ? 3200 : 1800,
-      observationHours: creative.status === "scale" ? 24 : creative.status === "refresh" ? 72 : 48,
-      winOrders: creative.status === "scale" ? 10 : 5,
-      stopRoi: creative.status === "scale" ? 1.62 : 1.4,
-      createdAt: "刚刚",
-    })
-    onClose()
-  }
-
-  const canGenerate = creative.status !== "refresh" || directions.length > 0
-
-  return (
-    <>
-      <DecisionDrawer
-        open
-        title="素材诊断详情"
-        description={`${creative.id} · ${product.name}`}
-        onOpenChange={(open) => !open && onClose()}
-        footer={
-          <div className="flex items-center justify-between gap-3">
-            <span className="text-[10.5px] text-[var(--muted)]">
-              {creative.protection
-                ? "非素材问题，素材动作已禁用"
-                : creative.status === "stop"
-                  ? "关停只移出当前商品素材池，可恢复、可审计"
-                  : "规则版本 v1.0 · 结论基于当前 Benchmark 快照"}
-            </span>
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={onClose}>
-                关闭
-              </Button>
-              <PrimaryAction
-                creative={creative}
-                phase={phase}
-                generating={generating}
-                canGenerate={canGenerate}
-                isGenerative={isGenerative}
-                onGenerate={startGenerate}
-                onCreateIntent={createIntent}
-                onStop={() => setConfirmStop(true)}
-                onKeep={() => {
-                  onMarkHandled(creative.id, creative.status === "stable" ? "已创建复查" : "观察中")
-                  onClose()
-                }}
-                onOpenDelivery={() => {
-                  onClose()
-                  onOpenDelivery(product.id)
-                }}
-              />
-            </div>
-          </div>
-        }
-      >
-        <DrawerStepper steps={steps} current={currentStep} />
-
-        <ResultCallout
-          tone={creative.protection ? "neutral" : CALLOUT_TONE[creative.status]}
-          badge={
-            creative.protection ? (
-              <Badge className="border-0 bg-zinc-100 text-zinc-700">
-                <ShieldCheck size={11} />
-                素材链路正常
-              </Badge>
-            ) : (
-              <DecisionBadge status={creative.status} />
-            )
-          }
-          headline={creative.headline}
-          lines={[creative.evidence, `结论：${creative.advice}`]}
-        />
-
-        <SectionTitle>系统为什么这样判断</SectionTitle>
-        <div className="mb-5 grid grid-cols-3 gap-2">
-          <EvidenceCard
-            label="CTR"
-            value={`${creative.ctr.toFixed(2)}%`}
-            hint={`均值 ${creative.benchmarkCtr.toFixed(2)}% · ${ctrDelta >= 0 ? "+" : ""}${ctrDelta}%`}
-            tone={ctrDelta >= -10 ? "good" : "bad"}
-          />
-          <EvidenceCard
-            label="CVR"
-            value={`${creative.cvr.toFixed(2)}%`}
-            hint={`均值 ${creative.benchmarkCvr.toFixed(2)}% · ${cvrDelta >= 0 ? "+" : ""}${cvrDelta}%`}
-            tone={cvrDelta >= -10 ? "good" : "bad"}
-          />
-          <EvidenceCard
-            label={creative.status === "observe" ? "样本状态" : "ROI / 目标"}
-            value={creative.status === "observe" ? creative.sample : creative.roi.toFixed(2)}
-            hint={
-              creative.status === "observe"
-                ? `可信度 ${creative.confidence}%`
-                : `目标 ${creative.targetRoi.toFixed(2)} · ${roiDelta >= 0 ? "+" : ""}${roiDelta}%`
-            }
-            tone={creative.status === "observe" ? "default" : roiDelta >= 0 ? "good" : "bad"}
-          />
-        </div>
-
-        {creative.status === "observe" && creative.sampleGap ? (
-          <div className="mb-5">
-            <SectionTitle>还差多少才能判断</SectionTitle>
-            <div className="space-y-3 rounded-xl border border-[var(--line)] p-4">
-              <SampleProgress label="消耗进度" current={creative.spend} target={creative.spend + creative.sampleGap.spendNeeded} unit="USD" />
-              <SampleProgress label="订单进度" current={creative.orders} target={creative.orders + creative.sampleGap.ordersNeeded} unit="单" />
-              <p className="text-[10.5px] leading-relaxed text-[var(--muted)]">
-                还差约 ${creative.sampleGap.spendNeeded} 消耗或 {creative.sampleGap.ordersNeeded} 个订单 · 预计{" "}
-                {creative.sampleGap.hoursLeft} 小时后可给出结论。达到阈值后系统自动重新诊断。
-              </p>
-            </div>
-          </div>
-        ) : null}
-
-        {creative.protection ? (
-          <div className="mb-5 rounded-xl border border-blue-100 bg-blue-50/60 p-4">
-            <p className="text-[12.5px] font-extrabold text-blue-900">系统不会让你为了动作而换素材</p>
-            <p className="mt-1 text-[10.5px] leading-relaxed text-blue-800">
-              CTR Index 与 CVR Index 均 ≥ 0.90，问题不在素材链路。生成变体、生成新方向与关停已被禁用，
-              请优先检查商品价格、客单价、库存、佣金或投放设置。
-            </p>
-          </div>
-        ) : null}
-
-        {creative.status === "iterate" || creative.status === "scale" ? (
-          <div className="mb-5">
-            <SectionTitle
-              action={
-                <span className="text-[10.5px] text-[var(--muted)]">
-                  {creative.status === "scale" ? "保留原素材结构" : "仅改 1 个变量"}
-                </span>
-              }
-            >
-              {creative.status === "scale" ? "生成 3 个爆款衍生" : "生成 3 个 Hook 变体"}
-            </SectionTitle>
-            <div className="grid grid-cols-3 gap-2">
-              {(creative.variants ?? []).map((variant) => (
-                <div key={variant.key} className="rounded-xl border border-[var(--line)] p-3">
-                  <span className="flex size-5 items-center justify-center rounded-full bg-[var(--near-black)] text-[9.5px] font-extrabold text-white">
-                    {variant.key}
-                  </span>
-                  <p className="mt-2 text-[11px] font-extrabold text-[var(--text)]">{variant.label}</p>
-                  <p className="mt-1 text-[10px] leading-relaxed text-[var(--muted)]">{variant.script}</p>
-                  {phase !== "diagnose" ? (
-                    <Badge className="mt-2 border-0 bg-emerald-50 text-emerald-700">
-                      <Check size={10} />
-                      已生成
-                    </Badge>
-                  ) : null}
-                </div>
-              ))}
-            </div>
-          </div>
-        ) : null}
-
-        {creative.status === "refresh" ? (
-          <div className="mb-5">
-            <SectionTitle action={<span className="text-[10.5px] text-[var(--muted)]">至少选择 1 个方向</span>}>
-              重新测试的方向
-            </SectionTitle>
-            <div className="space-y-2">
-              {(creative.directions ?? []).map((direction) => {
-                const checked = directions.includes(direction.key)
-                return (
-                  <button
-                    key={direction.key}
-                    type="button"
-                    onClick={() =>
-                      setDirections((prev) =>
-                        prev.includes(direction.key) ? prev.filter((key) => key !== direction.key) : [...prev, direction.key]
-                      )
-                    }
-                    className={cn(
-                      "flex w-full cursor-pointer items-center gap-3 rounded-xl border p-3 text-left transition-colors",
-                      checked ? "border-[var(--near-black)] bg-[var(--soft-2)]" : "border-[var(--line)] hover:bg-[var(--soft-2)]"
-                    )}
-                  >
-                    <span
-                      className={cn(
-                        "flex size-5 shrink-0 items-center justify-center rounded-md border",
-                        checked ? "border-[var(--near-black)] bg-[var(--near-black)] text-white" : "border-[var(--line-strong)]"
-                      )}
-                    >
-                      {checked ? <Check size={12} strokeWidth={3} /> : null}
-                    </span>
-                    <span className="min-w-0">
-                      <span className="block text-[11.5px] font-extrabold text-[var(--text)]">{direction.label}</span>
-                      <span className="mt-0.5 block text-[10px] text-[var(--muted)]">{direction.desc}</span>
-                    </span>
-                  </button>
-                )
-              })}
-            </div>
-            <p className="mt-2 text-[10px] leading-relaxed text-[var(--muted)]">
-              换新只保留商品、品牌与合规约束，不继承原内容结构；迭代只弱一环，换新是两条链路同时变弱。
-            </p>
-          </div>
-        ) : null}
-
-        <SectionTitle>下一次投放策略</SectionTitle>
-        <ContextTable
-          rows={[
-            { label: "关联商品", value: product.name, hint: `${product.sku} · ${product.country}` },
-            { label: "素材动作", value: creative.nextPlan.action },
-            {
-              label: creative.status === "stop" ? "影响范围" : "观察与判赢",
-              value: creative.nextPlan.observation,
-              hint: creative.status === "iterate" || creative.status === "scale" ? "未达止损线自动标记「建议关停」" : undefined,
-            },
-          ]}
-        />
-      </DecisionDrawer>
-
-      <ConfirmDialog
-        open={confirmStop}
-        onOpenChange={setConfirmStop}
-        title="确认关停这条素材？"
-        description="关停后该素材将移出当前商品的 GMV Max 素材池，不会删除素材资产，也不影响它在其他商品中的使用。"
-        impacts={[
-          { label: "素材", value: creative.id },
-          { label: "关联商品", value: product.name },
-          { label: "当前消耗", value: `${formatMoney(creative.spend)} · ${creative.orders} 单` },
-          { label: "预计影响", value: "风险消耗下降，无 GMV 损失" },
-        ]}
-        recoverHint="操作会记录 operator、before/after 与 request_id，可在任务记录中随时恢复。"
-        confirmLabel="确认关停"
-        onConfirm={() => {
-          setConfirmStop(false)
-          onMarkHandled(creative.id, "已移出素材池")
-          onClose()
-        }}
-      />
-    </>
-  )
-}
-
-function PrimaryAction({
-  creative,
-  phase,
-  generating,
-  canGenerate,
-  isGenerative,
-  onGenerate,
-  onCreateIntent,
-  onStop,
-  onKeep,
-  onOpenDelivery,
-}: {
-  creative: CreativeDiagnosis
-  phase: DrawerPhase
-  generating: boolean
-  canGenerate: boolean
-  isGenerative: boolean
-  onGenerate: () => void
-  onCreateIntent: () => void
-  onStop: () => void
-  onKeep: () => void
-  onOpenDelivery: () => void
-}) {
-  const meta = DECISION_STATUS_META[creative.status]
-
-  if (creative.protection) {
-    return (
-      <Button onClick={onOpenDelivery}>
-        <Rocket size={14} />
-        查看商品与投放诊断
-      </Button>
-    )
-  }
-
-  if (creative.status === "stop") {
-    return (
-      <Button variant="destructive" onClick={onStop}>
-        <XCircle size={14} />
-        确认关停
-      </Button>
-    )
-  }
-
-  if (!isGenerative) {
-    return (
-      <Button variant="primary" onClick={onKeep}>
-        <Check size={14} />
-        {meta.action}
-      </Button>
-    )
-  }
-
-  if (phase === "diagnose") {
-    return (
-      <Button variant="primary" disabled={!canGenerate || generating} onClick={onGenerate}>
-        {generating ? <Loader2 size={14} className="animate-spin" /> : <WandSparkles size={14} />}
-        {generating ? "生成中…" : creative.status === "iterate" ? "生成变体并创建测试" : meta.action}
-      </Button>
-    )
-  }
-
-  return (
-    <Button variant="primary" onClick={onCreateIntent}>
-      <Sparkles size={14} />
-      创建投放方案
-      <ArrowRight size={14} />
-    </Button>
   )
 }

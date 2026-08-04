@@ -1,10 +1,10 @@
 "use client"
 
-/** 素材决策闭环的共享 UI 原子：抽屉、步骤条、结论卡、证据卡、筛选 chip 等 */
+/** 素材诊断闭环的共享 UI 原子：抽屉、步骤条、结论卡、证据卡、筛选 chip 等 */
 
 import * as Dialog from "@radix-ui/react-dialog"
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion"
-import { ArrowDownRight, ArrowRight, ArrowUpRight, Check, TriangleAlert, X } from "lucide-react"
+import { ArrowDownRight, ArrowRight, ArrowUpRight, Check, ChevronRight, Lock, Play, TriangleAlert, X } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -134,6 +134,7 @@ export function DecisionDrawer({
   description,
   children,
   footer,
+  width = 560,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -141,6 +142,8 @@ export function DecisionDrawer({
   description?: string
   children: React.ReactNode
   footer?: React.ReactNode
+  /** 抽屉宽度上限，窄屏自动退化为满宽减边距。素材诊断详情用 720，其余保持 560 */
+  width?: number
 }) {
   const reduceMotion = useReducedMotion()
 
@@ -160,7 +163,8 @@ export function DecisionDrawer({
             </Dialog.Overlay>
             <Dialog.Content asChild forceMount>
               <motion.aside
-                className="fixed bottom-4 right-4 top-4 z-50 flex w-[min(560px,calc(100vw-32px))] flex-col overflow-hidden rounded-[24px] border border-[var(--line)] bg-white shadow-[0_28px_90px_rgba(9,9,11,0.22)] outline-none"
+                className="fixed bottom-4 right-4 top-4 z-50 flex flex-col overflow-hidden rounded-[24px] border border-[var(--line)] bg-white shadow-[0_28px_90px_rgba(9,9,11,0.22)] outline-none"
+                style={{ width: `min(${width}px, calc(100vw - 32px))` }}
                 initial={{ opacity: 0, x: reduceMotion ? 0 : 48, scale: reduceMotion ? 1 : 0.985 }}
                 animate={{ opacity: 1, x: 0, scale: 1 }}
                 exit={{ opacity: 0, x: reduceMotion ? 0 : 36, scale: reduceMotion ? 1 : 0.99 }}
@@ -308,7 +312,7 @@ export function ConclusionBox({ title, detail, tone = "neutral" }: { title: stri
   )
 }
 
-/** 键值说明表，用于「进入素材决策后自动带入」「下一次投放策略」 */
+/** 键值说明表，用于「进入素材诊断后自动带入」「下一次投放策略」 */
 export function ContextTable({ rows }: { rows: Array<{ label: string; value: React.ReactNode; hint?: string }> }) {
   return (
     <div className="overflow-hidden rounded-xl border border-[var(--line)]">
@@ -495,6 +499,235 @@ export function TableHead({
         </span>
       ))}
     </div>
+  )
+}
+
+// ─── 候选方案卡（9:16 封面 + hover 看完整脚本） ───────────────────────────────
+
+export function VideoCard({
+  cover,
+  category,
+  title,
+  desc,
+  script,
+  sourceLabel,
+  sourceClassName,
+  metric,
+  selected,
+  disabled,
+  onToggle,
+  onRemove,
+}: {
+  cover: string
+  category: string
+  title: string
+  desc: string
+  /** hover 浮层里展开的完整脚本 */
+  script: string
+  sourceLabel?: string
+  sourceClassName?: string
+  /** 右下角的效果标注，如 ROI 2.42 */
+  metric?: string
+  selected: boolean
+  disabled?: boolean
+  onToggle: () => void
+  onRemove?: () => void
+}) {
+  return (
+    <div className="group relative">
+      <button
+        type="button"
+        onClick={onToggle}
+        disabled={disabled && !selected}
+        aria-pressed={selected}
+        className={cn(
+          "w-full overflow-hidden rounded-xl border bg-white text-left transition-all",
+          selected ? "border-[var(--near-black)] ring-1 ring-[var(--near-black)]/15" : "border-[var(--line)] hover:border-[var(--line-strong)]",
+          disabled && !selected ? "cursor-not-allowed opacity-45" : "cursor-pointer"
+        )}
+      >
+        <span className="relative block aspect-[9/14] overflow-hidden bg-[var(--soft)]">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={cover} alt={title} className="size-full object-cover" />
+          <span className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-black/20" />
+
+          <span className="absolute left-1.5 top-1.5 max-w-[calc(100%-44px)] truncate rounded-md bg-black/65 px-1.5 py-0.5 text-[9.5px] font-extrabold text-white">
+            {category}
+          </span>
+          <span
+            className={cn(
+              "absolute right-1.5 top-1.5 flex size-5 items-center justify-center rounded-md border transition-colors",
+              selected ? "border-[var(--lime)] bg-[var(--lime)] text-[var(--near-black)]" : "border-white/70 bg-black/30 text-transparent"
+            )}
+          >
+            <Check size={12} strokeWidth={3} />
+          </span>
+
+          <span className="absolute left-1/2 top-1/2 flex size-9 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 opacity-0 shadow transition-opacity group-hover:opacity-100">
+            <Play size={13} className="translate-x-0.5 text-[#18181b]" fill="#18181b" />
+          </span>
+
+          {metric ? (
+            <span className="absolute bottom-1.5 left-1.5 rounded bg-black/65 px-1.5 py-0.5 text-[9.5px] font-bold tabular-nums text-white">
+              {metric}
+            </span>
+          ) : null}
+          {sourceLabel ? (
+            <span className={cn("absolute bottom-1.5 right-1.5 rounded px-1.5 py-0.5 text-[9px] font-bold", sourceClassName ?? "bg-white/90 text-[var(--text)]")}>
+              {sourceLabel}
+            </span>
+          ) : null}
+        </span>
+
+        <span className="block p-2">
+          <span className="block truncate text-[11px] font-extrabold text-[var(--text)]">{title}</span>
+          <span className="mt-0.5 line-clamp-2 block text-[9.5px] leading-relaxed text-[var(--muted)]">{desc}</span>
+        </span>
+      </button>
+
+      {onRemove ? (
+        <button
+          type="button"
+          onClick={onRemove}
+          aria-label="移除该参考"
+          className="absolute -right-1.5 -top-1.5 z-10 hidden size-5 cursor-pointer items-center justify-center rounded-full border border-[var(--line)] bg-white text-[var(--muted)] shadow-sm hover:text-[var(--text)] group-hover:flex"
+        >
+          <X size={11} strokeWidth={2.6} />
+        </button>
+      ) : null}
+
+      {/* hover 浮层：完整脚本 */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-full z-20 mb-1.5 hidden group-hover:block">
+        <div className="rounded-xl border border-[var(--line)] bg-[var(--near-black)] p-2.5 shadow-[0_12px_32px_rgba(9,9,11,0.28)]">
+          <p className="text-[9.5px] font-extrabold text-[var(--lime)]">{category} · 完整脚本</p>
+          <p className="mt-1 text-[10px] leading-relaxed text-white/90">{script}</p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── 素材链路四环 ────────────────────────────────────────────────────────────
+
+export function LinkChain({
+  stages,
+  levels,
+}: {
+  stages: Array<{ key: string; label: string; question: string }>
+  /** 每一环的迭代优先级：主迭代标红、次迭代标黄、其余为已验证锁定 */
+  levels: Record<string, "primary" | "secondary" | "ok">
+}) {
+  return (
+    <div className="flex items-stretch gap-1">
+      {stages.map((stage, index) => {
+        const level = levels[stage.key] ?? "ok"
+        return (
+          <div key={stage.key} className="flex min-w-0 flex-1 items-stretch">
+            <div
+              className={cn(
+                "min-w-0 flex-1 rounded-lg border px-2 py-2",
+                level === "primary" ? "border-red-200 bg-red-50/70"
+                : level === "secondary" ? "border-amber-200 bg-amber-50/60"
+                : "border-[var(--line)] bg-[var(--soft-2)]"
+              )}
+            >
+              <p className="flex items-center gap-1 text-[10px] font-extrabold">
+                {level === "ok" ? (
+                  <Lock size={9} className="shrink-0 text-[var(--muted-2)]" />
+                ) : (
+                  <TriangleAlert size={10} className={cn("shrink-0", level === "primary" ? "text-red-500" : "text-amber-500")} />
+                )}
+                <span
+                  className={cn(
+                    "truncate",
+                    level === "primary" ? "text-red-700" : level === "secondary" ? "text-amber-800" : "text-[var(--muted)]"
+                  )}
+                >
+                  {stage.label}
+                </span>
+              </p>
+              <p className="mt-0.5 truncate text-[9px] text-[var(--muted)]">{stage.question}</p>
+              <p
+                className={cn(
+                  "mt-1 text-[9px] font-bold",
+                  level === "primary" ? "text-red-600" : level === "secondary" ? "text-amber-700" : "text-[var(--muted-2)]"
+                )}
+              >
+                {level === "primary" ? "主迭代 · 优先改这里" : level === "secondary" ? "次迭代 · 可作备选" : "已验证 · 锁定"}
+              </p>
+            </div>
+            {index < stages.length - 1 ? (
+              <span className="flex items-center px-0.5 text-[var(--muted-2)]">
+                <ChevronRight size={11} />
+              </span>
+            ) : null}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+// ─── 迭代变量单选卡 ──────────────────────────────────────────────────────────
+
+export function VariableCard({
+  label,
+  desc,
+  targetMetric,
+  locked,
+  recommended,
+  secondary,
+  selected,
+  onSelect,
+}: {
+  label: string
+  desc: string
+  targetMetric: "ctr" | "cvr"
+  locked: string[]
+  /** 主迭代环的变量 */
+  recommended: boolean
+  /** 次迭代环的变量：不打主标，但也不置灰 */
+  secondary?: boolean
+  selected: boolean
+  onSelect: () => void
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      aria-pressed={selected}
+      className={cn(
+        "w-full cursor-pointer rounded-xl border p-3 text-left transition-colors",
+        selected ? "border-[var(--near-black)] bg-[var(--soft-2)]" : "border-[var(--line)] hover:bg-[var(--soft-2)]",
+        !recommended && !secondary && !selected && "opacity-60"
+      )}
+    >
+      <div className="flex items-center justify-between gap-2">
+        <span className="flex min-w-0 items-center gap-1.5">
+          <span className="truncate text-[11.5px] font-extrabold text-[var(--text)]">{label}</span>
+          {recommended ? (
+            <Badge className="border-0 bg-[var(--lime-soft)] text-[9px] text-[#5c7a00]">主迭代</Badge>
+          ) : secondary ? (
+            <Badge className="border-0 bg-amber-50 text-[9px] text-amber-800">次迭代</Badge>
+          ) : null}
+        </span>
+        <span
+          className={cn(
+            "flex size-4 shrink-0 items-center justify-center rounded-full border",
+            selected ? "border-[var(--near-black)] bg-[var(--near-black)]" : "border-[var(--line-strong)]"
+          )}
+        >
+          {selected ? <span className="size-1.5 rounded-full bg-white" /> : null}
+        </span>
+      </div>
+      <p className="mt-1 text-[10px] leading-relaxed text-[var(--muted)]">{desc}</p>
+      <div className="mt-1.5 flex flex-wrap items-center gap-1">
+        <span className="rounded bg-[var(--soft)] px-1.5 py-0.5 text-[9px] font-bold text-[var(--text)]">
+          目标指标 {targetMetric.toUpperCase()}
+        </span>
+        <span className="truncate text-[9px] text-[var(--muted-2)]">锁定 {locked.join(" / ")}</span>
+      </div>
+    </button>
   )
 }
 

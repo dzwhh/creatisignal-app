@@ -2,7 +2,7 @@
 <table>
   <thead><tr><th background-color="light-gray">优先级</th><th background-color="light-gray">范围</th><th background-color="light-gray">原因</th><th background-color="light-gray">研发依赖</th></tr></thead>
   <tbody>
-    <tr><td>P0</td><td>Product × Creative 数据模型；统一指标与 Benchmark；六类互斥规则；素材决策列表；诊断抽屉；Mock 闭环 Demo</td><td>构成产品核心 Hook：AO 能看到唯一结论、证据和动作</td><td>TikTok 数据同步、商品素材关联、规则服务、前端列表与抽屉</td></tr>
+    <tr><td>P0</td><td>Product × Creative 数据模型；统一指标与 Benchmark；六类互斥规则；素材诊断列表；诊断抽屉；Mock 闭环 Demo</td><td>构成产品核心 Hook：AO 能看到唯一结论、证据和动作</td><td>TikTok 数据同步、商品素材关联、规则服务、前端列表与抽屉</td></tr>
     <tr><td>P1</td><td>生成变体、生成新方向、投放确认、任务状态机、结果回流、关停确认与审计</td><td>完成从洞察到执行再到验证的主工作流</td><td>生成服务、素材存储、GMV Max 素材池接口、任务队列</td></tr>
     <tr><td>P2</td><td>商品层放量建议、爆款衍生、非素材问题跳转、失败恢复、Benchmark 多级回退</td><td>提升判断质量和增长效率</td><td>预算/投放配置接口、经营诊断模块、配置中心</td></tr>
     <tr><td>P3</td><td>账户/品类自定义阈值、自动执行、协作审批、行业 Benchmark、预测影响</td><td>提高规模化和协作效率，但非 MVP 闭环必需</td><td>权限、审批、实验平台、行业数据与预测模型</td></tr>
