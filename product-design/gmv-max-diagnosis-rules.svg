@@ -1,0 +1,209 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1200" viewBox="0 0 1920 1200">
+  <defs>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="5" stdDeviation="14" flood-color="#17200d" flood-opacity="0.07"/>
+    </filter>
+    <style>
+      .title{font:750 30px -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;fill:#151713}
+      .subtitle{font:500 14px -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;fill:#6d7369}
+      .h2{font:750 22px -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;fill:#151713}
+      .h3{font:700 15px -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;fill:#151713}
+      .body{font:500 13px -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;fill:#43483f}
+      .small{font:500 12px -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;fill:#737970}
+      .tiny{font:500 11px -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;fill:#858b81}
+      .code{font:600 12px ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;fill:#353b32}
+      .button{font:700 13px -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;fill:#151713}
+    </style>
+  </defs>
+
+  <rect width="1920" height="1200" fill="#f5f6f3"/>
+
+  <!-- header -->
+  <rect width="1920" height="102" fill="#fff"/>
+  <text x="46" y="45" class="title">GMV Max 素材诊断规则 · MVP</text>
+  <text x="46" y="73" class="subtitle">诊断对象：商品 × 素材 × 国家 × 观察窗口｜每条素材只输出一个结果和一个主动作</text>
+  <rect x="1515" y="28" width="350" height="42" rx="12" fill="#f0ffd1" stroke="#d8eba8"/>
+  <text x="1540" y="54" class="h3">判定优先级：观察 → 关停 → 换新 → 放量 → 迭代 → 稳定</text>
+
+  <!-- shared metric bar -->
+  <g transform="translate(46 126)">
+    <rect width="1828" height="118" rx="18" fill="#fff" stroke="#e0e4dc"/>
+    <text x="22" y="31" class="h3">所有诊断共用 6 个计算变量</text>
+
+    <g transform="translate(22 48)">
+      <rect width="278" height="49" rx="11" fill="#f8f9f6"/>
+      <text x="12" y="19" class="tiny">目标成本</text><text x="12" y="38" class="code">Target CPA = AOV ÷ Target ROI</text>
+    </g>
+    <g transform="translate(312 48)">
+      <rect width="278" height="49" rx="11" fill="#f8f9f6"/>
+      <text x="12" y="19" class="tiny">收益指数</text><text x="12" y="38" class="code">ROI Index = ROI ÷ Target ROI</text>
+    </g>
+    <g transform="translate(602 48)">
+      <rect width="278" height="49" rx="11" fill="#f8f9f6"/>
+      <text x="12" y="19" class="tiny">点击指数</text><text x="12" y="38" class="code">CTR Index = CTR ÷ Benchmark CTR</text>
+    </g>
+    <g transform="translate(892 48)">
+      <rect width="278" height="49" rx="11" fill="#f8f9f6"/>
+      <text x="12" y="19" class="tiny">转化指数</text><text x="12" y="38" class="code">CVR Index = CVR ÷ Benchmark CVR</text>
+    </g>
+    <g transform="translate(1182 48)">
+      <rect width="278" height="49" rx="11" fill="#f8f9f6"/>
+      <text x="12" y="19" class="tiny">短期趋势</text><text x="12" y="38" class="code">Trend = 近3日 ÷ 前7日 - 1</text>
+    </g>
+    <g transform="translate(1472 48)">
+      <rect width="334" height="49" rx="11" fill="#f8f9f6"/>
+      <text x="12" y="19" class="tiny">样本充分</text><text x="12" y="38" class="code">Active≥24h 且 Orders≥5，或 Spend≥2×Target CPA</text>
+    </g>
+  </g>
+
+  <!-- row 1 cards -->
+  <g transform="translate(46 272)">
+    <!-- scale -->
+    <g filter="url(#shadow)">
+      <rect width="590" height="408" rx="20" fill="#fff"/>
+      <rect width="590" height="9" rx="5" fill="#35c66d"/>
+    </g>
+    <rect x="22" y="28" width="88" height="30" rx="15" fill="#dff8e7"/>
+    <text x="44" y="48" class="h3" fill="#157944">可放量</text>
+    <text x="128" y="49" class="small">素材动作：爆款衍生</text>
+    <text x="22" y="88" class="h2">已经证明能赚，且还有增长空间</text>
+    <text x="22" y="122" class="h3">触发逻辑</text>
+    <text x="22" y="148" class="code">Sample = 充分</text>
+    <text x="22" y="171" class="code">ROI Index ≥ 1.15</text>
+    <text x="22" y="194" class="code">Orders ≥ max(10, 商品素材订单均值)</text>
+    <text x="22" y="217" class="code">近 3 日 ROI Trend ≥ -10%</text>
+    <rect x="22" y="238" width="546" height="82" rx="12" fill="#f2fff5"/>
+    <text x="36" y="262" class="small">诊断原因</text>
+    <text x="36" y="284" class="body">ROI 高于目标 27%，订单高于同商品均值 31%，连续 3 日稳定</text>
+    <text x="36" y="307" class="small">建议：保留原素材，生成 3–5 个同结构变体；商品层逐步放量</text>
+    <rect x="22" y="340" width="190" height="44" rx="12" fill="#b5f22b"/>
+    <text x="57" y="367" class="button">创建放量方案</text>
+    <rect x="226" y="340" width="156" height="44" rx="12" fill="#fff" stroke="#dfe3da"/>
+    <text x="258" y="367" class="button">生成爆款变体</text>
+    <text x="400" y="367" class="small">24h 后回看 ROI</text>
+
+    <!-- stable -->
+    <g transform="translate(619 0)" filter="url(#shadow)">
+      <rect width="590" height="408" rx="20" fill="#fff"/>
+      <rect width="590" height="9" rx="5" fill="#7d8974"/>
+    </g>
+    <g transform="translate(619 0)">
+      <rect x="22" y="28" width="100" height="30" rx="15" fill="#edf0ea"/>
+      <text x="43" y="48" class="h3">稳定投放</text>
+      <text x="140" y="49" class="small">无需改素材</text>
+      <text x="22" y="88" class="h2">在目标线上稳定，不冒险做调整</text>
+      <text x="22" y="122" class="h3">触发逻辑</text>
+      <text x="22" y="148" class="code">Sample = 充分</text>
+      <text x="22" y="171" class="code">1.00 ≤ ROI Index &lt; 1.15</text>
+      <text x="22" y="194" class="code">CTR Index ≥ 0.90 且 CVR Index ≥ 0.90</text>
+      <text x="22" y="217" class="code">近 3 日 ROI / CTR 波动均 &lt; 15%</text>
+      <rect x="22" y="238" width="546" height="82" rx="12" fill="#f7f8f5"/>
+      <text x="36" y="262" class="small">诊断原因</text>
+      <text x="36" y="284" class="body">ROI 1.92，高于目标 6%；点击、转化和订单没有显著下滑</text>
+      <text x="36" y="307" class="small">建议：维持当前素材池与投放设置，72 小时后自动复查</text>
+      <rect x="22" y="340" width="174" height="44" rx="12" fill="#1b1d19"/>
+      <text x="67" y="367" class="button" style="fill:#fff">保持投放</text>
+      <text x="220" y="367" class="small">系统自动复查，无需 AO 操作</text>
+    </g>
+
+    <!-- observe -->
+    <g transform="translate(1238 0)" filter="url(#shadow)">
+      <rect width="590" height="408" rx="20" fill="#fff"/>
+      <rect width="590" height="9" rx="5" fill="#78a6dd"/>
+    </g>
+    <g transform="translate(1238 0)">
+      <rect x="22" y="28" width="88" height="30" rx="15" fill="#e9f2fd"/>
+      <text x="43" y="48" class="h3" fill="#345f96">待观察</text>
+      <text x="128" y="49" class="small">数据不足，不下结论</text>
+      <text x="22" y="88" class="h2">不是表现差，是还没跑够</text>
+      <text x="22" y="122" class="h3">触发逻辑（任一满足）</text>
+      <text x="22" y="148" class="code">Active Time &lt; 24h 且 Spend &lt; 2 × Target CPA</text>
+      <text x="22" y="171" class="code">Orders &lt; 5 且 Spend &lt; 2 × Target CPA</text>
+      <text x="22" y="194" class="code">关键指标延迟 / 缺失 / 素材刚加入素材池</text>
+      <text x="22" y="217" class="code">不参与其余 5 类诊断</text>
+      <rect x="22" y="238" width="546" height="82" rx="12" fill="#f3f8ff"/>
+      <text x="36" y="262" class="small">诊断原因</text>
+      <text x="36" y="284" class="body">当前仅消耗 $26、产生 1 单，距离有效判断还差约 $34 消耗</text>
+      <text x="36" y="307" class="small">建议：继续投放至样本充分；达到阈值后自动重新诊断</text>
+      <rect x="22" y="340" width="174" height="44" rx="12" fill="#fff" stroke="#6c97cb"/>
+      <text x="67" y="367" class="button" fill="#345f96">继续观察</text>
+      <text x="220" y="367" class="small">预计 18 小时后可重新判断</text>
+    </g>
+  </g>
+
+  <!-- row 2 cards -->
+  <g transform="translate(46 712)">
+    <!-- iterate -->
+    <g filter="url(#shadow)">
+      <rect width="590" height="426" rx="20" fill="#fff"/>
+      <rect width="590" height="9" rx="5" fill="#e9bd32"/>
+    </g>
+    <rect x="22" y="28" width="88" height="30" rx="15" fill="#fff0b9"/>
+    <text x="43" y="48" class="h3" fill="#7e5d00">需迭代</text>
+    <text x="128" y="49" class="small">单变量修改</text>
+    <text x="22" y="88" class="h2">方向仍然有效，只修最弱的一环</text>
+    <text x="22" y="122" class="h3">触发逻辑</text>
+    <text x="22" y="148" class="code">Sample = 充分 且 ROI Index ≥ 0.90</text>
+    <text x="22" y="171" class="code">CTR Index &lt; 0.80，但 CVR Index ≥ 0.90 → 改 Hook</text>
+    <text x="22" y="194" class="code">或 CTR ≥ 0.90，但 CVR &lt; 0.80 → 改卖点 / Offer</text>
+    <text x="22" y="217" class="code">或单项近 3 日 Trend ≤ -20%，其他链路正常</text>
+    <rect x="22" y="238" width="546" height="94" rx="12" fill="#fffaf0"/>
+    <text x="36" y="262" class="small">诊断原因</text>
+    <text x="36" y="284" class="body">开头吸引力下降：CTR 比近 7 日 Benchmark 低 21%</text>
+    <text x="36" y="307" class="small">建议：保留核心卖点与转化结构，只生成 3 个新开头</text>
+    <text x="36" y="325" class="tiny">疲劳只作为原因标签：Hook 疲劳 / 卖点疲劳 / Offer 疲劳</text>
+    <rect x="22" y="352" width="174" height="44" rx="12" fill="#1b1d19"/>
+    <text x="67" y="379" class="button" style="fill:#fff">生成变体</text>
+    <text x="220" y="379" class="small">48h 后比较原素材与变体</text>
+
+    <!-- refresh -->
+    <g transform="translate(619 0)" filter="url(#shadow)">
+      <rect width="590" height="426" rx="20" fill="#fff"/>
+      <rect width="590" height="9" rx="5" fill="#698cdb"/>
+    </g>
+    <g transform="translate(619 0)">
+      <rect x="22" y="28" width="88" height="30" rx="15" fill="#e8eeff"/>
+      <text x="43" y="48" class="h3" fill="#3e5f9f">需换新</text>
+      <text x="128" y="49" class="small">更换创意方向</text>
+      <text x="22" y="88" class="h2">局部修改不够，需要新的表达结构</text>
+      <text x="22" y="122" class="h3">触发逻辑</text>
+      <text x="22" y="148" class="code">Sample = 充分 且 0.70 ≤ ROI Index &lt; 0.90</text>
+      <text x="22" y="171" class="code">CTR Index &lt; 0.80 且 CVR Index &lt; 0.80</text>
+      <text x="22" y="194" class="code">或历史曾达标，但 ROI 较历史稳定期下降 ≥ 30%</text>
+      <text x="22" y="217" class="code">且连续 2 个诊断窗口未恢复</text>
+      <rect x="22" y="238" width="546" height="94" rx="12" fill="#f4f7ff"/>
+      <text x="36" y="262" class="small">诊断原因</text>
+      <text x="36" y="284" class="body">观看和转化同时下降，原有创意方向已经失效</text>
+      <text x="36" y="307" class="small">建议：保留商品与合规信息，重新测试场景、达人和表达结构</text>
+      <text x="36" y="325" class="tiny">与迭代的边界：迭代只弱一环；换新是两条链路同时变弱</text>
+      <rect x="22" y="352" width="174" height="44" rx="12" fill="#fff" stroke="#557ac7"/>
+      <text x="55" y="379" class="button" fill="#3e5f9f">生成新方向</text>
+      <text x="220" y="379" class="small">新素材上线后观察 72h</text>
+    </g>
+
+    <!-- stop -->
+    <g transform="translate(1238 0)" filter="url(#shadow)">
+      <rect width="590" height="426" rx="20" fill="#fff"/>
+      <rect width="590" height="9" rx="5" fill="#e05f5f"/>
+    </g>
+    <g transform="translate(1238 0)">
+      <rect x="22" y="28" width="102" height="30" rx="15" fill="#fee5e5"/>
+      <text x="43" y="48" class="h3" fill="#a63c3c">建议关停</text>
+      <text x="142" y="49" class="small">先止损，再补新素材</text>
+      <text x="22" y="88" class="h2">已经花够钱验证，继续投只会扩大损失</text>
+      <text x="22" y="122" class="h3">触发逻辑</text>
+      <text x="22" y="148" class="code">Sample = 充分 且 ROI Index &lt; 0.70</text>
+      <text x="22" y="171" class="code">Spend ≥ 2 × Target CPA</text>
+      <text x="22" y="194" class="code">连续 2 个诊断窗口低于止损线</text>
+      <text x="22" y="217" class="code">且 CTR Index &lt; 0.80 或 CVR Index &lt; 0.80</text>
+      <rect x="22" y="238" width="546" height="94" rx="12" fill="#fff5f5"/>
+      <text x="36" y="262" class="small">诊断原因</text>
+      <text x="36" y="284" class="body">消耗 $186，仅 2 单，ROI 0.72，低于目标 60%</text>
+      <text x="36" y="307" class="small">建议：移出该商品素材池；保留历史数据，可随时恢复</text>
+      <text x="36" y="325" class="tiny">如果当前商品缺少可用素材，同时创建「补充新方向」任务</text>
+      <rect x="22" y="352" width="174" height="44" rx="12" fill="#fff" stroke="#da5656"/>
+      <text x="67" y="379" class="button" fill="#a63c3c">确认关停</text>
+      <text x="220" y="379" class="small">关停后记录可恢复、可审计</text>
+    </g>
+  </g>
+</svg>

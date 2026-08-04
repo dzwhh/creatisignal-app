@@ -1,16 +1,22 @@
 "use client"
 
-import { useMemo, useState } from "react"
-import { Battery, Calendar, Check, ChevronDown, Gauge, Megaphone, Stethoscope, Tags } from "lucide-react"
+import { useState } from "react"
+import { AnimatePresence, motion } from "framer-motion"
+import { BarChart3, Calendar, Check, ChevronDown, ClipboardCheck, Megaphone, Rocket, Sparkles } from "lucide-react"
 import * as Popover from "@radix-ui/react-popover"
 import { cn } from "@/lib/utils"
 import { AccountPicker } from "./account-picker"
-import { ACCOUNTS } from "@/lib/insights/mock"
-import { DATE_RANGE_LABEL, type DateRange, type ViewMode } from "@/lib/insights/types"
-import { DashboardPage } from "./pages/dashboard-page"
-import { DiagnosePage } from "./pages/diagnose-page"
-import { TaggingPage } from "./pages/tagging-page"
-import { FatiguePage } from "./pages/fatigue-page"
+import { DATE_RANGE_LABEL, type DateRange } from "@/lib/insights/types"
+import {
+  BASE_DELIVERY_DRAFTS,
+  BusinessOverview,
+  CreativeDecision,
+  DeliveryCenter,
+  INITIAL_CLOSED_LOOP_TASKS,
+  TaskCenter,
+} from "./decision/decision-pages"
+import type { ClosedLoopTask, DeliveryIntent } from "@/lib/insights/decision-mock"
+import { DECISION_STATUS_META } from "@/lib/insights/decision-mock"
 
 // ─── Ad product (广告产品) ──────────────────────────────────────────────────
 type AdProductId = "gmv_max" | "standard"
@@ -34,30 +40,80 @@ const AD_PRODUCTS: AdProduct[] = [
   },
 ]
 
-type Tab = "dashboard" | "diagnose" | "tagging" | "fatigue"
+type Tab = "overview" | "creative" | "delivery" | "tasks"
 
 const tabs: { id: Tab; label: string; icon: React.ComponentType<{ size?: number; strokeWidth?: number }> }[] = [
-  { id: "dashboard",  label: "Dashboard",        icon: Gauge },
-  { id: "diagnose",   label: "素材 360",          icon: Stethoscope },
-  { id: "fatigue",    label: "疲劳度监测",       icon: Battery },
-  { id: "tagging",    label: "Creative Tagging", icon: Tags },
+  { id: "overview", label: "经营总览", icon: BarChart3 },
+  { id: "creative", label: "素材决策", icon: Sparkles },
+  { id: "delivery", label: "投放中心", icon: Rocket },
+  { id: "tasks", label: "任务记录", icon: ClipboardCheck },
 ]
 
-export function InsightsShell({ initialTab = "dashboard" }: { initialTab?: Tab } = {}) {
+export function InsightsShell({ initialTab = "overview" }: { initialTab?: Tab } = {}) {
   const [tab, setTab] = useState<Tab>(initialTab)
   const [adProduct, setAdProduct] = useState<AdProduct>(AD_PRODUCTS[0])
   const [shop, setShop] = useState<Shop>(SHOPS[0])
   const [dateRange, setDateRange] = useState<DateRange>("7d")
-  const [view, setView] = useState<ViewMode>("material")
+  const [creativeProductId, setCreativeProductId] = useState<string | null>(null)
+  const [deliveryProductId, setDeliveryProductId] = useState<string | null>(null)
+  const [drafts, setDrafts] = useState<DeliveryIntent[]>(BASE_DELIVERY_DRAFTS)
+  const [tasks, setTasks] = useState<ClosedLoopTask[]>(INITIAL_CLOSED_LOOP_TASKS)
   // Default = all active accounts (≠ paused); empty Set means "all"
   const [selectedAccounts, setSelectedAccounts] = useState<Set<string>>(() => new Set())
 
-  const effectiveAccountIds = useMemo(() => {
-    if (selectedAccounts.size === 0) {
-      return ACCOUNTS.filter((a) => a.status !== "paused").map((a) => a.id)
-    }
-    return Array.from(selectedAccounts)
-  }, [selectedAccounts])
+  /** 带商品上下文进入素材决策；传 "all" 表示不带筛选 */
+  const openCreative = (productId: string) => {
+    setCreativeProductId(productId === "all" ? null : productId)
+    setTab("creative")
+  }
+
+  /** 非素材问题走投放中心：只复核目标 ROI 与商品 Offer，不给素材动作 */
+  const openDelivery = (productId: string) => {
+    setDeliveryProductId(productId)
+    setTab("delivery")
+  }
+
+  const createDelivery = (intent: DeliveryIntent) => {
+    const selectedCount = intent.creatives.filter((item) => item.selected).length
+    setDrafts((current) => [intent, ...current.filter((item) => item.id !== intent.id)])
+    setTasks((current) => [{
+      id: `task-${intent.id}`,
+      title: intent.title,
+      productName: intent.title.split("｜")[0],
+      source: DECISION_STATUS_META[intent.sourceStatus].label,
+      stage: "ready",
+      progress: 100,
+      result: `${selectedCount} 条素材已准备，等待发布`,
+      updatedAt: "刚刚",
+      timeline: [
+        { time: "刚刚", label: "诊断命中并生成素材", detail: `来源素材 ${intent.sourceCreativeId}`, state: "done" },
+        { time: "刚刚", label: "写入待发布方案", detail: `目标 ROI ${intent.targetRoi.toFixed(2)} · 日预算 $${intent.dailyBudget}`, state: "done" },
+        { time: "—", label: "等待投放确认", detail: `首轮观察 ${intent.observationHours} 小时 · 判赢 ${intent.winOrders} 单`, state: "current" },
+        { time: "—", label: "结果回流", detail: "同口径比较原素材与变体后更新诊断", state: "todo" },
+      ],
+    }, ...current.filter((item) => item.id !== `task-${intent.id}`)])
+    setDeliveryProductId(null)
+    setTab("delivery")
+  }
+
+  const publishDelivery = (intent: DeliveryIntent) => {
+    setDrafts((current) => current.filter((item) => item.id !== intent.id))
+    setTasks((current) => [{
+      id: `published-${intent.id}`,
+      title: intent.title,
+      productName: intent.title.split("｜")[0],
+      source: "投放发布",
+      stage: "observing",
+      progress: 18,
+      result: `已发布，首轮观察 ${intent.observationHours} 小时`,
+      updatedAt: "刚刚",
+      timeline: [
+        { time: "刚刚", label: "确认并发布", detail: `${intent.creatives.filter((item) => item.selected).length} 条素材加入 GMV Max 素材池`, state: "done" },
+        { time: "刚刚", label: `首轮观察 ${intent.observationHours} 小时`, detail: `判赢 ROI ≥ ${intent.targetRoi.toFixed(2)} 且订单 ≥ ${intent.winOrders}`, state: "current" },
+        { time: "—", label: "结果回流", detail: `连续两个窗口低于止损 ROI ${intent.stopRoi.toFixed(2)} 时提醒调整`, state: "todo" },
+      ],
+    }, ...current])
+  }
 
   return (
     <div className="flex-1 flex flex-col min-h-0">
@@ -66,10 +122,10 @@ export function InsightsShell({ initialTab = "dashboard" }: { initialTab?: Tab }
         <div className="flex items-end justify-between gap-4 mb-4">
           <div>
             <h1 className="text-[22px] font-extrabold text-[var(--text)] tracking-tight leading-tight">
-              素材增长诊断
+              GMV Max 素材决策
             </h1>
             <p className="text-[12.5px] text-[var(--muted)] mt-1">
-              诊断高 CPO 原因，生成下一轮素材 Brief
+              从经营波动定位到素材动作，再完成投放与结果回收
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -77,7 +133,6 @@ export function InsightsShell({ initialTab = "dashboard" }: { initialTab?: Tab }
             {adProduct.id === "gmv_max" && <ShopSwitcher value={shop} onChange={setShop} />}
             <AccountPicker selected={selectedAccounts} onChange={setSelectedAccounts} />
             <DateRangePicker value={dateRange} onChange={setDateRange} />
-            {tab === "diagnose" && <ViewSwitcher value={view} onChange={setView} />}
           </div>
         </div>
 
@@ -105,14 +160,23 @@ export function InsightsShell({ initialTab = "dashboard" }: { initialTab?: Tab }
 
       {/* Page body */}
       <main className="flex-1 overflow-y-auto bg-[var(--soft-2)]">
-        {tab === "dashboard" && (
-          <DashboardPage accountIds={effectiveAccountIds} dateRange={dateRange} />
-        )}
-        {tab === "diagnose" && (
-          <DiagnosePage accountIds={effectiveAccountIds} view={view} onChangeView={setView} />
-        )}
-        {tab === "tagging" && <TaggingPage />}
-        {tab === "fatigue" && <FatiguePage />}
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div key={tab} className="min-h-full">
+            {tab === "overview" && <BusinessOverview onOpenCreative={openCreative} onOpenDelivery={openDelivery} />}
+            {tab === "creative" && (
+              <CreativeDecision productId={creativeProductId} onCreateDelivery={createDelivery} onOpenDelivery={openDelivery} />
+            )}
+            {tab === "delivery" && (
+              <DeliveryCenter
+                drafts={drafts}
+                focusProductId={deliveryProductId}
+                onPublish={publishDelivery}
+                onOpenCreative={openCreative}
+              />
+            )}
+            {tab === "tasks" && <TaskCenter tasks={tasks} />}
+          </motion.div>
+        </AnimatePresence>
       </main>
     </div>
   )
@@ -289,28 +353,6 @@ function DateRangePicker({ value, onChange }: { value: DateRange; onChange: (v: 
         </Popover.Content>
       </Popover.Portal>
     </Popover.Root>
-  )
-}
-
-// ─── View switcher (素材 / 账户) ─────────────────────────────────────────────
-
-function ViewSwitcher({ value, onChange }: { value: ViewMode; onChange: (v: ViewMode) => void }) {
-  return (
-    <div className="h-9 p-0.5 rounded-full bg-[var(--soft)] flex items-center">
-      {(["material", "account"] as ViewMode[]).map((v) => (
-        <button
-          key={v}
-          type="button"
-          onClick={() => onChange(v)}
-          className={cn(
-            "h-8 px-3 rounded-full text-[12.5px] font-bold cursor-pointer transition-colors",
-            value === v ? "bg-white text-[var(--text)] shadow-sm" : "text-[var(--muted)] hover:text-[var(--text)]"
-          )}
-        >
-          {v === "material" ? "素材视图" : "账户视图"}
-        </button>
-      ))}
-    </div>
   )
 }
 

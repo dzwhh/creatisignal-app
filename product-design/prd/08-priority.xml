@@ -1,0 +1,31 @@
+<h2>8.1 研发落地优先级</h2>
+<table>
+  <thead><tr><th background-color="light-gray">优先级</th><th background-color="light-gray">范围</th><th background-color="light-gray">原因</th><th background-color="light-gray">研发依赖</th></tr></thead>
+  <tbody>
+    <tr><td>P0</td><td>Product × Creative 数据模型；统一指标与 Benchmark；六类互斥规则；素材决策列表；诊断抽屉；Mock 闭环 Demo</td><td>构成产品核心 Hook：AO 能看到唯一结论、证据和动作</td><td>TikTok 数据同步、商品素材关联、规则服务、前端列表与抽屉</td></tr>
+    <tr><td>P1</td><td>生成变体、生成新方向、投放确认、任务状态机、结果回流、关停确认与审计</td><td>完成从洞察到执行再到验证的主工作流</td><td>生成服务、素材存储、GMV Max 素材池接口、任务队列</td></tr>
+    <tr><td>P2</td><td>商品层放量建议、爆款衍生、非素材问题跳转、失败恢复、Benchmark 多级回退</td><td>提升判断质量和增长效率</td><td>预算/投放配置接口、经营诊断模块、配置中心</td></tr>
+    <tr><td>P3</td><td>账户/品类自定义阈值、自动执行、协作审批、行业 Benchmark、预测影响</td><td>提高规模化和协作效率，但非 MVP 闭环必需</td><td>权限、审批、实验平台、行业数据与预测模型</td></tr>
+  </tbody>
+</table>
+<h2>8.2 P0 验收标准</h2>
+<checkbox done="false">同一 Product × Creative 在同一周期只出现一个 active 诊断结果</checkbox>
+<checkbox done="false">六类结果均展示诊断原因、实际值、Benchmark、建议动作和唯一主按钮</checkbox>
+<checkbox done="false">样本不足或数据异常时不会触发关停、换新或生成动作</checkbox>
+<checkbox done="false">点击“生成变体”能自动形成只修改一个变量的 Brief，并生成 3 条 Mock 结果</checkbox>
+<checkbox done="false">投放确认必须绑定商品、选中素材、观察周期、判赢和止损条件</checkbox>
+<checkbox done="false">结果回流能够将胜出变体更新为可放量，并将失败变体更新为下一轮动作</checkbox>
+<checkbox done="false">关停只移出当前商品素材池，操作可恢复、可审计</checkbox>
+<checkbox done="false">桌面端 1440px 以上完整展示表格与右侧抽屉；较窄宽度抽屉覆盖打开</checkbox>
+<h2>8.3 本期明确不做</h2>
+<ul>
+  <li>不开放复杂自定义规则和权重配置</li>
+  <li>不保留独立疲劳度操作中心</li>
+  <li>不向用户展示无法解释的综合评分</li>
+  <li>不承诺单条素材独立预算控制</li>
+  <li>不自动无确认关停或发布素材</li>
+  <li>不在第一版引入预测 ROI 和行业级 Benchmark</li>
+</ul>
+<callout emoji="✅" background-color="light-green" border-color="green">
+  <p><b>MVP 成功标准：</b>AO 能在一个页面内完成“看懂问题 → 执行动作 → 生成/投放 → 等待验证 → 接收下一轮诊断”，且任何素材动作都有数据依据、任务记录和恢复路径。</p>
+</callout>

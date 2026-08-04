@@ -1,0 +1,13 @@
+<h2>2.1 一级菜单与上下游关系</h2>
+<table>
+  <colgroup><col width="110"/><col width="150"/><col width="260"/><col width="300"/><col width="300"/></colgroup>
+  <thead><tr><th background-color="light-gray">一级模块</th><th background-color="light-gray">二级模块 / 页面模块</th><th background-color="light-gray">功能逻辑详述</th><th background-color="light-gray">具体交互逻辑描述</th><th background-color="light-gray">页面 Demo 示意图</th></tr></thead>
+  <tbody>
+    <tr><td vertical-align="top">一级菜单</td><td vertical-align="top">经营总览</td><td vertical-align="top">展示店铺、商品和账户经营结果，识别 GMV、ROI、订单、消耗的主要异常；点击素材相关问题进入素材决策并带入商品、账户与日期上下文。</td><td vertical-align="top">1. 默认近 7 天、全部账户。<br/>2. 点击“素材导致的 ROI 缺口”跳转素材决策。<br/>3. 跳转后保留商品和日期筛选。<br/>4. 若判断为非素材问题，则保留在经营总览处理。</td><td vertical-align="top"><b>布局示意</b>：经营 KPI + 问题归因卡 + 商品列表。<br/><b>关键组件</b>：ROI 缺口卡、商品诊断入口、上下文筛选。<br/><b>Demo 展示重点</b>：点击美白精华“素材 CTR 下滑”后进入已筛选的素材决策页。</td></tr>
+    <tr><td vertical-align="top">一级菜单</td><td vertical-align="top">素材决策</td><td vertical-align="top">作为唯一素材操作入口，承接原素材 360 的检索能力和疲劳度的诊断能力，组织所有 Product × Creative 的诊断结果、证据与动作。</td><td vertical-align="top">1. 默认展示待处理任务。<br/>2. 六类结果单选筛选，可结合商品、账户、日期。<br/>3. 点击素材行打开右侧抽屉，不离开页面。<br/>4. 动作执行后行状态切换为“已执行/验证中”。</td><td vertical-align="top"><b>布局示意</b>：今日决策摘要 + 状态筛选 + 商品分组素材表 + 右侧抽屉。<br/><b>关键组件</b>：六状态 Filter、Benchmark 口径、素材行、CTA。<br/><b>Demo 展示重点</b>：默认展示 35 条 Mock 素材，其中 12 条待处理，参考 DEMO-01。</td></tr>
+    <tr><td vertical-align="top">一级菜单</td><td vertical-align="top">任务记录</td><td vertical-align="top">记录诊断动作的生成、投放和验证过程，确保每项建议可追踪、可回滚、可审计，并沉淀原素材与变体的父子关系。</td><td vertical-align="top">1. Tab：待执行、生成中、待投放、观察中、已完成、失败。<br/>2. 点击任务打开详情时间线。<br/>3. 失败任务展示原因并允许重试。<br/>4. 回流完成后展示原素材与变体对比以及下一轮诊断。</td><td vertical-align="top"><b>布局示意</b>：状态 Tab + 任务列表 + 右侧时间线抽屉。<br/><b>关键组件</b>：任务 Badge、进度、重试、结果对比、审计记录。<br/><b>Demo 展示重点</b>：展示“生成变体 → 已加入素材池 → 48h 回流 → 变体 02 可放量”的完整记录。</td></tr>
+  </tbody>
+</table>
+<callout emoji="📌" background-color="light-blue" border-color="blue">
+  <p><b>信息架构取舍：</b>不再保留独立“疲劳度中心”和独立“决策中心”。疲劳度成为诊断原因，素材 360 成为详情和历史证据层，用户操作统一从素材决策进入。</p>
+</callout>

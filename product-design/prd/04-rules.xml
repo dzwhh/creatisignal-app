@@ -1,0 +1,27 @@
+<h2>4.1 统一指标定义</h2>
+<pre lang="text" caption="MVP 诊断变量"><code>CTR = click ÷ impression
+CVR = conversion ÷ click
+CPA = spend ÷ conversion
+ROI = GMV ÷ spend
+Target CPA = AOV ÷ Target ROI
+ROI Index = ROI ÷ Target ROI
+CTR Index = CTR ÷ Benchmark CTR
+CVR Index = CVR ÷ Benchmark CVR
+Trend = 近 3 日指标 ÷ 前 7 日指标 - 1
+Sample Mature = Active Time ≥ 24h 且 Orders ≥ 5，或 Spend ≥ 2 × Target CPA</code></pre>
+<h2>4.2 规则引擎固定优先级</h2>
+<p>规则依次执行：数据异常/样本不足 → 建议关停 → 需换新 → 可放量 → 需迭代 → 稳定投放。命中后停止继续判断；每个诊断周期只写入一个 active 结果。</p>
+<h2>4.3 六类诊断能力地图</h2>
+<table>
+  <colgroup><col width="110"/><col width="150"/><col width="260"/><col width="300"/><col width="300"/></colgroup>
+  <thead><tr><th background-color="light-gray">一级模块</th><th background-color="light-gray">二级模块 / 页面模块</th><th background-color="light-gray">功能逻辑详述</th><th background-color="light-gray">具体交互逻辑描述</th><th background-color="light-gray">页面 Demo 示意图</th></tr></thead>
+  <tbody>
+    <tr><td vertical-align="top">规则引擎</td><td vertical-align="top">可放量 / 爆款衍生</td><td vertical-align="top">触发：样本充分；ROI Index ≥ 1.15；订单 ≥ max(10, 商品素材订单均值)；近 3 日 ROI Trend ≥ -10%。<br/>原因示例：ROI 高于目标 27%，订单高于均值 31%，连续 3 日稳定。<br/>输出：可放量；素材动作是爆款衍生，投放动作是商品层放量。</td><td vertical-align="top">1. 主按钮“创建放量方案”。<br/>2. 进入后默认保留原素材，生成 3 个同结构变体。<br/>3. 一次只改变 Hook、达人或场景中的一个变量。<br/>4. 商品层预算建议默认 +10%～20%，AO 确认后执行。<br/>5. 24h 后自动回看，ROI 低于目标 90% 时停止放量。</td><td vertical-align="top"><b>布局示意</b>：绿色结果卡 + ROI/订单证据 + 放量配置抽屉。<br/><b>关键组件</b>：创建放量方案、爆款变体、预算建议、止损条件。<br/><b>Demo 展示重点</b>：Mock ROI 2.42、目标 1.80、订单 126；证明放量是商品层动作而非单视频预算。</td></tr>
+    <tr><td vertical-align="top">规则引擎</td><td vertical-align="top">稳定投放</td><td vertical-align="top">触发：样本充分；1.00 ≤ ROI Index &lt; 1.15；CTR Index、CVR Index 均 ≥ 0.90；近 3 日 ROI/CTR 波动均小于 15%。<br/>原因示例：ROI 达标，点击、转化和订单均无明显下降。<br/>输出：稳定投放。</td><td vertical-align="top">1. 主按钮“保持投放”。<br/>2. 点击后不修改 GMV Max 配置，只创建 72h 自动复查任务。<br/>3. 用户无需二次确认。<br/>4. 指标越界后自动产生新的待处理任务。</td><td vertical-align="top"><b>布局示意</b>：灰绿色状态标签 + 正常指标 + 复查时间。<br/><b>关键组件</b>：保持投放按钮、下次复查时间。<br/><b>Demo 展示重点</b>：展示无须操作但仍被系统持续监控的成功状态。</td></tr>
+    <tr><td vertical-align="top">规则引擎</td><td vertical-align="top">待观察</td><td vertical-align="top">触发：投放未满 24h 且消耗未达 2×Target CPA；或订单&lt;5 且消耗&lt;2×Target CPA；或数据缺失/延迟。<br/>原因示例：当前消耗 $26、仅 1 单，距离有效判断还差约 $34 消耗。<br/>输出：待观察，不参与其余五类诊断。</td><td vertical-align="top">1. 主按钮“继续观察”。<br/>2. 页面必须说明缺少的时间、订单或消耗。<br/>3. 达到阈值时自动重新诊断。<br/>4. 数据同步错误时展示重试同步，不把错误数据判为关停。</td><td vertical-align="top"><b>布局示意</b>：蓝色状态标签 + 样本进度条 + 预计可判断时间。<br/><b>关键组件</b>：继续观察、样本缺口、数据延迟提示。<br/><b>Demo 展示重点</b>：展示“还差 $34 消耗 / 预计 18h 后判断”，避免模糊等待。</td></tr>
+    <tr><td vertical-align="top">规则引擎</td><td vertical-align="top">需迭代</td><td vertical-align="top">触发：样本充分且 ROI Index ≥ 0.90；只有一个素材链路弱于 Benchmark 20%，其他链路正常；或单项近 3 日 Trend ≤ -20%。<br/>映射：CTR 弱、CVR 正常 → 改 Hook；CTR 正常、CVR 弱 → 改卖点/证明/Offer/CTA。<br/>输出：需迭代。</td><td vertical-align="top">1. 主按钮“生成变体”。<br/>2. 系统自动锁定有效部分，只开放一个变量。<br/>3. 默认生成 3 个变体，可选择 1～5 个。<br/>4. 生成失败保留 Brief 并允许重试。<br/>5. 变体写回素材任务并继承 parent_creative_id。</td><td vertical-align="top"><b>布局示意</b>：黄色结果卡 + CTR/CVR 对照 + 三个变体方向。<br/><b>关键组件</b>：变量锁定、变体数量、生成进度、预览卡。<br/><b>Demo 展示重点</b>：CTR 0.62% 低于均值 23%，CVR 高于均值 6%，只生成 Hook 变体。</td></tr>
+    <tr><td vertical-align="top">规则引擎</td><td vertical-align="top">需换新</td><td vertical-align="top">触发：样本充分；0.70 ≤ ROI Index &lt; 0.90；CTR Index 和 CVR Index 同时&lt;0.80；或历史曾达标但 ROI 较稳定期下降≥30%，且连续两个诊断窗口未恢复。<br/>原因示例：观看和转化同步下降，原创意方向已失效。<br/>输出：需换新。</td><td vertical-align="top">1. 主按钮“生成新方向”。<br/>2. 保留商品、品牌、合规信息；不继承原内容结构。<br/>3. 默认提供达人、场景、表达结构三个方向。<br/>4. 至少选择一个方向后生成按钮才可用。<br/>5. 新素材上线后默认观察 72h。</td><td vertical-align="top"><b>布局示意</b>：蓝紫色结果卡 + 双链路衰退证据 + 新方向选择。<br/><b>关键组件</b>：方向卡、单选/多选、生成新方向、72h 验收。<br/><b>Demo 展示重点</b>：明确展示“迭代只弱一环，换新是两条链路同时变弱”。</td></tr>
+    <tr><td vertical-align="top">规则引擎</td><td vertical-align="top">建议关停</td><td vertical-align="top">触发：样本充分；ROI Index&lt;0.70；Spend≥2×Target CPA；连续两个窗口低于止损线；且 CTR 或 CVR 至少一项显著弱。零订单且消耗达到阈值可直接命中。<br/>原因示例：消耗 $186，仅 2 单，ROI 低于目标 60%。<br/>输出：建议关停。</td><td vertical-align="top">1. 主按钮“确认关停”。<br/>2. 点击打开二次确认，展示对象、关联商品、影响和恢复方式。<br/>3. 确认后只移出当前商品素材池，不影响该素材在其他商品中的使用。<br/>4. 操作失败时保留任务并展示平台错误。<br/>5. 全量记录操作人、时间与恢复入口。</td><td vertical-align="top"><b>布局示意</b>：红色结果卡 + 止损证据 + 关停确认弹窗。<br/><b>关键组件</b>：确认关停、取消、影响说明、恢复入口。<br/><b>Demo 展示重点</b>：展示可恢复、可审计，不做静默或不可逆删除。</td></tr>
+    <tr><td vertical-align="top">规则引擎</td><td vertical-align="top">非素材问题保护</td><td vertical-align="top">当 ROI 低于目标，但 CTR Index 与 CVR Index 均≥0.90 时，不允许系统用素材动作解释问题。将问题归因回商品价格、客单价、库存、佣金或投放设置。</td><td vertical-align="top">1. 素材行显示“素材链路正常”。<br/>2. 禁用生成变体、生成新方向和关停。<br/>3. 提供次按钮“查看商品与投放诊断”。<br/>4. 跳转经营总览并保留商品与日期上下文。</td><td vertical-align="top"><b>布局示意</b>：中性提示卡 + 非素材原因 + 经营诊断入口。<br/><b>关键组件</b>：保护提示、禁用态、查看商品诊断。<br/><b>Demo 展示重点</b>：证明系统不会为了给动作而错误要求客户不断换素材。</td></tr>
+  </tbody>
+</table>

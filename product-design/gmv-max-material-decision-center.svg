@@ -1,0 +1,396 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1200" viewBox="0 0 1920 1200">
+  <defs>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="12" stdDeviation="22" flood-color="#18230b" flood-opacity="0.12"/>
+    </filter>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="10" flood-color="#18230b" flood-opacity="0.07"/>
+    </filter>
+    <linearGradient id="hero" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f1ffd0"/>
+      <stop offset="1" stop-color="#fbfff2"/>
+    </linearGradient>
+    <linearGradient id="thumb1" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#120f17"/>
+      <stop offset="1" stop-color="#743d66"/>
+    </linearGradient>
+    <linearGradient id="thumb2" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#5d321c"/>
+      <stop offset="1" stop-color="#ecb56e"/>
+    </linearGradient>
+    <linearGradient id="thumb3" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#123b3d"/>
+      <stop offset="1" stop-color="#9dd2b4"/>
+    </linearGradient>
+    <linearGradient id="thumb4" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#211418"/>
+      <stop offset="1" stop-color="#a73843"/>
+    </linearGradient>
+    <style>
+      .title{font:700 28px -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;fill:#171915}
+      .h2{font:700 21px -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;fill:#171915}
+      .h3{font:700 16px -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;fill:#171915}
+      .body{font:500 14px -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;fill:#3f433b}
+      .small{font:500 12px -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;fill:#74796f}
+      .tiny{font:500 11px -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;fill:#8a8f84}
+      .metric{font:750 19px -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;fill:#171915}
+      .button{font:700 13px -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;fill:#171915}
+      .white{fill:#fff}
+    </style>
+  </defs>
+
+  <rect width="1920" height="1200" fill="#f5f6f3"/>
+
+  <!-- Top shell -->
+  <rect x="0" y="0" width="1920" height="172" fill="#ffffff"/>
+  <text x="40" y="50" class="title">GMV Max 素材决策</text>
+  <circle cx="337" cy="42" r="5" fill="#25bd67"/>
+  <text x="350" y="47" class="small">TikTok · GlowLab US</text>
+  <text x="40" y="79" class="body" fill="#7b8075">从投放结果直接得到每条素材的下一步动作</text>
+
+  <g transform="translate(1250 24)">
+    <rect width="150" height="46" rx="12" fill="#fff" stroke="#e1e4dd"/>
+    <text x="20" y="29" class="button">Product GMV Max</text>
+    <path d="M128 20l5 5 5-5" fill="none" stroke="#6e7469" stroke-width="1.8"/>
+  </g>
+  <g transform="translate(1414 24)">
+    <rect width="160" height="46" rx="12" fill="#fff" stroke="#e1e4dd"/>
+    <circle cx="22" cy="23" r="8" fill="#ff5d32"/>
+    <text x="39" y="29" class="button">GlowLab Store</text>
+    <path d="M139 20l5 5 5-5" fill="none" stroke="#6e7469" stroke-width="1.8"/>
+  </g>
+  <g transform="translate(1588 24)">
+    <rect width="132" height="46" rx="12" fill="#fff" stroke="#e1e4dd"/>
+    <text x="20" y="29" class="button">全部账户 15</text>
+  </g>
+  <g transform="translate(1734 24)">
+    <rect width="146" height="46" rx="12" fill="#fff" stroke="#e1e4dd"/>
+    <text x="20" y="29" class="button">近 7 天</text>
+    <path d="M120 20l5 5 5-5" fill="none" stroke="#6e7469" stroke-width="1.8"/>
+  </g>
+
+  <!-- Primary nav -->
+  <g transform="translate(40 112)">
+    <text x="0" y="24" class="body" fill="#7a7f75">经营总览</text>
+    <text x="112" y="24" class="h3">素材决策</text>
+    <rect x="112" y="43" width="65" height="3" rx="2" fill="#b5f22b"/>
+    <text x="229" y="24" class="body" fill="#7a7f75">任务记录</text>
+  </g>
+  <line x1="0" y1="171" x2="1920" y2="171" stroke="#e9ebe6"/>
+
+  <!-- Main content -->
+  <g transform="translate(40 198)">
+    <!-- action overview -->
+    <rect width="1260" height="154" rx="18" fill="url(#hero)" stroke="#dce9b9"/>
+    <text x="24" y="36" class="h2">今天有 12 条素材需要处理</text>
+    <text x="24" y="62" class="small">系统已按影响优先级排序 · 处理后预计减少无效消耗 $680 / 日</text>
+
+    <g transform="translate(24 82)">
+      <rect width="208" height="50" rx="12" fill="#fff" stroke="#d9e4c0"/>
+      <circle cx="25" cy="25" r="11" fill="#dcfce7"/>
+      <path d="M20 27l5-6 5 6" fill="none" stroke="#148647" stroke-width="2"/>
+      <text x="45" y="21" class="small">可放量</text><text x="45" y="39" class="h3">3 条</text>
+      <text x="151" y="30" class="small" fill="#148647">优先处理</text>
+    </g>
+    <g transform="translate(244 82)">
+      <rect width="208" height="50" rx="12" fill="#fff" stroke="#d9e4c0"/>
+      <circle cx="25" cy="25" r="11" fill="#fff6cf"/>
+      <path d="M20 25h10M25 20v10" stroke="#9c7200" stroke-width="2"/>
+      <text x="45" y="21" class="small">需迭代</text><text x="45" y="39" class="h3">5 条</text>
+      <text x="148" y="30" class="small">生成变体</text>
+    </g>
+    <g transform="translate(464 82)">
+      <rect width="208" height="50" rx="12" fill="#fff" stroke="#d9e4c0"/>
+      <circle cx="25" cy="25" r="11" fill="#eaf0ff"/>
+      <path d="M20 28l10-7M21 21h8v8" fill="none" stroke="#4668bc" stroke-width="1.8"/>
+      <text x="45" y="21" class="small">需换新</text><text x="45" y="39" class="h3">2 条</text>
+      <text x="148" y="30" class="small">新方向</text>
+    </g>
+    <g transform="translate(684 82)">
+      <rect width="208" height="50" rx="12" fill="#fff" stroke="#d9e4c0"/>
+      <circle cx="25" cy="25" r="11" fill="#fee8e8"/>
+      <path d="M21 21l8 8M29 21l-8 8" stroke="#c53b3b" stroke-width="2"/>
+      <text x="45" y="21" class="small">建议关停</text><text x="45" y="39" class="h3">2 条</text>
+      <text x="148" y="30" class="small">止损</text>
+    </g>
+    <g transform="translate(918 82)">
+      <text x="0" y="19" class="tiny">无需立即处理</text>
+      <text x="0" y="39" class="small">稳定投放 18 · 待观察 7</text>
+      <path d="M260 17h22M274 10l8 7-8 7" fill="none" stroke="#687065" stroke-width="1.6"/>
+    </g>
+  </g>
+
+  <!-- filter + benchmark -->
+  <g transform="translate(40 372)">
+    <rect x="0" y="0" width="82" height="34" rx="17" fill="#1b1d19"/>
+    <text x="19" y="22" class="button white">全部 35</text>
+    <rect x="92" y="0" width="82" height="34" rx="17" fill="#fff" stroke="#e0e3dc"/>
+    <text x="111" y="22" class="button">可放量</text>
+    <rect x="184" y="0" width="92" height="34" rx="17" fill="#fff" stroke="#e0e3dc"/>
+    <text x="203" y="22" class="button">稳定投放</text>
+    <rect x="286" y="0" width="82" height="34" rx="17" fill="#fff" stroke="#e0e3dc"/>
+    <text x="305" y="22" class="button">待观察</text>
+    <rect x="378" y="0" width="82" height="34" rx="17" fill="#fff" stroke="#e0e3dc"/>
+    <text x="397" y="22" class="button">需迭代</text>
+    <rect x="470" y="0" width="82" height="34" rx="17" fill="#fff" stroke="#e0e3dc"/>
+    <text x="489" y="22" class="button">需换新</text>
+    <rect x="562" y="0" width="92" height="34" rx="17" fill="#fff" stroke="#e0e3dc"/>
+    <text x="581" y="22" class="button">建议关停</text>
+    <g transform="translate(888 0)">
+      <rect width="372" height="34" rx="17" fill="#fff" stroke="#e0e3dc"/>
+      <text x="16" y="22" class="small">Benchmark：同商品 · 同国家 · 近 7 天成熟素材</text>
+      <path d="M345 14l5 5 5-5" fill="none" stroke="#6d7369" stroke-width="1.5"/>
+    </g>
+  </g>
+
+  <!-- material table -->
+  <g transform="translate(40 422)">
+    <rect width="1260" height="724" rx="18" fill="#fff" stroke="#e0e3dc"/>
+    <rect x="1" y="1" width="1258" height="94" rx="17" fill="#fafbf8"/>
+    <text x="22" y="31" class="h3">商品：GlowLab 10% 烟酰胺精华</text>
+    <text x="22" y="56" class="small">SKU GL-NA10-US · 目标 ROI 1.80 · 当前 ROI 2.07</text>
+    <rect x="22" y="67" width="105" height="20" rx="10" fill="#e8f7d0"/>
+    <text x="36" y="81" class="tiny" fill="#58721c">当前商品可放量</text>
+    <text x="369" y="61" class="tiny">核心结果（对 Benchmark）</text>
+    <text x="689" y="61" class="tiny">诊断结果与依据</text>
+    <text x="1107" y="61" class="tiny">下一步</text>
+    <line x1="0" y1="95" x2="1260" y2="95" stroke="#e9ebe6"/>
+
+    <!-- Row 1 -->
+    <g transform="translate(0 95)">
+      <rect x="1" y="1" width="1258" height="144" fill="#fff"/>
+      <g transform="translate(22 22)">
+        <rect width="62" height="100" rx="10" fill="url(#thumb1)"/>
+        <circle cx="31" cy="42" r="17" fill="#f0c4d7" opacity="0.86"/>
+        <rect x="13" y="68" width="36" height="5" rx="2" fill="#fff" opacity="0.82"/>
+        <rect x="17" y="79" width="28" height="4" rx="2" fill="#b5f22b" opacity="0.9"/>
+      </g>
+      <text x="100" y="43" class="h3">7626360624905601032</text>
+      <text x="100" y="68" class="small">达人实测｜对比型开头</text>
+      <text x="100" y="95" class="tiny">成熟样本 · 投放 12 天</text>
+      <rect x="100" y="106" width="72" height="21" rx="10" fill="#eff3ec"/>
+      <text x="113" y="120" class="tiny">主力素材</text>
+
+      <text x="369" y="39" class="tiny">ROI</text><text x="369" y="66" class="metric">2.42</text>
+      <rect x="421" y="48" width="54" height="20" rx="10" fill="#e5f8e9"/>
+      <text x="431" y="62" class="tiny" fill="#148647">↑ 34%</text>
+      <text x="500" y="39" class="tiny">订单</text><text x="500" y="66" class="metric">126</text>
+      <rect x="543" y="48" width="52" height="20" rx="10" fill="#e5f8e9"/>
+      <text x="553" y="62" class="tiny" fill="#148647">↑ 22%</text>
+      <text x="369" y="99" class="tiny">CTR 1.31%  ↑28%</text>
+      <text x="500" y="99" class="tiny">CVR 4.20%  ↑11%</text>
+
+      <rect x="689" y="24" width="76" height="28" rx="14" fill="#dff7e6"/>
+      <text x="708" y="43" class="button" fill="#137a43">可放量</text>
+      <text x="689" y="77" class="body">连续 3 日 ROI 达标，订单稳定</text>
+      <text x="689" y="102" class="small">建议保留原素材，同时扩充同结构变体</text>
+
+      <rect x="1089" y="50" width="145" height="42" rx="12" fill="#b5f22b"/>
+      <text x="1112" y="76" class="button">创建放量方案</text>
+      <line x1="0" y1="144" x2="1260" y2="144" stroke="#eceee9"/>
+    </g>
+
+    <!-- Row 2 selected -->
+    <g transform="translate(0 239)">
+      <rect x="1" y="1" width="1258" height="154" fill="#fbfff1"/>
+      <rect x="1" y="1" width="4" height="154" fill="#b5f22b"/>
+      <g transform="translate(22 27)">
+        <rect width="62" height="100" rx="10" fill="url(#thumb2)"/>
+        <rect x="15" y="17" width="32" height="38" rx="15" fill="#f4d4b7"/>
+        <rect x="11" y="66" width="40" height="9" rx="4" fill="#1b1d19" opacity="0.84"/>
+        <rect x="15" y="81" width="32" height="5" rx="2" fill="#fff" opacity="0.85"/>
+      </g>
+      <text x="100" y="48" class="h3">7637401399248076818</text>
+      <text x="100" y="73" class="small">痛点口播｜价格利益点</text>
+      <text x="100" y="100" class="tiny">成熟样本 · 投放 9 天</text>
+      <rect x="100" y="111" width="82" height="21" rx="10" fill="#fff2c4"/>
+      <text x="113" y="125" class="tiny" fill="#866300">Hook 疲劳</text>
+
+      <text x="369" y="44" class="tiny">ROI</text><text x="369" y="71" class="metric">1.74</text>
+      <rect x="421" y="53" width="50" height="20" rx="10" fill="#fff1d6"/>
+      <text x="431" y="67" class="tiny" fill="#9b6800">↓ 3%</text>
+      <text x="500" y="44" class="tiny">订单</text><text x="500" y="71" class="metric">43</text>
+      <rect x="538" y="53" width="52" height="20" rx="10" fill="#f0f3ed"/>
+      <text x="548" y="67" class="tiny">≈ 均值</text>
+      <text x="369" y="104" class="tiny" fill="#b13434">CTR 0.62%  ↓23%</text>
+      <text x="500" y="104" class="tiny" fill="#148647">CVR 4.00%  ↑6%</text>
+
+      <rect x="689" y="29" width="76" height="28" rx="14" fill="#fff0bf"/>
+      <text x="708" y="48" class="button" fill="#856100">需迭代</text>
+      <text x="689" y="82" class="body">转化正常，但前 3 秒吸引力下降</text>
+      <text x="689" y="107" class="small">保留商品卖点，只更换开头 Hook</text>
+
+      <rect x="1089" y="55" width="145" height="42" rx="12" fill="#1b1d19"/>
+      <text x="1132" y="81" class="button white">生成变体</text>
+      <line x1="0" y1="154" x2="1260" y2="154" stroke="#eceee9"/>
+    </g>
+
+    <!-- Row 3 -->
+    <g transform="translate(0 393)">
+      <rect x="1" y="1" width="1258" height="144" fill="#fff"/>
+      <g transform="translate(22 22)">
+        <rect width="62" height="100" rx="10" fill="url(#thumb3)"/>
+        <circle cx="31" cy="32" r="16" fill="#d3ab87"/>
+        <path d="M10 65h42v24H10z" fill="#f3f0d7" opacity="0.9"/>
+        <path d="M17 72h28M17 79h22" stroke="#244845" stroke-width="3"/>
+      </g>
+      <text x="100" y="43" class="h3">7647056764006760455</text>
+      <text x="100" y="68" class="small">产品展示｜成分解释</text>
+      <text x="100" y="95" class="tiny">成熟样本 · 投放 24 天</text>
+      <rect x="100" y="106" width="82" height="21" rx="10" fill="#e7efff"/>
+      <text x="113" y="120" class="tiny" fill="#425f9f">方向疲劳</text>
+
+      <text x="369" y="39" class="tiny">ROI</text><text x="369" y="66" class="metric">1.39</text>
+      <rect x="421" y="48" width="55" height="20" rx="10" fill="#fee8e8"/>
+      <text x="431" y="62" class="tiny" fill="#b13434">↓ 28%</text>
+      <text x="500" y="39" class="tiny">订单</text><text x="500" y="66" class="metric">18</text>
+      <rect x="538" y="48" width="55" height="20" rx="10" fill="#fee8e8"/>
+      <text x="548" y="62" class="tiny" fill="#b13434">↓ 41%</text>
+      <text x="369" y="99" class="tiny" fill="#b13434">CTR 0.48%  ↓34%</text>
+      <text x="500" y="99" class="tiny" fill="#b13434">CVR 2.20%  ↓26%</text>
+
+      <rect x="689" y="24" width="76" height="28" rx="14" fill="#e8eeff"/>
+      <text x="708" y="43" class="button" fill="#425f9f">需换新</text>
+      <text x="689" y="77" class="body">观看与转化同步下降，原方向已失效</text>
+      <text x="689" y="102" class="small">保留商品，重新测试场景与表达结构</text>
+
+      <rect x="1089" y="50" width="145" height="42" rx="12" fill="#fff" stroke="#1b1d19"/>
+      <text x="1124" y="76" class="button">生成新方向</text>
+      <line x1="0" y1="144" x2="1260" y2="144" stroke="#eceee9"/>
+    </g>
+
+    <!-- Row 4 -->
+    <g transform="translate(0 537)">
+      <rect x="1" y="1" width="1258" height="186" rx="0 0 17 17" fill="#fff"/>
+      <g transform="translate(22 22)">
+        <rect width="62" height="100" rx="10" fill="url(#thumb4)"/>
+        <circle cx="31" cy="34" r="16" fill="#d9aa92"/>
+        <rect x="10" y="62" width="42" height="24" rx="4" fill="#f6dfd0"/>
+      </g>
+      <text x="100" y="43" class="h3">7550853680897146888</text>
+      <text x="100" y="68" class="small">UGC 自拍｜日常场景</text>
+      <text x="100" y="95" class="tiny">成熟样本 · 投放 8 天</text>
+      <rect x="100" y="106" width="93" height="21" rx="10" fill="#fde9e9"/>
+      <text x="113" y="120" class="tiny" fill="#a63838">已触发止损线</text>
+
+      <text x="369" y="39" class="tiny">ROI</text><text x="369" y="66" class="metric">0.72</text>
+      <rect x="421" y="48" width="55" height="20" rx="10" fill="#fee8e8"/>
+      <text x="431" y="62" class="tiny" fill="#b13434">↓ 60%</text>
+      <text x="500" y="39" class="tiny">订单</text><text x="500" y="66" class="metric">2</text>
+      <rect x="533" y="48" width="55" height="20" rx="10" fill="#fee8e8"/>
+      <text x="543" y="62" class="tiny" fill="#b13434">↓ 81%</text>
+      <text x="369" y="99" class="tiny">消耗 $186 · CPO $93</text>
+      <text x="500" y="99" class="tiny">连续 3 日低于底线</text>
+
+      <rect x="689" y="24" width="90" height="28" rx="14" fill="#fee5e5"/>
+      <text x="708" y="43" class="button" fill="#a63838">建议关停</text>
+      <text x="689" y="77" class="body">样本充分且持续不达标，无修复信号</text>
+      <text x="689" y="102" class="small">移出当前商品素材池，停止无效消耗</text>
+
+      <rect x="1089" y="50" width="145" height="42" rx="12" fill="#fff" stroke="#d24a4a"/>
+      <text x="1132" y="76" class="button" fill="#b13434">确认关停</text>
+    </g>
+  </g>
+
+  <!-- Decision drawer -->
+  <g transform="translate(1340 198)" filter="url(#shadow)">
+    <rect width="540" height="948" rx="22" fill="#fff"/>
+  </g>
+  <g transform="translate(1340 198)">
+    <text x="28" y="41" class="h2">素材诊断详情</text>
+    <text x="28" y="67" class="small">7637401399248076818 · GlowLab 精华</text>
+    <circle cx="502" cy="35" r="15" fill="#f2f3ef"/>
+    <path d="M496 29l12 12M508 29l-12 12" stroke="#687065" stroke-width="1.6"/>
+    <line x1="0" y1="88" x2="540" y2="88" stroke="#e7e9e3"/>
+
+    <!-- stepper -->
+    <g transform="translate(28 110)">
+      <circle cx="13" cy="13" r="13" fill="#1b1d19"/><path d="M7 13l4 4 8-9" fill="none" stroke="#fff" stroke-width="2"/>
+      <text x="0" y="44" class="tiny">数据诊断</text>
+      <line x1="42" y1="13" x2="122" y2="13" stroke="#b5f22b" stroke-width="3"/>
+      <circle cx="148" cy="13" r="13" fill="#b5f22b"/><text x="144" y="18" class="button">2</text>
+      <text x="128" y="44" class="tiny" fill="#171915">素材生成</text>
+      <line x1="177" y1="13" x2="257" y2="13" stroke="#e0e3dc" stroke-width="3"/>
+      <circle cx="283" cy="13" r="13" fill="#f0f2ed"/><text x="279" y="18" class="button">3</text>
+      <text x="255" y="44" class="tiny">GMV Max 投放</text>
+      <line x1="312" y1="13" x2="392" y2="13" stroke="#e0e3dc" stroke-width="3"/>
+      <circle cx="418" cy="13" r="13" fill="#f0f2ed"/><text x="414" y="18" class="button">4</text>
+      <text x="397" y="44" class="tiny">结果回流</text>
+    </g>
+
+    <!-- conclusion -->
+    <g transform="translate(28 178)">
+      <rect width="484" height="132" rx="16" fill="#fff9df" stroke="#f1de8d"/>
+      <rect x="18" y="18" width="76" height="28" rx="14" fill="#ffe9a6"/>
+      <text x="37" y="37" class="button" fill="#7d5b00">需迭代</text>
+      <text x="18" y="72" class="h3">不是商品卖不动，是开头抓不住人</text>
+      <text x="18" y="98" class="body">CTR 低于 Benchmark 23%，但 CVR 高于均值 6%</text>
+      <text x="18" y="119" class="small">结论：保留卖点、达人和 Offer，只替换前 3 秒 Hook</text>
+    </g>
+
+    <!-- evidence -->
+    <text x="28" y="344" class="h3">系统为什么这样判断</text>
+    <g transform="translate(28 360)">
+      <rect width="150" height="70" rx="12" fill="#fafbf8" stroke="#e4e7e0"/>
+      <text x="14" y="23" class="tiny">CTR</text><text x="14" y="49" class="metric" fill="#b13434">0.62%</text>
+      <text x="86" y="49" class="tiny">均值 0.81%</text>
+    </g>
+    <g transform="translate(195 360)">
+      <rect width="150" height="70" rx="12" fill="#fafbf8" stroke="#e4e7e0"/>
+      <text x="14" y="23" class="tiny">CVR</text><text x="14" y="49" class="metric" fill="#148647">4.00%</text>
+      <text x="86" y="49" class="tiny">均值 3.77%</text>
+    </g>
+    <g transform="translate(362 360)">
+      <rect width="150" height="70" rx="12" fill="#fafbf8" stroke="#e4e7e0"/>
+      <text x="14" y="23" class="tiny">样本状态</text><text x="14" y="49" class="h3">充分</text>
+      <text x="68" y="49" class="tiny">可信度 91%</text>
+    </g>
+
+    <!-- variant recipe -->
+    <text x="28" y="468" class="h3">生成 3 个 Hook 变体</text>
+    <text x="455" y="468" class="small">仅改 1 个变量</text>
+    <g transform="translate(28 485)">
+      <rect width="484" height="151" rx="16" fill="#fafbf8" stroke="#e3e6df"/>
+      <g transform="translate(16 16)">
+        <rect width="139" height="113" rx="12" fill="#fff" stroke="#e2e5de"/>
+        <circle cx="21" cy="21" r="11" fill="#1b1d19"/><text x="18" y="25" class="tiny white">A</text>
+        <text x="14" y="52" class="button">结果先出</text>
+        <text x="14" y="76" class="tiny">“用了 7 天后，</text>
+        <text x="14" y="94" class="tiny">毛孔真的小了吗？”</text>
+      </g>
+      <g transform="translate(172 16)">
+        <rect width="139" height="113" rx="12" fill="#fff" stroke="#e2e5de"/>
+        <circle cx="21" cy="21" r="11" fill="#1b1d19"/><text x="18" y="25" class="tiny white">B</text>
+        <text x="14" y="52" class="button">痛点冲突</text>
+        <text x="14" y="76" class="tiny">“越控油越出油，</text>
+        <text x="14" y="94" class="tiny">你可能做错了”</text>
+      </g>
+      <g transform="translate(328 16)">
+        <rect width="139" height="113" rx="12" fill="#fff" stroke="#e2e5de"/>
+        <circle cx="21" cy="21" r="11" fill="#1b1d19"/><text x="18" y="25" class="tiny white">C</text>
+        <text x="14" y="52" class="button">价格利益</text>
+        <text x="14" y="76" class="tiny">“不到一杯咖啡，</text>
+        <text x="14" y="94" class="tiny">测 10% 烟酰胺”</text>
+      </g>
+    </g>
+
+    <!-- test plan -->
+    <text x="28" y="676" class="h3">下一次投放策略</text>
+    <g transform="translate(28 694)">
+      <rect width="484" height="144" rx="16" fill="#fff" stroke="#dfe3da"/>
+      <text x="16" y="28" class="small">关联商品</text><text x="158" y="28" class="button">GlowLab 10% 烟酰胺精华</text>
+      <line x1="16" y1="43" x2="468" y2="43" stroke="#eceee9"/>
+      <text x="16" y="69" class="small">素材动作</text><text x="158" y="69" class="button">3 个变体加入 GMV Max 素材池</text>
+      <line x1="16" y1="84" x2="468" y2="84" stroke="#eceee9"/>
+      <text x="16" y="110" class="small">观察与判赢</text><text x="158" y="110" class="button">48 小时 · ROI ≥ 1.80 · 订单 ≥ 5</text>
+      <text x="158" y="130" class="tiny">未达止损线自动标记「建议关停」</text>
+    </g>
+
+    <!-- footer action -->
+    <g transform="translate(28 865)">
+      <rect width="484" height="58" rx="15" fill="#b5f22b"/>
+      <text x="152" y="36" class="h3">生成变体并创建测试</text>
+      <path d="M382 24h22M397 17l7 7-7 7" fill="none" stroke="#171915" stroke-width="2"/>
+    </g>
+  </g>
+</svg>

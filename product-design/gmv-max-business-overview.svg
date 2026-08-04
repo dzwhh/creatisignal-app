@@ -1,0 +1,145 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1200" viewBox="0 0 1920 1200">
+  <defs>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="12" stdDeviation="22" flood-color="#18230b" flood-opacity="0.12"/></filter>
+    <linearGradient id="hero" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f0ffd1"/><stop offset="1" stop-color="#fbfff3"/></linearGradient>
+    <linearGradient id="p1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f6dadf"/><stop offset="1" stop-color="#a74258"/></linearGradient>
+    <linearGradient id="p2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f7d9ae"/><stop offset="1" stop-color="#d38134"/></linearGradient>
+    <linearGradient id="p3" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f6efc3"/><stop offset="1" stop-color="#e0ae2a"/></linearGradient>
+    <linearGradient id="p4" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d3b7c8"/><stop offset="1" stop-color="#723b5e"/></linearGradient>
+    <style>
+      .title{font:700 28px -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;fill:#171915}
+      .h2{font:700 21px -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;fill:#171915}
+      .h3{font:700 16px -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;fill:#171915}
+      .body{font:500 14px -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;fill:#3f433b}
+      .small{font:500 12px -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;fill:#74796f}
+      .tiny{font:500 11px -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;fill:#8a8f84}
+      .metric{font:750 25px -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;fill:#171915}
+      .button{font:700 13px -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;fill:#171915}
+    </style>
+  </defs>
+
+  <rect width="1920" height="1200" fill="#f5f6f3"/>
+  <rect width="1920" height="172" fill="#fff"/>
+  <text x="40" y="50" class="title">GMV Max 经营总览</text>
+  <circle cx="315" cy="42" r="5" fill="#25bd67"/><text x="328" y="47" class="small">TikTok · GlowLab US</text>
+  <text x="40" y="79" class="body" fill="#7b8075">先定位经营缺口，再判断是否由素材造成</text>
+
+  <g transform="translate(1250 24)"><rect width="150" height="46" rx="12" fill="#fff" stroke="#e1e4dd"/><text x="20" y="29" class="button">Product GMV Max</text><path d="M128 20l5 5 5-5" fill="none" stroke="#6e7469" stroke-width="1.8"/></g>
+  <g transform="translate(1414 24)"><rect width="160" height="46" rx="12" fill="#fff" stroke="#e1e4dd"/><circle cx="22" cy="23" r="8" fill="#ff5d32"/><text x="39" y="29" class="button">GlowLab Store</text><path d="M139 20l5 5 5-5" fill="none" stroke="#6e7469" stroke-width="1.8"/></g>
+  <g transform="translate(1588 24)"><rect width="132" height="46" rx="12" fill="#fff" stroke="#e1e4dd"/><text x="20" y="29" class="button">全部账户 15</text></g>
+  <g transform="translate(1734 24)"><rect width="146" height="46" rx="12" fill="#fff" stroke="#e1e4dd"/><text x="20" y="29" class="button">近 7 天</text><path d="M120 20l5 5 5-5" fill="none" stroke="#6e7469" stroke-width="1.8"/></g>
+
+  <g transform="translate(40 112)"><text x="0" y="24" class="h3">经营总览</text><rect x="0" y="43" width="65" height="3" rx="2" fill="#b5f22b"/><text x="112" y="24" class="body" fill="#7a7f75">素材决策</text><text x="229" y="24" class="body" fill="#7a7f75">任务记录</text></g>
+  <line x1="0" y1="171" x2="1920" y2="171" stroke="#e9ebe6"/>
+
+  <!-- KPI cards -->
+  <g transform="translate(40 198)">
+    <g><rect width="198" height="112" rx="16" fill="#fff" stroke="#9fd837" stroke-width="1.5"/><rect x="16" y="14" width="30" height="30" rx="8" fill="#ebffc6"/><text x="27" y="35" class="h3" fill="#688b1d">$</text><text x="16" y="61" class="small">Spend</text><text x="16" y="88" class="h2">$42.7K</text><text x="118" y="88" class="tiny" fill="#148647">↑ 8.1%</text><path d="M172 27l4 4 8-9" fill="none" stroke="#44503b" stroke-width="1.7"/></g>
+    <g transform="translate(212 0)"><rect width="198" height="112" rx="16" fill="#fff" stroke="#e0e3dc"/><rect x="16" y="14" width="30" height="30" rx="8" fill="#f4f5f2"/><path d="M25 35l8-12M24 25l11 8" stroke="#72786e" stroke-width="1.6"/><text x="16" y="61" class="small">CTR</text><text x="16" y="88" class="h2">0.78%</text><text x="118" y="88" class="tiny" fill="#b13a3a">↓ 4.2%</text></g>
+    <g transform="translate(424 0)"><rect width="198" height="112" rx="16" fill="#fff" stroke="#e0e3dc"/><rect x="16" y="14" width="30" height="30" rx="8" fill="#f4f5f2"/><path d="M23 34l6-6 5 3 5-8" fill="none" stroke="#72786e" stroke-width="1.6"/><text x="16" y="61" class="small">CVR</text><text x="16" y="88" class="h2">3.42%</text><text x="118" y="88" class="tiny" fill="#148647">↑ 1.6%</text></g>
+    <g transform="translate(636 0)"><rect width="198" height="112" rx="16" fill="#fff" stroke="#e0e3dc"/><rect x="16" y="14" width="30" height="30" rx="8" fill="#f4f5f2"/><path d="M22 24h4l2 11h10l3-8H27M30 39h1M37 39h1" fill="none" stroke="#72786e" stroke-width="1.5"/><text x="16" y="61" class="small">Orders</text><text x="16" y="88" class="h2">3,842</text><text x="118" y="88" class="tiny" fill="#148647">↑ 9.4%</text></g>
+    <g transform="translate(848 0)"><rect width="198" height="112" rx="16" fill="#fff" stroke="#9fd837" stroke-width="1.5"/><rect x="16" y="14" width="30" height="30" rx="8" fill="#ebffc6"/><path d="M23 36V25M28 36V20M33 36V29M38 36V23" fill="none" stroke="#688b1d" stroke-width="1.7"/><text x="16" y="61" class="small">GMV</text><text x="16" y="88" class="h2">$128.4K</text><text x="121" y="88" class="tiny" fill="#148647">↑ 12.6%</text><path d="M172 27l4 4 8-9" fill="none" stroke="#44503b" stroke-width="1.7"/></g>
+    <g transform="translate(1060 0)"><rect width="240" height="112" rx="16" fill="#fff" stroke="#e0e3dc"/><rect x="16" y="14" width="30" height="30" rx="8" fill="#f4f5f2"/><path d="M23 29h16M31 21v16" stroke="#72786e" stroke-width="1.5"/><text x="16" y="61" class="small">ROI</text><text x="16" y="88" class="h2">3.01</text><rect x="112" y="70" width="100" height="22" rx="11" fill="#ecffd0"/><text x="127" y="85" class="tiny" fill="#59780f">目标 2.80</text></g>
+  </g>
+
+  <!-- selectable trend retained in upper half -->
+  <g transform="translate(40 330)">
+    <rect width="1260" height="230" rx="18" fill="#fff" stroke="#e0e3dc"/>
+    <text x="22" y="32" class="h3">指标趋势</text><text x="22" y="54" class="tiny">点击上方指标卡切换 · 点击异常事件定位到下方商品问题</text>
+    <g transform="translate(1048 18)"><rect width="82" height="26" rx="13" fill="#edf3ff"/><circle cx="14" cy="13" r="4" fill="#4b8cff"/><text x="25" y="17" class="small">Spend</text><rect x="92" width="78" height="26" rx="13" fill="#fff0f8"/><circle cx="106" cy="13" r="4" fill="#f1509b"/><text x="117" y="17" class="small">GMV</text></g>
+    <text x="34" y="82" class="tiny">$28K</text><text x="34" y="120" class="tiny">$24K</text><text x="34" y="158" class="tiny">$20K</text>
+    <line x1="82" y1="78" x2="1218" y2="78" stroke="#e9ece6" stroke-dasharray="4 5"/><line x1="82" y1="116" x2="1218" y2="116" stroke="#e9ece6" stroke-dasharray="4 5"/><line x1="82" y1="154" x2="1218" y2="154" stroke="#e9ece6" stroke-dasharray="4 5"/>
+    <path d="M82 125 C150 76,215 79,285 98 S420 171,490 164 S620 142,690 98 S820 58,890 70 S1025 121,1090 144 S1175 152,1218 110 L1218 174 L82 174 Z" fill="#4b8cff" opacity="0.13"/>
+    <path d="M82 125 C150 76,215 79,285 98 S420 171,490 164 S620 142,690 98 S820 58,890 70 S1025 121,1090 144 S1175 152,1218 110" fill="none" stroke="#4b8cff" stroke-width="2.3"/>
+    <path d="M82 142 C150 176,220 174,285 137 S420 58,490 65 S620 112,690 138 S820 155,890 137 S1025 64,1090 82 S1170 120,1218 91 L1218 174 L82 174 Z" fill="#f1509b" opacity="0.12"/>
+    <path d="M82 142 C150 176,220 174,285 137 S420 58,490 65 S620 112,690 138 S820 155,890 137 S1025 64,1090 82 S1170 120,1218 91" fill="none" stroke="#f1509b" stroke-width="2.3"/>
+    <g transform="translate(82 183)"><text x="0" y="14" class="tiny">07-29</text><text x="185" y="14" class="tiny">07-30</text><text x="374" y="14" class="tiny">07-31</text><text x="562" y="14" class="tiny">08-01</text><text x="750" y="14" class="tiny">08-02</text><text x="938" y="14" class="tiny">08-03</text><text x="1110" y="14" class="tiny">08-04</text></g>
+    <g transform="translate(82 207)"><text x="0" y="12" class="tiny">事件</text><rect x="83" y="0" width="44" height="20" rx="8" fill="#f7f8f5" stroke="#e2e5df"/><circle cx="95" cy="10" r="4" fill="#e9b82d"/><text x="106" y="14" class="tiny">4</text><rect x="461" y="0" width="44" height="20" rx="8" fill="#eff8ff" stroke="#dfe6eb"/><circle cx="473" cy="10" r="4" fill="#3a8cd7"/><text x="484" y="14" class="tiny">5</text><rect x="839" y="0" width="44" height="20" rx="8" fill="#fff4f4" stroke="#ecdede"/><circle cx="851" cy="10" r="4" fill="#ce4848"/><text x="862" y="14" class="tiny">4</text><text x="922" y="13" class="small" fill="#a63a3a">08-03 CTR 异常 ↓18% · 已定位 2 个商品</text></g>
+  </g>
+
+  <!-- filters -->
+  <g transform="translate(40 580)">
+    <rect width="100" height="34" rx="17" fill="#1b1d19"/><text x="19" y="22" class="button" style="fill:#fff">全部商品 24</text>
+    <rect x="112" width="116" height="34" rx="17" fill="#fff" stroke="#e0e3dc"/><text x="131" y="22" class="button">素材问题 3</text>
+    <rect x="240" width="116" height="34" rx="17" fill="#fff" stroke="#e0e3dc"/><text x="259" y="22" class="button">商品问题 1</text>
+    <rect x="368" width="104" height="34" rx="17" fill="#fff" stroke="#e0e3dc"/><text x="387" y="22" class="button">待观察 1</text>
+    <g transform="translate(928 0)"><rect width="372" height="34" rx="17" fill="#fff" stroke="#e0e3dc"/><text x="16" y="22" class="small">排序：预估 GMV 影响从高到低</text><path d="M345 14l5 5 5-5" fill="none" stroke="#6d7369" stroke-width="1.5"/></g>
+  </g>
+
+  <!-- product issue list -->
+  <g transform="translate(40 628)">
+    <rect width="1260" height="518" rx="18" fill="#fff" stroke="#e0e3dc"/>
+    <rect x="1" y="1" width="1258" height="62" rx="17" fill="#fafbf8"/>
+    <text x="22" y="38" class="h3">商品经营问题清单</text>
+    <text x="306" y="38" class="tiny">经营结果</text><text x="493" y="38" class="tiny">素材信号（对 Benchmark）</text><text x="746" y="38" class="tiny">系统判断</text><text x="1115" y="38" class="tiny">下一步</text>
+    <line x1="0" y1="63" x2="1260" y2="63" stroke="#e9ebe6"/>
+
+    <g transform="translate(0 63)">
+      <rect x="1" y="1" width="1258" height="132" fill="#fff"/>
+      <g transform="translate(22 20)"><rect width="66" height="92" rx="11" fill="url(#p1)"/><rect x="19" y="14" width="28" height="58" rx="13" fill="#fff" opacity="0.78"/><rect x="13" y="77" width="40" height="5" rx="2" fill="#fff" opacity="0.9"/></g>
+      <text x="104" y="42" class="h3">GlowLab 10% 烟酰胺精华</text><text x="104" y="66" class="small">GL-NA10-US · Beauty</text><rect x="104" y="82" width="100" height="22" rx="11" fill="#e4f7dc"/><text x="118" y="97" class="tiny" fill="#4a751f">高 GMV 机会</text>
+      <text x="306" y="38" class="tiny">GMV</text><text x="306" y="63" class="h3">$38.4K</text><text x="386" y="38" class="tiny">ROI</text><text x="386" y="63" class="h3">2.07</text><text x="386" y="87" class="tiny">目标 1.80 ↑15%</text>
+      <text x="493" y="38" class="small">3 条可放量 · 5 条需迭代</text><text x="493" y="64" class="tiny">Top 素材 ROI ↑34% · 供给覆盖仅 62%</text><text x="493" y="88" class="tiny">当前不是亏损问题，是素材供给限制增长</text>
+      <rect x="746" y="25" width="104" height="28" rx="14" fill="#dff7e6"/><text x="767" y="44" class="button" fill="#137a43">素材可放量</text><text x="746" y="79" class="body">已有赢家，但可用变体不足</text><text x="746" y="102" class="small">预估 GMV 机会 +$2.1K / 日</text>
+      <rect x="1089" y="45" width="145" height="42" rx="12" fill="#b5f22b"/><text x="1114" y="71" class="button">处理 8 条素材</text>
+      <line x1="0" y1="132" x2="1260" y2="132" stroke="#eceee9"/>
+    </g>
+
+    <g transform="translate(0 195)">
+      <rect x="1" y="1" width="1258" height="132" fill="#fbfff1"/><rect x="1" y="1" width="4" height="132" fill="#b5f22b"/>
+      <g transform="translate(22 20)"><rect width="66" height="92" rx="11" fill="url(#p2)"/><circle cx="33" cy="37" r="19" fill="#f4dec1"/><rect x="13" y="67" width="40" height="11" rx="4" fill="#473522"/><rect x="17" y="84" width="32" height="4" rx="2" fill="#fff"/></g>
+      <text x="104" y="42" class="h3">GlowLab 胶原蛋白面膜</text><text x="104" y="66" class="small">GL-MASK-05-US · Beauty</text><rect x="104" y="82" width="92" height="22" rx="11" fill="#fff0bd"/><text x="118" y="97" class="tiny" fill="#816000">优先处理 P1</text>
+      <text x="306" y="38" class="tiny">GMV</text><text x="306" y="63" class="h3">$22.7K</text><text x="386" y="38" class="tiny">ROI</text><text x="386" y="63" class="h3">1.52</text><text x="386" y="87" class="tiny" fill="#b13a3a">目标 1.80 ↓15.6%</text>
+      <text x="493" y="38" class="small" fill="#b13a3a">CTR 0.54%  ↓26%</text><text x="493" y="64" class="tiny" fill="#148647">CVR 3.80%  ↑3%</text><text x="493" y="88" class="tiny">AOV 与价格稳定，问题发生在点击前</text>
+      <rect x="746" y="25" width="104" height="28" rx="14" fill="#fff0bd"/><text x="767" y="44" class="button" fill="#806000">素材问题</text><text x="746" y="79" class="body">开头吸引力下降，拖累商品 ROI</text><text x="746" y="102" class="small">4 条需迭代 · 1 条待观察</text>
+      <rect x="1089" y="45" width="145" height="42" rx="12" fill="#1b1d19"/><text x="1114" y="71" class="button" style="fill:#fff">处理 4 条素材</text>
+      <line x1="0" y1="132" x2="1260" y2="132" stroke="#eceee9"/>
+    </g>
+
+    <g transform="translate(0 327)">
+      <rect x="1" y="1" width="1258" height="132" fill="#fff"/>
+      <g transform="translate(22 20)"><rect width="66" height="92" rx="11" fill="url(#p3)"/><circle cx="33" cy="31" r="17" fill="#fff4c5"/><path d="M15 61h36v19H15z" fill="#fff" opacity="0.82"/><path d="M21 68h24" stroke="#886f22" stroke-width="3"/></g>
+      <text x="104" y="42" class="h3">GlowLab SPF50 防晒霜</text><text x="104" y="66" class="small">GL-SPF50-US · Beauty</text><rect x="104" y="82" width="90" height="22" rx="11" fill="#e9efff"/><text x="118" y="97" class="tiny" fill="#46619c">转商品诊断</text>
+      <text x="306" y="38" class="tiny">GMV</text><text x="306" y="63" class="h3">$19.3K</text><text x="386" y="38" class="tiny">ROI</text><text x="386" y="63" class="h3">1.46</text><text x="386" y="87" class="tiny" fill="#b13a3a">目标 1.80 ↓18.9%</text>
+      <text x="493" y="38" class="small">CTR 0.82%  ≈均值</text><text x="493" y="64" class="tiny">CVR 3.60%  ≈均值</text><text x="493" y="88" class="tiny" fill="#b13a3a">AOV ↓18% · 折扣结束后客单下降</text>
+      <rect x="746" y="25" width="114" height="28" rx="14" fill="#e8eeff"/><text x="766" y="44" class="button" fill="#425f9f">非素材问题</text><text x="746" y="79" class="body">素材链路正常，不建议换素材</text><text x="746" y="102" class="small">优先检查价格、Offer 与商品组合</text>
+      <rect x="1089" y="45" width="145" height="42" rx="12" fill="#fff" stroke="#1b1d19"/><text x="1114" y="71" class="button">查看商品问题</text>
+      <line x1="0" y1="132" x2="1260" y2="132" stroke="#eceee9"/>
+    </g>
+
+    <g transform="translate(0 459)" display="none">
+      <rect x="1" y="1" width="1258" height="136" rx="0 0 17 17" fill="#fff"/>
+      <g transform="translate(22 20)"><rect width="66" height="92" rx="11" fill="url(#p4)"/><circle cx="33" cy="34" r="17" fill="#d4a98f"/><rect x="11" y="65" width="44" height="16" rx="5" fill="#f2dde5"/></g>
+      <text x="104" y="42" class="h3">GlowLab 修护发油</text><text x="104" y="66" class="small">GL-HAIR-02-US · Beauty</text><rect x="104" y="82" width="92" height="22" rx="11" fill="#fee5e5"/><text x="118" y="97" class="tiny" fill="#a63838">风险消耗 P1</text>
+      <text x="306" y="38" class="tiny">GMV</text><text x="306" y="63" class="h3">$9.1K</text><text x="386" y="38" class="tiny">ROI</text><text x="386" y="63" class="h3">0.76</text><text x="386" y="87" class="tiny" fill="#b13a3a">目标 1.80 ↓57.8%</text>
+      <text x="493" y="38" class="small" fill="#b13a3a">CTR 0.41%  ↓39%</text><text x="493" y="64" class="tiny" fill="#b13a3a">CVR 1.90%  ↓32%</text><text x="493" y="88" class="tiny">观看和转化同时下降，连续 2 个窗口未恢复</text>
+      <rect x="746" y="25" width="104" height="28" rx="14" fill="#fee5e5"/><text x="767" y="44" class="button" fill="#a63838">素材失效</text><text x="746" y="79" class="body">2 条建议关停 · 1 条需换新</text><text x="746" y="102" class="small">预计减少风险消耗 $310 / 日</text>
+      <rect x="1089" y="45" width="145" height="42" rx="12" fill="#fff" stroke="#d24a4a"/><text x="1114" y="71" class="button" fill="#b13434">处理 3 条素材</text>
+    </g>
+    <g transform="translate(0 459)"><rect x="1" y="1" width="1258" height="58" rx="0 0 17 17" fill="#fafbf8"/><text x="22" y="36" class="small">另有 21 个商品 · 其中 1 个待观察</text><text x="1102" y="36" class="button">查看全部商品 →</text></g>
+  </g>
+
+  <!-- right diagnosis drawer -->
+  <g transform="translate(1340 198)" filter="url(#shadow)"><rect width="540" height="948" rx="22" fill="#fff"/></g>
+  <g transform="translate(1340 198)">
+    <text x="28" y="41" class="h2">商品经营诊断</text><text x="28" y="67" class="small">GlowLab 胶原蛋白面膜 · GL-MASK-05-US</text><circle cx="502" cy="35" r="15" fill="#f2f3ef"/><path d="M496 29l12 12M508 29l-12 12" stroke="#687065" stroke-width="1.6"/>
+    <line x1="0" y1="88" x2="540" y2="88" stroke="#e7e9e3"/>
+    <g transform="translate(28 110)"><circle cx="13" cy="13" r="13" fill="#1b1d19"/><text x="9" y="18" class="button" style="fill:#fff">1</text><text x="0" y="44" class="tiny">经营判断</text><line x1="42" y1="13" x2="122" y2="13" stroke="#b5f22b" stroke-width="3"/><circle cx="148" cy="13" r="13" fill="#b5f22b"/><text x="144" y="18" class="button">2</text><text x="128" y="44" class="tiny">素材诊断</text><line x1="177" y1="13" x2="257" y2="13" stroke="#e0e3dc" stroke-width="3"/><circle cx="283" cy="13" r="13" fill="#f0f2ed"/><text x="279" y="18" class="button">3</text><text x="260" y="44" class="tiny">执行动作</text><line x1="312" y1="13" x2="392" y2="13" stroke="#e0e3dc" stroke-width="3"/><circle cx="418" cy="13" r="13" fill="#f0f2ed"/><text x="414" y="18" class="button">4</text><text x="397" y="44" class="tiny">结果回流</text></g>
+    <g transform="translate(28 178)"><rect width="484" height="130" rx="16" fill="#fff9df" stroke="#f1de8d"/><rect x="18" y="18" width="92" height="28" rx="14" fill="#ffe9a6"/><text x="37" y="37" class="button" fill="#7d5b00">素材问题</text><text x="18" y="72" class="h3">ROI 缺口主要来自素材点击下降</text><text x="18" y="98" class="body">商品 ROI 1.52，低于目标 15.6%，预估 GMV 缺口 $1.2K/日</text><text x="18" y="119" class="small">商品价格和点击后转化正常，不建议先调整 Offer</text></g>
+    <text x="28" y="342" class="h3">系统为什么这样判断</text>
+    <g transform="translate(28 360)"><rect width="150" height="74" rx="12" fill="#fff6f6" stroke="#f0dddd"/><text x="14" y="23" class="tiny">CTR</text><text x="14" y="52" class="metric" fill="#b13434">0.54%</text><text x="87" y="52" class="tiny">均值 0.73%</text></g>
+    <g transform="translate(195 360)"><rect width="150" height="74" rx="12" fill="#f5fbf5" stroke="#dfeade"/><text x="14" y="23" class="tiny">CVR</text><text x="14" y="52" class="metric" fill="#148647">3.80%</text><text x="87" y="52" class="tiny">均值 3.69%</text></g>
+    <g transform="translate(362 360)"><rect width="150" height="74" rx="12" fill="#fafbf8" stroke="#e4e7e0"/><text x="14" y="23" class="tiny">AOV</text><text x="14" y="52" class="metric">$34.1</text><text x="84" y="52" class="tiny">均值 $34.6</text></g>
+    <g transform="translate(28 454)"><rect width="484" height="90" rx="14" fill="#f7f8f5"/><text x="16" y="27" class="small">归因结论</text><text x="16" y="52" class="h3">点击前链路异常 → 定位到素材 Hook 与首帧</text><text x="16" y="75" class="small">CTR 低 26%，但 CVR 与 AOV 正常，因此不归因到商品或 Offer</text></g>
+    <text x="28" y="584" class="h3">受影响素材</text><text x="432" y="584" class="small">共 5 条</text>
+    <g transform="translate(28 602)"><rect width="484" height="177" rx="16" fill="#fff" stroke="#e0e3dc"/>
+      <g transform="translate(14 14)"><rect width="44" height="50" rx="8" fill="url(#p2)"/><text x="58" y="19" class="button">素材 763740...</text><text x="58" y="40" class="tiny">CTR ↓23% · CVR 正常</text><rect x="362" y="10" width="82" height="27" rx="13" fill="#fff0bd"/><text x="383" y="28" class="button" fill="#806000">需迭代</text></g>
+      <line x1="14" y1="73" x2="470" y2="73" stroke="#eceee9"/>
+      <g transform="translate(14 86)"><rect width="44" height="50" rx="8" fill="url(#p2)"/><text x="58" y="19" class="button">素材 751796...</text><text x="58" y="40" class="tiny">CTR ↓19% · CVR 正常</text><rect x="362" y="10" width="82" height="27" rx="13" fill="#fff0bd"/><text x="383" y="28" class="button" fill="#806000">需迭代</text></g>
+      <text x="14" y="163" class="tiny">另有 2 条需迭代 · 1 条待观察</text>
+    </g>
+    <text x="28" y="816" class="h3">进入素材决策后自动带入</text>
+    <g transform="translate(28 834)"><rect width="484" height="54" rx="13" fill="#f7f8f5"/><text x="14" y="22" class="tiny">商品：胶原蛋白面膜　国家：US　账户：全部 15</text><text x="14" y="42" class="tiny">日期：近 7 天　状态：需迭代 + 待观察</text></g>
+    <g transform="translate(28 906)"><rect width="484" height="58" rx="15" fill="#b5f22b"/><text x="157" y="36" class="h3">查看 5 条素材决策</text><path d="M382 24h22M397 17l7 7-7 7" fill="none" stroke="#171915" stroke-width="2"/></g>
+  </g>
+</svg>

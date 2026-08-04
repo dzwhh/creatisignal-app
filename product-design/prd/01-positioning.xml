@@ -1,0 +1,20 @@
+<h2>1.1 背景与问题</h2>
+<p>现有经营总览、素材 360、疲劳度监测和决策能力彼此割裂。用户能够看到大量指标和素材分类，但不能快速确定每条素材的下一步动作，也无法追踪生成的新素材是否加入正确商品、是否完成测试、是否产生新的赢家。</p>
+<h2>1.2 第一性原理</h2>
+<ol>
+  <li seq="auto">AO 打开产品的目的不是浏览报表，而是决定今天哪些素材该加、该保持、该改、该换、该等、该停。</li>
+  <li seq="auto">任何素材结论必须绑定商品和投放环境，同一素材用于不同商品时必须分别诊断。</li>
+  <li seq="auto">疲劳是诊断原因，不是独立业务动作；动作必须翻译成可放量、稳定投放、待观察、需迭代、需换新、建议关停。</li>
+  <li seq="auto">每条诊断只允许一个主结果和一个主按钮，避免结果冲突。</li>
+  <li seq="auto">只有数据回流并验证上一次动作后，任务才算闭环完成。</li>
+</ol>
+<h2>1.3 产品整体 Sprint PRD 能力地图</h2>
+<table>
+  <colgroup><col width="110"/><col width="150"/><col width="260"/><col width="300"/><col width="300"/></colgroup>
+  <thead><tr><th background-color="light-gray">一级模块</th><th background-color="light-gray">二级模块 / 页面模块</th><th background-color="light-gray">功能逻辑详述</th><th background-color="light-gray">具体交互逻辑描述</th><th background-color="light-gray">页面 Demo 示意图</th></tr></thead>
+  <tbody>
+    <tr><td vertical-align="top">产品整体</td><td vertical-align="top">GMV Max 素材决策闭环</td><td vertical-align="top">1. 业务目的：提升 GMV Max 素材命中率并减少无效消耗。<br/>2. 用户目标：从数据问题直接进入动作。<br/>3. 能力：诊断、生成、投放、观察、回流。<br/>4. 输出：每个 Product × Creative 的唯一诊断结果和执行任务。<br/>5. 上游：TikTok Ads / Shop 数据；下游：生成系统与 GMV Max 素材池。</td><td vertical-align="top">1. 默认进入“素材决策”待处理列表。<br/>2. 系统按潜在 GMV 影响与风险消耗排序。<br/>3. AO 点击唯一主按钮执行动作。<br/>4. 生成或投放失败时任务保留并允许重试。<br/>5. 数据回流后自动更新诊断结果和任务状态。</td><td vertical-align="top"><b>布局示意</b>：顶部经营上下文 + 今日待处理摘要 + 六类筛选 + 素材诊断列表 + 右侧执行抽屉。<br/><b>关键组件</b>：诊断卡、Benchmark 对比、主 CTA、步骤条、任务状态。<br/><b>Demo 展示重点</b>：用 4 条 Mock 素材展示可放量、需迭代、需换新、建议关停及完整点击路径，参考 DEMO-01。</td></tr>
+    <tr><td vertical-align="top">产品整体</td><td vertical-align="top">诊断最小单元</td><td vertical-align="top">诊断对象固定为“商品 × 素材 × 国家 × 观察窗口”。同一素材关联不同商品或国家时生成不同诊断记录，避免全局评分错误迁移。</td><td vertical-align="top">1. 列表按商品分组。<br/>2. 素材行必须展示关联商品与国家。<br/>3. 切换商品后只刷新该商品诊断。<br/>4. 关联关系缺失时不进入规则判断，展示“等待关联”并禁用动作按钮。</td><td vertical-align="top"><b>布局示意</b>：商品分组头 + 素材缩略图 + 素材 ID + 国家标签。<br/><b>关键组件</b>：商品选择器、国家筛选、关联异常提示。<br/><b>Demo 展示重点</b>：同一个视频在两个商品下显示不同 ROI 与不同诊断结果。</td></tr>
+    <tr><td vertical-align="top">产品整体</td><td vertical-align="top">唯一结果原则</td><td vertical-align="top">规则引擎按固定优先级执行，只输出六类结果之一：可放量、稳定投放、待观察、需迭代、需换新、建议关停。</td><td vertical-align="top">1. 同一诊断周期仅一个结果为 active。<br/>2. 新结果产生后关闭旧结果，但保留历史。<br/>3. 点击“查看依据”可展开触发规则、实际值和 Benchmark。<br/>4. 置信度不足时强制进入待观察。</td><td vertical-align="top"><b>布局示意</b>：结果标签 + 一句话判断 + 三条证据 + 唯一主 CTA。<br/><b>关键组件</b>：状态 Badge、证据卡、规则解释 Popover。<br/><b>Demo 展示重点</b>：视觉上不出现两个并列主动作，参考 DEMO-02。</td></tr>
+  </tbody>
+</table>

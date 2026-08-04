@@ -106,8 +106,8 @@ export function OverviewPage({
       <DiagnosisCard
         issues={DIAGNOSTIC_ISSUES}
         onGenerateBrief={() => setBriefSeed({})}
-        onJumpDiagnose={() => onJumpTab("diagnose")}
-        onJumpReport={() => onJumpTab("diagnose")}
+        onJumpDiagnose={() => onJumpTab("creative")}
+        onJumpReport={() => onJumpTab("creative")}
       />
 
       {/* Tag split-view */}

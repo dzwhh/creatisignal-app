@@ -5,7 +5,7 @@ export default function TaggingRoute() {
   return (
     <>
       <Topbar title="素材洞察" />
-      <InsightsShell initialTab="tagging" />
+      <InsightsShell initialTab="creative" />
     </>
   )
 }

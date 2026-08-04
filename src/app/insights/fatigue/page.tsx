@@ -5,7 +5,7 @@ export default function FatigueRoute() {
   return (
     <>
       <Topbar title="素材洞察" />
-      <InsightsShell initialTab="fatigue" />
+      <InsightsShell initialTab="creative" />
     </>
   )
 }
